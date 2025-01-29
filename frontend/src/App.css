@@ -1,0 +1,142 @@
+/* General body styling */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  height: 100vh;
+  background-color: #e0f7fa; /* Soft light blue background */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  transition: background-color 0.3s ease; /* Smooth background transition */
+}
+
+.container {
+  display: flex;
+  flex-direction: column; /* Stack elements vertically */
+  justify-content: flex-start;
+  align-items: center; /* Center everything horizontally */
+  width: 100%;
+  padding: 20px;
+}
+
+/* Styling for restaurant name - Oaxaca */
+.restaurant-title {
+  font-family: 'Merriweather', serif; /* Posh font */
+  font-size: 3.5em;  /* Larger size for Oaxaca */
+  font-weight: 700;
+  color: #000000; /* Black color for the restaurant title */
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 40px;
+}
+
+/* Role selector styling */
+.role-selector {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 320px;
+  text-align: center;
+  margin-bottom: 20px; /* Adds space below the role selector */
+}
+
+.role-label {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.slider-container {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.slider {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(to right, #3b82f6, #10b981, #f59e0b);
+  outline: none;
+  transition: background-color 0.3s ease;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 30px;
+  height: 30px;
+  background-image: url('./assets/slider.png');
+  background-size: cover;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.slider::-moz-range-thumb {
+  width: 30px;
+  height: 30px;
+  background-image: url('./assets/2.png');
+  background-size: cover;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 0.9em;
+  color: #666;
+}
+
+/* Specific colors for each role */
+.slider-labels span:nth-child(1) { /* Customer (index 0) */
+  color: #3b82f6; /* Blue for Customer */
+}
+
+.slider-labels span:nth-child(2) { /* Waiter (index 1) */
+  color: #10b981; /* Green for Waiter */
+}
+
+.slider-labels span:nth-child(3) { /* Kitchen (index 2) */
+  color: #f59e0b; /* Orange for Kitchen */
+}
+
+.selected-role {
+  margin-top: 20px;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #333;
+}
+
+h3 {
+  margin: 0;
+}
+
+span {
+  color: #3b82f6;
+}
+
+/* Body background when Waiter role is selected */
+body.waiter {
+  background-color: #e5f8e0; /* Lighter, creamier green */
+}
+
+/* Body background when Kitchen role is selected */
+body.kitchen {
+  background-color:  #fbe4b0; /* Creamy orange */
+}
+
+/* Styles for role text colors */
+.green-text {
+  color: #4CAF50;  /* Green color for Waiter */
+}
+
+.orange-text {
+  color: #FF5722;  /* Orange color for Kitchen */
+}
