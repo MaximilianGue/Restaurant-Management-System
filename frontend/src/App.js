@@ -16,101 +16,26 @@ import churrosImage from './assets/churros.jpg';
 import flanImage from './assets/flan.jpg';
 
 function App() {
-  // State to manage the selected role
   const [role, setRole] = useState(0);
+  const [cart, setCart] = useState({});
 
-  // Array of roles to display
   const roles = ["Customer", "Waiter", "Kitchen"];
 
-  // Menu items with Mexican dishes
   const menuItems = [
-    {
-      category: "Starter",
-      name: "Tacos",
-      image: tacoImage,
-      price: "9.99",
-      allergies: ["Gluten", "Dairy"]
-    },
-    {
-      category: "Starter",
-      name: "Guacamole with Tortilla Chips",
-      image: guacamoleImage,
-      price: "6.50",
-      allergies: ["Gluten", "Dairy"]
-    },
-    {
-      category: "Main",
-      name: "Burrito",
-      image: burritoImage,
-      price: "12.99",
-      allergies: ["Gluten", "Dairy"]
-    },
-    {
-      category: "Main",
-      name: "Enchiladas",
-      image: enchiladasImage,
-      price: "14.99",
-      allergies: ["Gluten", "Dairy"]
-    },
-    {
-      category: "Main",
-      name: "Quesadilla",
-      image: quesadillaImage,
-      price: "11.50",
-      allergies: ["Gluten", "Dairy"]
-    },
-    {
-      category: "Main",
-      name: "Fajitas",
-      image: fajitasImage,
-      price: "16.00",
-      allergies: ["Gluten", "Dairy"]
-    },
-    {
-      category: "Main",
-      name: "Chilaquiles",
-      image: chilaquilesImage,
-      price: "13.50",
-      allergies: ["Gluten", "Dairy"]
-    },
-    {
-      category: "Main",
-      name: "Carnitas",
-      image: carnitasImage,
-      price: "15.00",
-      allergies: ["Gluten", "Dairy"]
-    },
-    {
-      category: "Main",
-      name: "Mole Poblano",
-      image: molePoblanoImage,
-      price: "18.00",
-      allergies: ["Gluten", "Dairy"]
-    },
-    {
-      category: "Main",
-      name: "Tamale",
-      image: tamaleImage,
-      price: "10.99",
-      allergies: ["Gluten", "Dairy"]
-    },
-    {
-      category: "Dessert",
-      name: "Churros",
-      image: churrosImage,
-      price: "5.99",
-      allergies: ["Gluten", "Dairy"]
-    },
-    {
-      category: "Dessert",
-      name: "Flan",
-      image: flanImage,
-      price: "4.99",
-      allergies: ["Gluten", "Dairy"]
-    }
+    { category: "Starter", name: "Tacos", image: tacoImage, price: "9.99", allergies: ["Gluten", "Dairy"] },
+    { category: "Starter", name: "Nachos", image: guacamoleImage, price: "6.50", allergies: ["Gluten", "Dairy"] },
+    { category: "Main", name: "Burrito", image: burritoImage, price: "12.99", allergies: ["Gluten", "Dairy"] },
+    { category: "Main", name: "Enchiladas", image: enchiladasImage, price: "14.99", allergies: ["Gluten", "Dairy"] },
+    { category: "Main", name: "Quesadilla", image: quesadillaImage, price: "11.50", allergies: ["Gluten", "Dairy"] },
+    { category: "Main", name: "Fajitas", image: fajitasImage, price: "16.00", allergies: ["Gluten", "Dairy"] },
+    { category: "Main", name: "Chilaquiles", image: chilaquilesImage, price: "13.50", allergies: ["Gluten", "Dairy"] },
+    { category: "Main", name: "Carnitas", image: carnitasImage, price: "15.00", allergies: ["Gluten", "Dairy"] },
+    { category: "Main", name: "Mole Poblano", image: molePoblanoImage, price: "18.00", allergies: ["Gluten", "Dairy"] },
+    { category: "Main", name: "Tamale", image: tamaleImage, price: "10.99", allergies: ["Gluten", "Dairy"] },
+    { category: "Dessert", name: "Churros", image: churrosImage, price: "5.99", allergies: ["Gluten", "Dairy"] },
+    { category: "Dessert", name: "Flan", image: flanImage, price: "4.99", allergies: ["Gluten", "Dairy"] }
   ];
-  
-  // Update the background color according to the role
+
   useEffect(() => {
     if (role === 1) {
       document.body.classList.add("waiter");
@@ -123,39 +48,55 @@ function App() {
     }
   }, [role]);
 
-  // Handler for slider input
   const handleSliderChange = (event) => {
     setRole(Number(event.target.value));
   };
 
-  // Set dynamic color class for the selected role text
   const getRoleTextColor = () => {
-    switch(role) {
+    switch (role) {
       case 1:
-        return "green-text"; // For waiter, text will be green
+        return "green-text";
       case 2:
-        return "orange-text"; // For kitchen, text will be orange
+        return "orange-text";
       default:
         return "";
     }
   };
 
+  const handleSelect = (itemName) => {
+    setCart((prevCart) => ({ ...prevCart, [itemName]: 1 }));
+  };
+
+  const handleQuantityChange = (itemName, type) => {
+    setCart((prevCart) => {
+      const currentQuantity = prevCart[itemName] || 1;
+      let newQuantity = type === "increase" ? currentQuantity + 1 : currentQuantity - 1;
+
+      // If the quantity is less than 1, we remove the item from the cart
+      if (newQuantity < 1) {
+        const updatedCart = { ...prevCart };
+        delete updatedCart[itemName];
+        return updatedCart;
+      }
+
+      return { ...prevCart, [itemName]: newQuantity };
+    });
+  };
+
   return (
     <div className="container">
-      {/* Restaurant name */}
       <h1 className="restaurant-title">Oaxaca</h1>
 
-      {/* Role selector */}
       <div className="role-selector">
         <label htmlFor="role-slider" className="role-label">Select your role:</label>
         <div className="slider-container">
-          <input 
-            type="range" 
-            id="role-slider" 
-            min="0" 
-            max="2" 
-            step="1" 
-            value={role} 
+          <input
+            type="range"
+            id="role-slider"
+            min="0"
+            max="2"
+            step="1"
+            value={role}
             onChange={handleSliderChange}
             className="slider"
           />
@@ -166,16 +107,15 @@ function App() {
           </div>
         </div>
         <div className="selected-role">
-          <h3 >Selected Role: <span className={getRoleTextColor()}>{roles[role]}</span></h3>
+          <h3>Selected Role: <span className={getRoleTextColor()}>{roles[role]}</span></h3>
         </div>
       </div>
 
-      {/* Menu on the left */}
       <div className="menu-container">
-        {role === 0 && (  // Show menu only if "Customer" (role 0) is selected
+        {role === 0 && (
           <div className="menu">
             <h3>Menu:</h3>
-            
+
             {/* Starters Section */}
             <div className="menu-category">
               <h4>Starters</h4>
@@ -192,6 +132,26 @@ function App() {
                           <li key={idx}>{allergy}</li>
                         ))}
                       </ul>
+
+                      {/* Display counter if selected */}
+                      {cart[item.name] ? (
+                        <div className="counter">
+                          <button
+                            onClick={() => handleQuantityChange(item.name, "decrease")}
+                            className="counter-btn"
+                          >-</button>
+                          <span>{cart[item.name]}</span>
+                          <button
+                            onClick={() => handleQuantityChange(item.name, "increase")}
+                            className="counter-btn"
+                          >+</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleSelect(item.name)}
+                          className="select-button"
+                        >Select</button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -214,6 +174,26 @@ function App() {
                           <li key={idx}>{allergy}</li>
                         ))}
                       </ul>
+
+                      {/* Display counter if selected */}
+                      {cart[item.name] ? (
+                        <div className="counter">
+                          <button
+                            onClick={() => handleQuantityChange(item.name, "decrease")}
+                            className="counter-btn"
+                          >-</button>
+                          <span>{cart[item.name]}</span>
+                          <button
+                            onClick={() => handleQuantityChange(item.name, "increase")}
+                            className="counter-btn"
+                          >+</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleSelect(item.name)}
+                          className="select-button"
+                        >Select</button>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -236,12 +216,31 @@ function App() {
                           <li key={idx}>{allergy}</li>
                         ))}
                       </ul>
+
+                      {/* Display counter if selected */}
+                      {cart[item.name] ? (
+                        <div className="counter">
+                          <button
+                            onClick={() => handleQuantityChange(item.name, "decrease")}
+                            className="counter-btn"
+                          >-</button>
+                          <span>{cart[item.name]}</span>
+                          <button
+                            onClick={() => handleQuantityChange(item.name, "increase")}
+                            className="counter-btn"
+                          >+</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleSelect(item.name)}
+                          className="select-button"
+                        >Select</button>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-
           </div>
         )}
       </div>

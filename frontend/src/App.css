@@ -10,6 +10,7 @@ body {
   transition: background-color 0.3s ease; /* Smooth background transition */
 }
 
+/* Container for the app */
 .container {
   display: flex;
   flex-direction: column; /* Stack elements vertically */
@@ -212,6 +213,53 @@ span {
 
 .menu-item-details p {
   margin-top: 10px;
+}
+
+/* Select button styling */
+.select-button {
+  background-color: #fbe4b0; /* Creamy orange */
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 1.1em;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-left: 20px;  /* Space between the button and image */
+}
+
+.select-button:hover {
+  background-color: #f39c12; /* Darker orange on hover */
+}
+
+/* Counter (Quantity adjuster) styling */
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.counter-btn {
+  width: 40px;      /* Width of the button */
+  height: 40px;     /* Height of the button */
+  background-color: #ff7f3f; /* Orange color */
+  color: white;
+  border: none;
+  font-size: 24px;  /* Font size for "+" and "-" */
+  text-align: center;
+  line-height: 40px; /* Vertically center the text */
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.counter-btn:hover {
+  background-color: #ff5e1f; /* Darker orange when hovered */
+}
+
+.counter-btn:focus {
+  outline: none; /* Remove outline on focus */
 }
 
 /* Body background when Waiter role is selected */
