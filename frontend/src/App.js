@@ -83,6 +83,29 @@ function App() {
     });
   };
 
+  const getOrderSummary = () => {
+    let totalPrice = 0;
+    return Object.keys(cart).map((itemName) => {
+      const item = menuItems.find((menuItem) => menuItem.name === itemName);
+      if (item) {
+        const itemTotal = parseFloat(item.price) * cart[itemName];
+        totalPrice += itemTotal;
+        return (
+          <div key={itemName} className="order-summary-item">
+            <span>{itemName} x{cart[itemName]}: </span>
+            <span>£{(itemTotal).toFixed(2)}</span>
+          </div>
+        );
+      }
+      return null;
+    }).concat(
+      <div key="total" className="order-summary-total">
+        <span>Total: </span>
+        <span>£{totalPrice.toFixed(2)}</span>
+      </div>
+    );
+  };
+
   return (
     <div className="container">
       <h1 className="restaurant-title">Oaxaca</h1>
@@ -240,6 +263,12 @@ function App() {
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Order Summary */}
+            <div className="order-summary">
+              <h4>Order Summary</h4>
+              {getOrderSummary()}
             </div>
           </div>
         )}

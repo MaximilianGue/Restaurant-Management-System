@@ -280,3 +280,58 @@ body.kitchen {
 .orange-text {
   color: #FF5722;  /* Orange color for Kitchen */
 }
+/* Menu Container and Layout */
+.menu-container {
+  display: flex; /* Use flexbox for layout */
+  flex-wrap: wrap; /* Allow wrapping if content overflows */
+  justify-content: flex-start; /* Align items to the left */
+  gap: 20px; /* Add space between menu items and the order summary */
+  width: 100%;
+}
+
+/* Order Summary Styling */
+.order-summary {
+  background-color: #ffffff; /* White background for the order summary */
+  border-radius: 10px; /* Rounded corners */
+  padding: 20px; /* Padding inside the box */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
+  width: 100%; /* Full width of the container */
+  flex-grow: 1; /* Allow the order summary to grow and take available space */
+  margin-top: 40px; /* Space above the order summary */
+  font-family: 'Arial', sans-serif;
+}
+
+/* Order Summary Title */
+.order-summary h4 {
+  font-size: 1.6em; /* Larger font size for the title */
+  color: #333; /* Dark color for the title */
+  margin-bottom: 20px; /* Space below the title */
+  text-align: center;
+}
+
+/* Order Summary Items */
+.order-summary-item {
+  display: flex; /* Align items side by side */
+  justify-content: space-between; /* Space between item name and price */
+  font-size: 1.1em; /* Slightly larger font */
+  margin-bottom: 10px; /* Space between items */
+}
+
+/* Total Price Styling */
+.order-summary-total {
+  display: flex; /* Align total price text and amount side by side */
+  justify-content: space-between; /* Space between total text and price */
+  font-size: 1.3em; /* Larger font for the total price */
+  font-weight: bold; /* Bold for total */
+  color: #e74c3c; /* Red color for the total amount */
+  margin-top: 20px; /* Space before the total */
+  border-top: 1px solid #ccc; /* Divider line between items and total */
+  padding-top: 10px; /* Padding at the top of the total */
+}
+
+/* Menu Grid Layout */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Two columns for menu items */
+  gap: 20px;
+}
