@@ -5,7 +5,7 @@ from django.db import models
 class MenuItem(models.Model):
     name = models.CharField(max_length=100)
     price = models.FloatField()
-    image = models.URLField()  
+    image = models.URLField(blank=True, null=True)
     allergies = models.JSONField(default=list, blank=True)  
 
     def __str__(self):
