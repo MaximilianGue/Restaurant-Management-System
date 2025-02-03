@@ -134,7 +134,8 @@ function App() {
         </div>
       </div>
 
-      <div className="menu-container">
+      {/* Customer Page */}
+      <div className="menu-container"> 
         {role === 0 && (
           <div className="menu">
             <h3>Menu:</h3>
@@ -270,6 +271,15 @@ function App() {
               <h4>Order Summary</h4>
               {getOrderSummary()}
             </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Waiter Page */}
+      <div className="Waiter-container">
+        {role === 1 && (
+          <div className="waiter">
+            <h3>Waiter Page:</h3>
           </div>
         )}
       </div>
