@@ -106,6 +106,13 @@ function App() {
     );
   };
 
+  const confirmTopOrder = (event) => {
+    var x = document.getElementById("placedOrders");
+    try {
+      x.deleteRow(0);
+    } catch(err) {};
+  };
+
   return (
     <div className="container">
       <h1 className="restaurant-title">Oaxaca</h1>
@@ -280,6 +287,21 @@ function App() {
         {role === 1 && (
           <div className="waiter">
             <h3>Waiter Page:</h3>
+            <table id="placedOrders">
+              <tr>
+                <td>Order #1</td>
+                <td>Tacos x1, Nachos x2, Burrito x1</td>
+                <td>£35.98</td>
+              </tr>
+              <tr>
+                <td>Order #2</td>
+                <td>Enchiladas x3, Mole Poblano x1, Churros x2</td>
+                <td>£74.98</td>
+              </tr>
+            </table>
+
+            <button onClick={confirmTopOrder}>Confirm Top Order</button>
+
           </div>
         )}
       </div>
