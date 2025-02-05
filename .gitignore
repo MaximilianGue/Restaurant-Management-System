@@ -1,0 +1,4 @@
+# Exclude Virtual Environment
+env/
+venv/
+
