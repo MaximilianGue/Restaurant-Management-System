@@ -1,6 +1,0 @@
-# Exclude Virtual Environment
-env/
-venv/
-
-# Environment variables
-.env
