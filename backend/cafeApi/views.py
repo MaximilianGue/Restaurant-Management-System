@@ -6,8 +6,12 @@ from rest_framework import generics
 
 class MenuItemView(generics.ListCreateAPIView):
     serializer_class = MenuItemSerializer
-    queryset = MenuItem.objects.all()  # it get all menu items created as json list object 
+    queryset = MenuItem.objects.all()
 
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context.update({"request": self.request})
+        return context
 class CustomerView(generics.ListCreateAPIView):
     serializer_class = CustomerSerializer
     queryset = Customer.objects.all()  # It gets all customers as a JSON list object

@@ -1,67 +1,45 @@
-import React, { useState, useEffect } from 'react';
-import './App.css';
+import React, { useState, useEffect } from "react";
+import { fetchMenuItems, fetchCustomers, fetchOrders, createOrder } from "./api"; 
+import "./App.css";
 
-// image file imports
-import tacoImage from './assets/taco.jpg';
-import guacamoleImage from './assets/nachos.jpg';
-import burritoImage from './assets/burrito.jpg';
-import enchiladasImage from './assets/enchiladas.jpg';
-import quesadillaImage from './assets/quesadilla.jpg';
-import fajitasImage from './assets/fajitas.jpg';
-import chilaquilesImage from './assets/chilaquiles.jpg';
-import carnitasImage from './assets/carnitas.jpg';
-import molePoblanoImage from './assets/mole-poblano.jpg';
-import tamaleImage from './assets/tamale.jpg';
-import churrosImage from './assets/churros.jpg';
-import flanImage from './assets/flan.jpg';
+
 
 function App() {
   const [role, setRole] = useState(0);
   const [cart, setCart] = useState({});
+  const [menuItems, setMenuItems] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [selectedCustomer, setSelectedCustomer] = useState("");
 
   const roles = ["Customer", "Waiter", "Kitchen"];
 
-  const menuItems = [
-    { category: "Starter", name: "Tacos", image: tacoImage, price: "9.99", allergies: ["Gluten", "Dairy"] },
-    { category: "Starter", name: "Nachos", image: guacamoleImage, price: "6.50", allergies: ["Gluten", "Dairy"] },
-    { category: "Main", name: "Burrito", image: burritoImage, price: "12.99", allergies: ["Gluten", "Dairy"] },
-    { category: "Main", name: "Enchiladas", image: enchiladasImage, price: "14.99", allergies: ["Gluten", "Dairy"] },
-    { category: "Main", name: "Quesadilla", image: quesadillaImage, price: "11.50", allergies: ["Gluten", "Dairy"] },
-    { category: "Main", name: "Fajitas", image: fajitasImage, price: "16.00", allergies: ["Gluten", "Dairy"] },
-    { category: "Main", name: "Chilaquiles", image: chilaquilesImage, price: "13.50", allergies: ["Gluten", "Dairy"] },
-    { category: "Main", name: "Carnitas", image: carnitasImage, price: "15.00", allergies: ["Gluten", "Dairy"] },
-    { category: "Main", name: "Mole Poblano", image: molePoblanoImage, price: "18.00", allergies: ["Gluten", "Dairy"] },
-    { category: "Main", name: "Tamale", image: tamaleImage, price: "10.99", allergies: ["Gluten", "Dairy"] },
-    { category: "Dessert", name: "Churros", image: churrosImage, price: "5.99", allergies: ["Gluten", "Dairy"] },
-    { category: "Dessert", name: "Flan", image: flanImage, price: "4.99", allergies: ["Gluten", "Dairy"] }
-  ];
+  // Fetch data from the backend
+  useEffect(() => {
+    const loadData = async () => {
+      const items = await fetchMenuItems();
+      setMenuItems(items || []); // Ensure non-empty array
+
+      const customersData = await fetchCustomers();
+      setCustomers(customersData || []);
+
+      const ordersData = await fetchOrders();
+      setOrders(ordersData || []);
+    };
+    loadData();
+  }, []);
 
   useEffect(() => {
-    if (role === 1) {
-      document.body.classList.add("waiter");
-      document.body.classList.remove("kitchen");
-    } else if (role === 2) {
-      document.body.classList.add("kitchen");
-      document.body.classList.remove("waiter");
-    } else {
-      document.body.classList.remove("waiter", "kitchen");
-    }
+    document.body.classList.remove("waiter", "kitchen");
+    if (role === 1) document.body.classList.add("waiter");
+    if (role === 2) document.body.classList.add("kitchen");
   }, [role]);
 
   const handleSliderChange = (event) => {
     setRole(Number(event.target.value));
   };
 
-  const getRoleTextColor = () => {
-    switch (role) {
-      case 1:
-        return "green-text";
-      case 2:
-        return "orange-text";
-      default:
-        return "";
-    }
-  };
+  const getRoleTextColor = () => (role === 1 ? "green-text" : role === 2 ? "orange-text" : "");
 
   const handleSelect = (itemName) => {
     setCart((prevCart) => ({ ...prevCart, [itemName]: 1 }));
@@ -72,38 +50,38 @@ function App() {
       const currentQuantity = prevCart[itemName] || 1;
       let newQuantity = type === "increase" ? currentQuantity + 1 : currentQuantity - 1;
 
-      // If the quantity is less than 1, we remove the item from the cart
       if (newQuantity < 1) {
         const updatedCart = { ...prevCart };
         delete updatedCart[itemName];
         return updatedCart;
       }
-
       return { ...prevCart, [itemName]: newQuantity };
     });
   };
 
-  const getOrderSummary = () => {
-    let totalPrice = 0;
-    return Object.keys(cart).map((itemName) => {
-      const item = menuItems.find((menuItem) => menuItem.name === itemName);
-      if (item) {
-        const itemTotal = parseFloat(item.price) * cart[itemName];
-        totalPrice += itemTotal;
-        return (
-          <div key={itemName} className="order-summary-item">
-            <span>{itemName} x{cart[itemName]}: </span>
-            <span>£{(itemTotal).toFixed(2)}</span>
-          </div>
-        );
-      }
-      return null;
-    }).concat(
-      <div key="total" className="order-summary-total">
-        <span>Total: </span>
-        <span>£{totalPrice.toFixed(2)}</span>
-      </div>
-    );
+  const handlePlaceOrder = async () => {
+    if (!selectedCustomer) {
+      alert("Please select a customer before placing an order.");
+      return;
+    }
+
+    const orderData = {
+      customer: selectedCustomer,
+      status: "pending",
+      total_price: Object.keys(cart).reduce((sum, itemName) => {
+        const item = menuItems.find((menuItem) => menuItem.name === itemName);
+        return sum + (parseFloat(item.price) * cart[itemName]);
+      }, 0),
+    };
+
+    const orderResponse = await createOrder(orderData);
+    if (orderResponse) {
+      alert("Order placed successfully!");
+      setCart({});
+      setOrders([...orders, orderResponse]); 
+    } else {
+      alert("Failed to place order.");
+    }
   };
 
   return (
@@ -134,145 +112,80 @@ function App() {
         </div>
       </div>
 
-      <div className="menu-container">
-        {role === 0 && (
-          <div className="menu">
-            <h3>Menu:</h3>
+      {role === 0 && (
+        <div className="menu-container">
+          <h3>Menu:</h3>
+          <div className="menu-grid">
+            {menuItems.length > 0 ? menuItems.map((item, index) => (
+              <div className="menu-item" key={index}>
+                <img 
+                 src={item.image} 
+                  alt={item.name} 
+                  className="menu-item-image" 
+                  onError={(e) => e.target.src = "/fallback-image.jpg"} 
+                />
+                <div className="menu-item-details">
+                  <h4>{item.name}</h4>
+                  <p className="price">£{item.price}</p>
+                  <p><strong>Allergies:</strong> {item.allergies.join(", ")}</p>
 
-            {/* Starters Section */}
-            <div className="menu-category">
-              <h4>Starters</h4>
-              <div className="menu-grid">
-                {menuItems.filter(item => item.category === "Starter").map((item, index) => (
-                  <div className="menu-item" key={index}>
-                    <img src={item.image} alt={item.name} className="menu-item-image" />
-                    <div className="menu-item-details">
-                      <h4>{item.name}</h4>
-                      <p className="price">£{item.price}</p>
-                      <p><strong>Potential Allergies:</strong></p>
-                      <ul>
-                        {item.allergies.map((allergy, idx) => (
-                          <li key={idx}>{allergy}</li>
-                        ))}
-                      </ul>
-
-                      {/* Display counter if selected */}
-                      {cart[item.name] ? (
-                        <div className="counter">
-                          <button
-                            onClick={() => handleQuantityChange(item.name, "decrease")}
-                            className="counter-btn"
-                          >-</button>
-                          <span>{cart[item.name]}</span>
-                          <button
-                            onClick={() => handleQuantityChange(item.name, "increase")}
-                            className="counter-btn"
-                          >+</button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleSelect(item.name)}
-                          className="select-button"
-                        >Select</button>
-                      )}
+                  {cart[item.name] ? (
+                    <div className="counter">
+                      <button onClick={() => handleQuantityChange(item.name, "decrease")} className="counter-btn">-</button>
+                      <span>{cart[item.name]}</span>
+                      <button onClick={() => handleQuantityChange(item.name, "increase")} className="counter-btn">+</button>
                     </div>
-                  </div>
-                ))}
+                  ) : (
+                    <button onClick={() => handleSelect(item.name)} className="select-button">Select</button>
+                  )}
+                </div>
               </div>
-            </div>
-
-            {/* Mains Section */}
-            <div className="menu-category">
-              <h4>Mains</h4>
-              <div className="menu-grid">
-                {menuItems.filter(item => item.category === "Main").map((item, index) => (
-                  <div className="menu-item" key={index}>
-                    <img src={item.image} alt={item.name} className="menu-item-image" />
-                    <div className="menu-item-details">
-                      <h4>{item.name}</h4>
-                      <p className="price">£{item.price}</p>
-                      <p><strong>Potential Allergies:</strong></p>
-                      <ul>
-                        {item.allergies.map((allergy, idx) => (
-                          <li key={idx}>{allergy}</li>
-                        ))}
-                      </ul>
-
-                      {/* Display counter if selected */}
-                      {cart[item.name] ? (
-                        <div className="counter">
-                          <button
-                            onClick={() => handleQuantityChange(item.name, "decrease")}
-                            className="counter-btn"
-                          >-</button>
-                          <span>{cart[item.name]}</span>
-                          <button
-                            onClick={() => handleQuantityChange(item.name, "increase")}
-                            className="counter-btn"
-                          >+</button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleSelect(item.name)}
-                          className="select-button"
-                        >Select</button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Desserts Section */}
-            <div className="menu-category">
-              <h4>Desserts</h4>
-              <div className="menu-grid">
-                {menuItems.filter(item => item.category === "Dessert").map((item, index) => (
-                  <div className="menu-item" key={index}>
-                    <img src={item.image} alt={item.name} className="menu-item-image" />
-                    <div className="menu-item-details">
-                      <h4>{item.name}</h4>
-                      <p className="price">£{item.price}</p>
-                      <p><strong>Potential Allergies:</strong></p>
-                      <ul>
-                        {item.allergies.map((allergy, idx) => (
-                          <li key={idx}>{allergy}</li>
-                        ))}
-                      </ul>
-
-                      {/* Display counter if selected */}
-                      {cart[item.name] ? (
-                        <div className="counter">
-                          <button
-                            onClick={() => handleQuantityChange(item.name, "decrease")}
-                            className="counter-btn"
-                          >-</button>
-                          <span>{cart[item.name]}</span>
-                          <button
-                            onClick={() => handleQuantityChange(item.name, "increase")}
-                            className="counter-btn"
-                          >+</button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleSelect(item.name)}
-                          className="select-button"
-                        >Select</button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Order Summary */}
-            <div className="order-summary">
-              <h4>Order Summary</h4>
-              {getOrderSummary()}
-            </div>
+            )) : <p>Loading menu...</p>}
           </div>
-        )}
-      </div>
+
+          <div className="order-summary">
+            <h4>Order Summary</h4>
+            <label>Select Customer:</label>
+            <select onChange={(e) => setSelectedCustomer(e.target.value)}>
+              <option value="">-- Select Customer --</option>
+              {customers.map((customer) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.first_name} {customer.last_name}
+                </option>
+              ))}
+            </select>
+
+            {Object.keys(cart).length > 0 ? (
+              <>
+                {Object.keys(cart).map((itemName) => {
+                  const item = menuItems.find((menuItem) => menuItem.name === itemName);
+                  return (
+                    <div key={itemName} className="order-summary-item">
+                      <span>{itemName} x{cart[itemName]}</span>
+                      <span>£{(parseFloat(item.price) * cart[itemName]).toFixed(2)}</span>
+                    </div>
+                  );
+                })}
+                <button onClick={handlePlaceOrder} className="order-button">Place Order</button>
+              </>
+            ) : (
+              <p>No items selected</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {role === 1 && (
+        <div className="order-list">
+          <h3>Orders for Waiters:</h3>
+          {orders.length > 0 ? orders.map((order, index) => (
+            <div key={index} className="order-summary-item">
+              <span>Order #{order.id} - £{order.total_price.toFixed(2)}</span>
+              <span>Status: {order.status}</span>
+            </div>
+          )) : <p>No orders available.</p>}
+        </div>
+      )}
     </div>
   );
 }
