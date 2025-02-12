@@ -94,7 +94,6 @@ function App() {
 
               {role === 0 && (
                 <div className="menu-container">
-                  <h3 className="menu-heading">Menu</h3> {/* Added heading for the menu */}
                   <div className="menu-grid">
                     {menuItems.length > 0
                       ? menuItems.map((item, index) => (
