@@ -77,15 +77,17 @@ body {
   transition: background-color 0.3s ease;
 }
 
+
 .slider::-moz-range-thumb {
   width: 30px;
   height: 30px;
-  background-image: url('./assets/2.png');
+  background-image: url('./assets/slider.png');
   background-size: cover;
   border: none;
   border-radius: 50%;
   cursor: pointer;
 }
+
 
 .slider-labels {
   display: flex;
