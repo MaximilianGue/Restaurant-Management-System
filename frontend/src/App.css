@@ -335,3 +335,22 @@ body.kitchen {
   grid-template-columns: repeat(2, 1fr); /* Two columns for menu items */
   gap: 20px;
 }
+/* Staff Login Button */
+.staff-login {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: #4CAF50; /* Green color */
+  color: white;
+  font-size: 1.1em;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.staff-login:hover {
+  background-color: #45a049; /* Darker green on hover */
+}
+
