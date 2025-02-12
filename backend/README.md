@@ -2,11 +2,9 @@
 
 Automatical setup using .sh files
 --------------------------------
-mac/linux:
-source setup_ml.sh
+mac/linux/windows:
+$ source setup.sh
 
-windows:
-source setup_w.sh
 
 
 In the following, you can see how to manually do it.
