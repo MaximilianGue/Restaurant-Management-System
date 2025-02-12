@@ -84,6 +84,14 @@ function App() {
     }
   };
 
+  const cancelTopOrder = () => {
+
+  };
+
+  const progressTopOrder = () => {
+
+  };
+
   return (
     <div className="container">
       <h1 className="restaurant-title">Oaxaca</h1>
@@ -184,7 +192,8 @@ function App() {
               <span>Status: {order.status}</span>
             </div>
           )) : <p>No orders available.</p>}
-        <button onclick="cancelOrder()">Cancel Order</button>
+        <button onClick={() => cancelTopOrder()} className="waiter-order-btn">Cancel Top Order</button>
+        <button onClick={() => progressTopOrder()} className="waiter-order-btn">Progress Top Order</button>
         </div>
       )}
     </div>
