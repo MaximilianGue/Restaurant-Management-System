@@ -151,6 +151,7 @@ span {
   grid-template-columns: repeat(2, 1fr);  /* 2 columns */
   gap: 20px;
   margin-bottom: 40px;
+  justify-items: center;  /* Center menu items within the grid */
 }
 
 /* Menu item styling */
@@ -280,6 +281,7 @@ body.kitchen {
 .orange-text {
   color: #FF5722;  /* Orange color for Kitchen */
 }
+
 /* Menu Container and Layout */
 .menu-container {
   display: flex; /* Use flexbox for layout */
@@ -287,6 +289,7 @@ body.kitchen {
   justify-content: flex-start; /* Align items to the left */
   gap: 20px; /* Add space between menu items and the order summary */
   width: 100%;
+  text-align: center; /* Center text inside the menu-container */
 }
 
 /* Order Summary Styling */
@@ -334,7 +337,9 @@ body.kitchen {
   display: grid;
   grid-template-columns: repeat(2, 1fr); /* Two columns for menu items */
   gap: 20px;
+  justify-items: center; /* Center menu items within the grid */
 }
+
 /* Staff Login Button */
 .staff-login {
   position: absolute;
@@ -353,4 +358,3 @@ body.kitchen {
 .staff-login:hover {
   background-color: #45a049; /* Darker green on hover */
 }
-

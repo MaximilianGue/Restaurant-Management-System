@@ -1,14 +1,14 @@
 .staff-login-container {
     text-align: center;
     margin-top: 50px;
-  }
-  
-  h2 {
+}
+
+h2 {
     font-size: 24px;
     margin-bottom: 20px;
-  }
-  
-  .staff-button {
+}
+
+.staff-button {
     display: block;
     width: 200px;
     padding: 12px;
@@ -18,39 +18,52 @@
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.3s ease, transform 0.2s;
-  }
-  
-  .waiter-button {
-    background-color: #ff9800;
+}
+
+/* Creamy Blue for Return Button */
+.return-button {
+    background-color: #a0c4ff; /* Creamy blue */
     color: white;
-  }
-  
-  .kitchen-button {
-    background-color: #4caf50;
-    color: white;
-  }
-  
-  .staff-button:hover {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
-  .return-button {
-    display: block;
-    width: 200px;
-    padding: 12px;
-    margin: 15px auto;
-    font-size: 16px;
     border: none;
-    border-radius: 8px;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
     cursor: pointer;
-    background-color: #d32f2f;
-    color: white;
-    transition: background 0.3s ease, transform 0.2s;
-  }
-  
-  .return-button:hover {
-    background-color: #b71c1c;
+}
+
+.return-button:hover {
+    background-color: #88aaff; /* Darker shade of blue on hover */
     transform: scale(1.05);
-  }
-  
-  
+}
+
+/* Cream Green for Waiter Button */
+.waiter-button {
+    background-color: #a8e6a1; /* Creamy green */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.waiter-button:hover {
+    background-color: #8bcf88; /* Darker shade of green on hover */
+    transform: scale(1.05);
+}
+
+/* Creamy Orange for Kitchen Button */
+.kitchen-button {
+    background-color: #f8c08f; /* Creamy orange */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.kitchen-button:hover {
+    background-color: #e8a06b; /* Darker shade of orange on hover */
+    transform: scale(1.05);
+}

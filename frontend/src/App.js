@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { fetchMenuItems, fetchCustomers, fetchOrders, createOrder } from "./api"; 
 import StaffLogin from "./StaffLogin"; // Import StaffLogin component
 import "./App.css";
@@ -32,6 +32,49 @@ function App() {
     if (role === 2) document.body.classList.add("kitchen");
   }, [role]);
 
+  const handleSelect = (itemName) => {
+    setCart((prevCart) => ({ ...prevCart, [itemName]: 1 }));
+  };
+
+  const handleQuantityChange = (itemName, type) => {
+    setCart((prevCart) => {
+      const currentQuantity = prevCart[itemName] || 1;
+      let newQuantity = type === "increase" ? currentQuantity + 1 : currentQuantity - 1;
+
+      if (newQuantity < 1) {
+        const updatedCart = { ...prevCart };
+        delete updatedCart[itemName];
+        return updatedCart;
+      }
+      return { ...prevCart, [itemName]: newQuantity };
+    });
+  };
+
+  const handlePlaceOrder = async () => {
+    if (!selectedCustomer) {
+      alert("Please select a customer before placing an order.");
+      return;
+    }
+
+    const orderData = {
+      customer: selectedCustomer,
+      status: "pending",
+      total_price: Object.keys(cart).reduce((sum, itemName) => {
+        const item = menuItems.find((menuItem) => menuItem.name === itemName);
+        return sum + (parseFloat(item.price) * cart[itemName]);
+      }, 0),
+    };
+
+    const orderResponse = await createOrder(orderData);
+    if (orderResponse) {
+      alert("Order placed successfully!");
+      setCart({});
+      setOrders([...orders, orderResponse]); 
+    } else {
+      alert("Failed to place order.");
+    }
+  };
+
   return (
     <Router>
       <div className="container">
@@ -51,23 +94,82 @@ function App() {
 
               {role === 0 && (
                 <div className="menu-container">
-                  <h3>Menu:</h3>
+                  <h3 className="menu-heading">Menu</h3> {/* Added heading for the menu */}
                   <div className="menu-grid">
-                    {menuItems.length > 0 ? menuItems.map((item, index) => (
-                      <div className="menu-item" key={index}>
-                        <img 
-                          src={item.image} 
-                          alt={item.name} 
-                          className="menu-item-image" 
-                          onError={(e) => e.target.src = "/fallback-image.jpg"} 
-                        />
-                        <div className="menu-item-details">
-                          <h4>{item.name}</h4>
-                          <p className="price">£{item.price}</p>
-                          <p><strong>Allergies:</strong> {item.allergies.join(", ")}</p>
-                        </div>
-                      </div>
-                    )) : <p>Loading menu...</p>}
+                    {menuItems.length > 0
+                      ? menuItems.map((item, index) => (
+                          <div className="menu-item" key={index}>
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="menu-item-image"
+                              onError={(e) => e.target.src = "/fallback-image.jpg"}
+                            />
+                            <div className="menu-item-details">
+                              <h4>{item.name}</h4>
+                              <p className="price">£{item.price}</p>
+                              <p><strong>Allergies:</strong> {item.allergies.join(", ")}</p>
+
+                              {cart[item.name] ? (
+                                <div className="counter">
+                                  <button
+                                    onClick={() => handleQuantityChange(item.name, "decrease")}
+                                    className="counter-btn"
+                                  >
+                                    -
+                                  </button>
+                                  <span>{cart[item.name]}</span>
+                                  <button
+                                    onClick={() => handleQuantityChange(item.name, "increase")}
+                                    className="counter-btn"
+                                  >
+                                    +
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => handleSelect(item.name)}
+                                  className="select-button"
+                                >
+                                  Select
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      : <p>Loading menu...</p>}
+                  </div>
+
+                  <div className="order-summary">
+                    <h4>Order Summary</h4>
+                    <label>Select Customer:</label>
+                    <select onChange={(e) => setSelectedCustomer(e.target.value)}>
+                      <option value="">-- Select Customer --</option>
+                      {customers.map((customer) => (
+                        <option key={customer.id} value={customer.id}>
+                          {customer.first_name} {customer.last_name}
+                        </option>
+                      ))}
+                    </select>
+
+                    {Object.keys(cart).length > 0 ? (
+                      <>
+                        {Object.keys(cart).map((itemName) => {
+                          const item = menuItems.find((menuItem) => menuItem.name === itemName);
+                          return (
+                            <div key={itemName} className="order-summary-item">
+                              <span>{itemName} x{cart[itemName]}</span>
+                              <span>£{(parseFloat(item.price) * cart[itemName]).toFixed(2)}</span>
+                            </div>
+                          );
+                        })}
+                        <button onClick={handlePlaceOrder} className="order-button">
+                          Place Order
+                        </button>
+                      </>
+                    ) : (
+                      <p>No items selected</p>
+                    )}
                   </div>
                 </div>
               )}
