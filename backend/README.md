@@ -1,5 +1,14 @@
 # Backend Setup Guide
 
+Automatical setup using .sh files
+--------------------------------
+mac/linux/windows:
+$ source setup.sh
+
+
+
+In the following, you can see how to manually do it.
+
 ## Setting Up the Virtual Environment
 
 1. Navigate to the backend folder:
