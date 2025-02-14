@@ -77,15 +77,17 @@ body {
   transition: background-color 0.3s ease;
 }
 
+
 .slider::-moz-range-thumb {
   width: 30px;
   height: 30px;
-  background-image: url('./assets/2.png');
+  background-image: url('./assets/slider.png');
   background-size: cover;
   border: none;
   border-radius: 50%;
   cursor: pointer;
 }
+
 
 .slider-labels {
   display: flex;
@@ -253,6 +255,23 @@ span {
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
+}
+
+.waiter-order-btn {
+  background-color: #ff7f3f;
+  color: white;
+  border: none;
+  font-size: 18px;
+  text-align: center;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-left: 20px;  /* Space between the button and image */
+}
+
+.waiter-order-btn:hover {
+  background-color: #9e670e; /* Darker orange on hover */
 }
 
 .counter-btn:hover {
