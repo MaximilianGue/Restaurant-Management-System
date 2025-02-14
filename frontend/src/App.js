@@ -4,6 +4,9 @@ import { fetchMenuItems, fetchCustomers, fetchOrders, createOrder } from "./api"
 import StaffLogin from "./StaffLogin"; // Import StaffLogin component
 import "./App.css";
 
+// modular: app.js - default customer view, waiter.js, kitchen.js
+
+
 function App() {
   const [role, setRole] = useState(0); // Default role: Customer
   const [cart, setCart] = useState({});
@@ -94,6 +97,7 @@ function App() {
 
               {role === 0 && (
                 <div className="menu-container">
+                  <h3 className="menu-heading">Menu</h3> {/* Added heading for the menu */}
                   <div className="menu-grid">
                     {menuItems.length > 0
                       ? menuItems.map((item, index) => (
