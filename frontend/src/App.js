@@ -84,6 +84,14 @@ function App() {
     }
   };
 
+  const cancelTopOrder = () => {
+
+  };
+
+  const progressTopOrder = () => {
+
+  };
+
   return (
     <div className="container">
       <h1 className="restaurant-title">Oaxaca</h1>
@@ -112,7 +120,7 @@ function App() {
         </div>
       </div>
 
-      {role === 0 && (
+      {role === 0 && ( /* Customer Page Code */
         <div className="menu-container">
           <h3>Menu:</h3>
           <div className="menu-grid">
@@ -175,15 +183,17 @@ function App() {
         </div>
       )}
 
-      {role === 1 && (
+      {role === 1 && ( /* Waiter Page Code */
         <div className="order-list">
           <h3>Orders for Waiters:</h3>
-          {orders.length > 0 ? orders.map((order, index) => (
+          {orders.length > 0 ? orders.map((order, index) => ( /* Checks if there is any order data, displaying it if so. */
             <div key={index} className="order-summary-item">
               <span>Order #{order.id} - £{order.total_price.toFixed(2)}</span>
               <span>Status: {order.status}</span>
             </div>
           )) : <p>No orders available.</p>}
+        <button onClick={() => cancelTopOrder()} className="waiter-order-btn">Cancel Top Order</button>
+        <button onClick={() => progressTopOrder()} className="waiter-order-btn">Progress Top Order</button>
         </div>
       )}
     </div>
