@@ -1,27 +1,36 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react"; 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { fetchMenuItems, fetchCustomers, fetchOrders, createOrder } from "./api"; 
+import { fetchMenuItems, fetchOrders, createOrder } from "./api"; 
 import StaffLogin from "./StaffLogin"; // Import StaffLogin component
 import "./App.css";
 
-// modular: app.js - default customer view, waiter.js, kitchen.js
-
+// Modular: app.js - default customer view, waiter.js, kitchen.js
 
 function App() {
   const [role, setRole] = useState(0); // Default role: Customer
   const [cart, setCart] = useState({});
   const [menuItems, setMenuItems] = useState([]);
-  const [customers, setCustomers] = useState([]);
+  const [tables, setTables] = useState([]); // Fetching tables instead of customers
   const [orders, setOrders] = useState([]);
-  const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [selectedTable, setSelectedTable] = useState(""); // Replace customer selection with table selection
+  const [loadingTables, setLoadingTables] = useState(true); // Track table loading status
 
   useEffect(() => {
     const loadData = async () => {
       const items = await fetchMenuItems();
       setMenuItems(items || []);
       
-      const customersData = await fetchCustomers();
-      setCustomers(customersData || []);
+      // Fetch tables instead of customers
+      try {
+        const response = await fetch("http://127.0.0.1:8000/cafeApi/tables/");
+        const tableData = await response.json();
+        setTables(tableData || []);
+      } catch (error) {
+        console.error("Error fetching tables:", error);
+        setTables([]); // Ensure tables don't crash app if API fails
+      } finally {
+        setLoadingTables(false); // Stop loading indicator
+      }
 
       const ordersData = await fetchOrders();
       setOrders(ordersData || []);
@@ -54,20 +63,26 @@ function App() {
   };
 
   const handlePlaceOrder = async () => {
-    if (!selectedCustomer) {
-      alert("Please select a customer before placing an order.");
+    if (!selectedTable) {
+      alert("Please select a table before placing an order.");
       return;
     }
 
     const orderData = {
-      customer: selectedCustomer,
+      table_id: selectedTable,
       status: "pending",
-      total_price: Object.keys(cart).reduce((sum, itemName) => {
+      total_price: parseFloat(
+        Object.keys(cart).reduce((sum, itemName) => {
+          const item = menuItems.find((menuItem) => menuItem.name === itemName);
+          return sum + (parseFloat(item.price) * cart[itemName]);
+        }, 0).toFixed(2)  
+      ),
+      item_ids: Object.keys(cart).map(itemName => {
         const item = menuItems.find((menuItem) => menuItem.name === itemName);
-        return sum + (parseFloat(item.price) * cart[itemName]);
-      }, 0),
+        return item.id;
+      })
     };
-
+    
     const orderResponse = await createOrder(orderData);
     if (orderResponse) {
       alert("Order placed successfully!");
@@ -97,7 +112,7 @@ function App() {
 
               {role === 0 && (
                 <div className="menu-container">
-                  <h3 className="menu-heading">Menu</h3> {/* Added heading for the menu */}
+                  <h3 className="menu-heading">Menu</h3>
                   <div className="menu-grid">
                     {menuItems.length > 0
                       ? menuItems.map((item, index) => (
@@ -145,15 +160,24 @@ function App() {
 
                   <div className="order-summary">
                     <h4>Order Summary</h4>
-                    <label>Select Customer:</label>
-                    <select onChange={(e) => setSelectedCustomer(e.target.value)}>
-                      <option value="">-- Select Customer --</option>
-                      {customers.map((customer) => (
-                        <option key={customer.id} value={customer.id}>
-                          {customer.first_name} {customer.last_name}
-                        </option>
-                      ))}
+                    <label>Select Table:</label>
+                    <select onChange={(e) => setSelectedTable(e.target.value)} disabled={tables.length === 0}>
+                      <option value="">-- Select Table --</option>
+                      {tables.length > 0 ? (
+                        tables.map((table) => (
+                          <option key={table.id} value={table.id}>
+                            Table {table.number} (Waiter: {table.waiter_name || "None"})
+                          </option>
+                        ))
+                      ) : (
+                        <option disabled>No tables available</option>
+                      )}
                     </select>
+
+                    {loadingTables && <p>Loading tables...</p>} 
+                    {!loadingTables && tables.length === 0 && (
+                      <p className="error-message"> No tables available! Please check with staff.</p>
+                    )}
 
                     {Object.keys(cart).length > 0 ? (
                       <>
@@ -166,7 +190,7 @@ function App() {
                             </div>
                           );
                         })}
-                        <button onClick={handlePlaceOrder} className="order-button">
+                        <button onClick={handlePlaceOrder} className="order-button" disabled={tables.length === 0}>
                           Place Order
                         </button>
                       </>
