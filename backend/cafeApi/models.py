@@ -2,35 +2,51 @@
 # For example the customer Model or Order model
 from django.db import models
 
+STATUS_CHOICES = [
+    ('pending', 'Pending'),
+    ('completed', 'Completed'),
+    ('canceled', 'Canceled'),
+]
+
 class MenuItem(models.Model):
     name = models.CharField(max_length=100)
-    price = models.FloatField()
-    image = models.URLField(blank=True, null=True)
-    allergies = models.JSONField(default=list, blank=True)  
+    price = models.DecimalField(max_digits=6,decimal_places=2)
+    image = models.ImageField(upload_to="menu_images/", blank=True, null=True)
+    allergies = models.JSONField(default=list, blank=True)
 
     def __str__(self):
-        return f"Name: {self.name} | Price: {self.price} | Allergies: {', '.join(self.allergies) if self.allergies else 'None'}"
+        return f"Name: {self.name} | Price: £{self.price} | Allergies: {', '.join(self.allergies) if self.allergies else 'None'}"
+
+
+class Table(models.Model):
+    number = models.IntegerField(unique=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    waiter_name = models.CharField(max_length=100, blank=True, null=True)
+    estimated_time = models.IntegerField(blank=True, null=True)
+    capacity = models.IntegerField(default=4)
+
+    def __str__(self):
+        return f"Table {self.number} | Status: {self.status} | Capacity: {self.capacity}"
+
 
 class Customer(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=15, blank=True, null=True)
+    table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name="customers") 
 
     def __str__(self):
-        return f"Name: {self.first_name} {self.last_name} | Email: {self.email} | Phone: {self.phone if self.phone else 'None'}"
+        return f"{self.first_name} {self.last_name} | Email: {self.email} | Phone: {self.phone or 'None'}"
+
 
 class Order(models.Model):
-    STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('completed', 'Completed'),
-        ('canceled', 'Canceled'),
-    ]
-
-    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='orders')
+    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
+    table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name="orders")
     order_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    items = models.ManyToManyField(MenuItem, related_name="orders")
 
     def __str__(self):
-        return f"Order ID: {self.id} | Customer: {self.customer.first_name} {self.customer.last_name} | Status: {self.status} | Total Price: ${self.total_price}"
+        return f"Order {self.id} | Customer: {self.customer.first_name} {self.customer.last_name} | Status: {self.status} | Total: £{self.total_price}"
