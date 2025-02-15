@@ -1,0 +1,401 @@
+/* General body styling */
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  height: 100vh;
+  background-color: #e0f7fa; /* Soft light blue background */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  transition: background-color 0.3s ease; /* Smooth background transition */
+}
+
+/* Container for the app */
+.container {
+  display: flex;
+  flex-direction: column; /* Stack elements vertically */
+  justify-content: flex-start;
+  align-items: center; /* Center everything horizontally */
+  width: 100%;
+  padding: 20px;
+}
+
+/* Styling for restaurant name - Oaxaca */
+.restaurant-title {
+  font-family: 'Merriweather', serif; /* Posh font */
+  font-size: 3.5em;  /* Larger size for Oaxaca */
+  font-weight: 700;
+  color: #000000; /* Black color for the restaurant title */
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 40px;
+}
+
+/* Role selector styling */
+.role-selector {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 320px;
+  text-align: center;
+  margin-bottom: 20px; /* Adds space below the role selector */
+}
+
+.role-label {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.slider-container {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.slider {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(to right, #3b82f6, #10b981, #f59e0b);
+  outline: none;
+  transition: background-color 0.3s ease;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 30px;
+  height: 30px;
+  background-image: url('./assets/slider.png');
+  background-size: cover;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+
+.slider::-moz-range-thumb {
+  width: 30px;
+  height: 30px;
+  background-image: url('./assets/slider.png');
+  background-size: cover;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 0.9em;
+  color: #666;
+}
+
+/* Specific colors for each role */
+.slider-labels span:nth-child(1) { /* Customer (index 0) */
+  color: #3b82f6; /* Blue for Customer */
+}
+
+.slider-labels span:nth-child(2) { /* Waiter (index 1) */
+  color: #10b981; /* Green for Waiter */
+}
+
+.slider-labels span:nth-child(3) { /* Kitchen (index 2) */
+  color: #f59e0b; /* Orange for Kitchen */
+}
+
+.selected-role {
+  margin-top: 20px;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #333;
+}
+
+h3 {
+  margin: 0;
+}
+
+span {
+  color: #3b82f6;
+}
+
+/* Styling for the menu */
+.menu {
+  margin-top: 20px;
+  text-align: center; /* Center the menu section */
+  font-size: 1.5em; /* Larger size for menu */
+  font-family: 'Merriweather', serif; /* Posh font */
+  width: 100%; /* Full width of the container */
+  color: #000000; /* Black color for Menu section */
+}
+
+/* Menu categories */
+.menu-category {
+  margin-bottom: 40px;
+}
+
+.menu-category h4 {
+  font-size: 1.6em;
+  color: #000000; /* Black color for section titles */
+  margin-bottom: 20px;
+  text-align: left;
+  font-family: 'Merriweather', serif;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);  /* 2 columns */
+  gap: 20px;
+  margin-bottom: 40px;
+  justify-items: center;  /* Center menu items within the grid */
+}
+
+/* Menu item styling */
+.menu-item {
+  display: flex;  /* Display items side by side */
+  align-items: center;  /* Vertically center the content */
+  justify-content: flex-start;  /* Align the content to the left */
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.menu-item:hover {
+  transform: scale(1.02);  /* Slightly zoom effect on hover */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);  /* Enhanced shadow */
+}
+
+.menu-item-image {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-right: 20px;  /* Space between image and details */
+}
+
+.menu-item-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item-details h4 {
+  font-size: 1.4em;
+  color: #333;
+  margin: 0;
+}
+
+.menu-item-details .price {
+  font-size: 1.2em;
+  color: #e74c3c; /* Red color for prices */
+  margin: 10px 0;
+}
+
+.menu-item-details ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.menu-item-details ul li {
+  font-size: 1em;
+  color: #666;
+}
+
+.menu-item-details ul li::before {
+  content: "•";
+  color: #f59e0b; /* Orange bullet point */
+  padding-right: 5px;
+}
+
+.menu-item-details p {
+  margin-top: 10px;
+}
+
+/* Select button styling */
+.select-button {
+  background-color: #fbe4b0; /* Creamy orange */
+  border: none;
+  border-radius: 5px;
+  color: #fff;
+  font-size: 1.1em;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-left: 20px;  /* Space between the button and image */
+}
+
+.select-button:hover {
+  background-color: #f39c12; /* Darker orange on hover */
+}
+
+/* Counter (Quantity adjuster) styling */
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.counter-btn {
+  width: 40px;      /* Width of the button */
+  height: 40px;     /* Height of the button */
+  background-color: #ff7f3f; /* Orange color */
+  color: white;
+  border: none;
+  font-size: 24px;  /* Font size for "+" and "-" */
+  text-align: center;
+  line-height: 40px; /* Vertically center the text */
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.waiter-order-btn {
+  background-color: #ff7f3f;
+  color: white;
+  border: none;
+  font-size: 18px;
+  text-align: center;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-left: 20px;  /* Space between the button and image */
+}
+
+.waiter-order-btn:hover {
+  background-color: #9e670e; /* Darker orange on hover */
+}
+
+.counter-btn:hover {
+  background-color: #ff5e1f; /* Darker orange when hovered */
+}
+
+.counter-btn:focus {
+  outline: none; /* Remove outline on focus */
+}
+
+/* Body background when Waiter role is selected */
+body.waiter {
+  background-color: #e5f8e0; /* Lighter, creamier green */
+}
+
+/* Body background when Kitchen role is selected */
+body.kitchen {
+  background-color:  #fbe4b0; /* Creamy orange */
+}
+
+/* Styles for role text colors */
+.green-text {
+  color: #4CAF50;  /* Green color for Waiter */
+}
+
+.orange-text {
+  color: #FF5722;  /* Orange color for Kitchen */
+}
+
+/* Menu Container and Layout */
+.menu-container {
+  display: flex; /* Use flexbox for layout */
+  flex-wrap: wrap; /* Allow wrapping if content overflows */
+  justify-content: center; /* Center the content */
+  gap: 20px; /* Add space between menu items and the order summary */
+  width: 100%;
+  text-align: center; /* Center text inside the menu-container */
+}
+
+/* Order Summary Styling */
+.order-summary {
+  background-color: #ffffff; /* White background for the order summary */
+  border-radius: 10px; /* Rounded corners */
+  padding: 20px; /* Padding inside the box */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Soft shadow */
+  width: 100%; /* Full width of the container */
+  flex-grow: 1; /* Allow the order summary to grow and take available space */
+  margin-top: 40px; /* Space above the order summary */
+  font-family: 'Arial', sans-serif;
+}
+
+/* Order Summary Title */
+.order-summary h4 {
+  font-size: 1.6em; /* Larger font size for the title */
+  color: #333; /* Dark color for the title */
+  margin-bottom: 20px; /* Space below the title */
+  text-align: center;
+}
+
+/* Order Summary Items */
+.order-summary-item {
+  display: flex; /* Align items side by side */
+  justify-content: space-between; /* Space between item name and price */
+  font-size: 1.1em; /* Slightly larger font */
+  margin-bottom: 10px; /* Space between items */
+}
+
+/* Total Price Styling */
+.order-summary-total {
+  display: flex; /* Align total price text and amount side by side */
+  justify-content: space-between; /* Space between total text and price */
+  font-size: 1.3em; /* Larger font for the total price */
+  font-weight: bold; /* Bold for total */
+  color: #e74c3c; /* Red color for the total amount */
+  margin-top: 20px; /* Space before the total */
+  border-top: 1px solid #ccc; /* Divider line between items and total */
+  padding-top: 10px; /* Padding at the top of the total */
+}
+
+/* Menu Grid Layout */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Two columns for menu items */
+  gap: 20px;
+  justify-items: center; /* Center menu items within the grid */
+}
+
+/* Staff Login Button (Waiter & Kitchen page) - Changed to Menu */
+.staff-login {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background-color: #4CAF50; /* Green color */
+  color: white;
+  font-size: 1.1em;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.staff-login:hover {
+  background-color: #45a049; /* Darker green on hover */
+}
+
+/* Menu button for Waiter and Kitchen pages */
+body.waiter .staff-login,
+body.kitchen .staff-login {
+  background-color: #f59e0b; /* Change to orange for Waiter/Kitchen */
+  font-size: 1.2em;
+  padding: 12px 24px;
+}
+
+body.waiter .staff-login:hover,
+body.kitchen .staff-login:hover {
+  background-color: #f39c12; /* Darker orange on hover */
+}
+
+/* Updated text for the button */
+body.waiter .staff-login,
+body.kitchen .staff-login {
+  content: "Menu"; /* Change text to just "Menu" */
+  font-size: 1.1em;
+  color: white;
+  text-align: center;
+}
