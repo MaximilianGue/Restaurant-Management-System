@@ -11,6 +11,8 @@ function App() {
   const [orders, setOrders] = useState([]);
   const [tableNumber, setTableNumber] = useState(""); 
 
+  const validTables = ["101", "102", "103", "104", "201"]; // ✅ Valid table numbers
+
   useEffect(() => {
     const loadData = async () => {
       const items = await fetchMenuItems();
@@ -45,15 +47,28 @@ function App() {
     });
   };
 
-  // Calculate the total price of the order
+  // Calculate total price
   const totalAmount = Object.keys(cart).reduce((sum, itemName) => {
     const item = menuItems.find((menuItem) => menuItem.name === itemName);
     return sum + (parseFloat(item?.price || 0) * cart[itemName]);
   }, 0).toFixed(2);
 
+  // Handle table number input (only allows 3 digits)
+  const handleTableNumberChange = (e) => {
+    const value = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+    if (value.length <= 3) {
+      setTableNumber(value);
+    }
+  };
+
   const handlePlaceOrder = async () => {
     if (!tableNumber.trim()) {
       alert("Please enter a table number before placing an order.");
+      return;
+    }
+
+    if (!validTables.includes(tableNumber)) {
+      alert("Invalid table number. This table number does not exist.");
       return;
     }
 
@@ -94,7 +109,6 @@ function App() {
 
               {role === 0 && (
                 <div className="menu-container">
-                  {/* Removed the "Menu" text here */}
                   <div className="menu-grid">
                     {menuItems.length > 0
                       ? menuItems.map((item, index) => (
@@ -147,9 +161,10 @@ function App() {
                     <input
                       type="text"
                       value={tableNumber}
-                      onChange={(e) => setTableNumber(e.target.value)}
+                      onChange={handleTableNumberChange}
                       placeholder="Enter table number"
                       className="table-input"
+                      maxLength="3"
                     />
 
                     {Object.keys(cart).length > 0 ? (
