@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { fetchMenuItems, fetchOrders, createOrder } from "./api"; 
 import StaffLogin from "./StaffLogin"; 
-import Waiter from "./waiter"; // Correct import path
+import Waiter from "./waiter"; // Waiter component
+import Kitchen from "./kitchen"; // Kitchen component
 import "./App.css";
 
 function App() {
@@ -146,7 +147,6 @@ function App() {
 
                   <div className="order-summary">
                     <h4>Order Summary</h4>
-                    
                     <label>Enter Table Number:</label>
                     <input
                       type="text"
@@ -184,6 +184,10 @@ function App() {
 
               {role === 1 && (
                 <Waiter orders={orders} />  
+              )}
+
+              {role === 2 && (
+                <Kitchen orders={orders} />  
               )}
 
             </>
