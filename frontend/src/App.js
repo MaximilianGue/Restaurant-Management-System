@@ -41,7 +41,6 @@ function App() {
     setCart((prevCart) => {
       const currentQuantity = prevCart[itemName] || 1;
       let newQuantity = type === "increase" ? currentQuantity + 1 : currentQuantity - 1;
-
       if (newQuantity < 1) {
         const updatedCart = { ...prevCart };
         delete updatedCart[itemName];
@@ -109,10 +108,7 @@ function App() {
 
           <Route path="/" element={
             <>
-              <button className="staff-login" onClick={() => window.location.href = "/staff-login"}>
-                Staff Login
-              </button>
-
+              <button className="staff-login" onClick={() => window.location.href = "/staff-login"}>Staff Login</button>
               {role === 0 && (
                 <div className="menu-container">
                   <div className="menu-grid">
@@ -140,11 +136,13 @@ function App() {
                                 <button onClick={() => handleSelect(item.name)} className="select-button">Select</button>
                               )}
                             </div>
-                          </div>
-                        ))
-                      : <p>Loading menu...</p>}
+                          ) : (
+                            <button onClick={() => handleSelect(item.name)} className="select-button">Select</button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
-
                   <div className="order-summary">
                     <h4>Order Summary</h4>
                     <label>Enter Table Number:</label>
@@ -175,8 +173,6 @@ function App() {
 
                         <button onClick={handlePlaceOrder} className="order-button">Place Order</button>
                       </>
-                    ) : (
-                      <p>No items selected</p>
                     )}
                   </div>
                 </div>
