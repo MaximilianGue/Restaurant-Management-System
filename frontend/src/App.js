@@ -10,8 +10,10 @@ function App() {
   const [menuItems, setMenuItems] = useState([]);
   const [orders, setOrders] = useState([]);
   const [tableNumber, setTableNumber] = useState(""); 
+  const [errorMessage, setErrorMessage] = useState(""); 
+  const [showPopup, setShowPopup] = useState(false);
 
-  const validTables = ["101", "102", "103", "104", "201"]; // ✅ Valid table numbers
+  const validTables = ["101", "102", "103", "104", "201"];
 
   useEffect(() => {
     const loadData = async () => {
@@ -47,15 +49,13 @@ function App() {
     });
   };
 
-  // Calculate total price
   const totalAmount = Object.keys(cart).reduce((sum, itemName) => {
     const item = menuItems.find((menuItem) => menuItem.name === itemName);
     return sum + (parseFloat(item?.price || 0) * cart[itemName]);
   }, 0).toFixed(2);
 
-  // Handle table number input (only allows 3 digits)
   const handleTableNumberChange = (e) => {
-    const value = e.target.value.replace(/\D/g, ""); // Remove non-numeric characters
+    const value = e.target.value.replace(/\D/g, ""); 
     if (value.length <= 3) {
       setTableNumber(value);
     }
@@ -63,12 +63,14 @@ function App() {
 
   const handlePlaceOrder = async () => {
     if (!tableNumber.trim()) {
-      alert("Please enter a table number before placing an order.");
+      setErrorMessage("Please enter a table number before placing an order.");
+      setShowPopup(true);
       return;
     }
 
     if (!validTables.includes(tableNumber)) {
-      alert("Invalid table number. This table number does not exist.");
+      setErrorMessage("Invalid table number. This table number does not exist.");
+      setShowPopup(true);
       return;
     }
 
@@ -78,18 +80,20 @@ function App() {
       total_price: parseFloat(totalAmount),
       item_ids: Object.keys(cart).map(itemName => {
         const item = menuItems.find((menuItem) => menuItem.name === itemName);
-        return item.id;
+        return item?.id;
       })
     };
 
     const orderResponse = await createOrder(orderData);
     if (orderResponse) {
-      alert("Order placed successfully!");
       setCart({});
       setOrders([...orders, orderResponse]);
-      setTableNumber(""); 
+      setTableNumber("");
+      setErrorMessage("Order placed successfully!");
+      setShowPopup(true);
     } else {
-      alert("Failed to place order.");
+      setErrorMessage("Failed to place order. Please try again.");
+      setShowPopup(true);
     }
   };
 
@@ -126,27 +130,12 @@ function App() {
 
                               {cart[item.name] ? (
                                 <div className="counter">
-                                  <button
-                                    onClick={() => handleQuantityChange(item.name, "decrease")}
-                                    className="counter-btn"
-                                  >
-                                    -
-                                  </button>
+                                  <button onClick={() => handleQuantityChange(item.name, "decrease")} className="counter-btn">-</button>
                                   <span>{cart[item.name]}</span>
-                                  <button
-                                    onClick={() => handleQuantityChange(item.name, "increase")}
-                                    className="counter-btn"
-                                  >
-                                    +
-                                  </button>
+                                  <button onClick={() => handleQuantityChange(item.name, "increase")} className="counter-btn">+</button>
                                 </div>
                               ) : (
-                                <button
-                                  onClick={() => handleSelect(item.name)}
-                                  className="select-button"
-                                >
-                                  Select
-                                </button>
+                                <button onClick={() => handleSelect(item.name)} className="select-button">Select</button>
                               )}
                             </div>
                           </div>
@@ -179,18 +168,11 @@ function App() {
                           );
                         })}
                         
-                        {/* Total Amount Display */}
                         <div className="order-total">
                           <strong>Total: £{totalAmount}</strong>
                         </div>
 
-                        <button 
-                          onClick={handlePlaceOrder} 
-                          className="order-button"
-                          disabled={!tableNumber.trim() || Object.keys(cart).length === 0}
-                        >
-                          Place Order
-                        </button>
+                        <button onClick={handlePlaceOrder} className="order-button">Place Order</button>
                       </>
                     ) : (
                       <p>No items selected</p>
@@ -204,7 +186,7 @@ function App() {
                   <h3>Orders for Waiters:</h3>
                   {orders.length > 0 ? orders.map((order, index) => (
                     <div key={index} className="order-summary-item">
-                      <span>Order #{order.id} - £{order.total_price.toFixed(2)}</span>
+                      <span>Order #{order.id} - £{parseFloat(order.total_price || 0).toFixed(2)}</span>
                       <span>Status: {order.status}</span>
                     </div>
                   )) : <p>No orders available.</p>}
@@ -213,6 +195,15 @@ function App() {
             </>
           } />
         </Routes>
+
+        {showPopup && (
+          <div className="custom-popup">
+            <div className="popup-content">
+              <p>{errorMessage}</p>
+              <button onClick={() => setShowPopup(false)}>OK</button>
+            </div>
+          </div>
+        )}
       </div>
     </Router>
   );
