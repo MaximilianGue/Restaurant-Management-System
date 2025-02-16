@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { fetchMenuItems, fetchOrders, createOrder } from "./api"; 
 import StaffLogin from "./StaffLogin"; 
+import Waiter from "./waiter"; // Correct import path
 import "./App.css";
 
 function App() {
@@ -182,16 +183,9 @@ function App() {
               )}
 
               {role === 1 && (
-                <div className="order-list">
-                  <h3>Orders for Waiters:</h3>
-                  {orders.length > 0 ? orders.map((order, index) => (
-                    <div key={index} className="order-summary-item">
-                      <span>Order #{order.id} - £{parseFloat(order.total_price || 0).toFixed(2)}</span>
-                      <span>Status: {order.status}</span>
-                    </div>
-                  )) : <p>No orders available.</p>}
-                </div>
+                <Waiter orders={orders} />  
               )}
+
             </>
           } />
         </Routes>
