@@ -339,6 +339,14 @@ body.kitchen {
 }
 
 /* Table Number Input */
+.table-input-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 20px; /* Add spacing below */
+}
+
 .table-input {
   width: 100%;
   padding: 12px;
@@ -347,6 +355,7 @@ body.kitchen {
   border-radius: 8px;
   text-align: center;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  max-width: 300px; /* Limit the width */
 }
 
 .table-input:focus {
@@ -411,6 +420,7 @@ body.kitchen {
   cursor: not-allowed;
   transform: none;
 }
+
 .order-summary-total {
   display: flex;
   justify-content: space-between;
@@ -437,7 +447,7 @@ body.kitchen {
   position: absolute;
   top: 20px;
   right: 20px;
-  background-color: #4CAF50; /* Green color */
+  background-color: #6c5ce7; /* Green color */
   color: white;
   font-size: 1.1em;
   padding: 10px 20px;
@@ -492,4 +502,39 @@ body.kitchen .staff-login {
   color: white;
   border: none;
   cursor: pointer;
+}
+
+
+/* Call Waiter Button */
+.call-waiter-btn {
+  width: 100%; /* Make the button as wide as the Place Order button */
+  padding: 12px;
+  font-size: 1.3em;
+  font-weight: bold;
+  background: linear-gradient(90deg, #ff7f3f, #ff3f3f);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s ease, transform 0.2s ease;
+  max-width: 300px; /* Limit the width */
+  margin-top: 15px;
+}
+
+.call-waiter-btn:hover {
+  background: linear-gradient(90deg, #ff5e1f, #e62e2e);
+  transform: translateY(-2px);
+}
+
+.call-waiter-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Center text above the table input */
+.order-summary label {
+  font-size: 1.2em;
+  margin-bottom: 10px; /* Space between label and input field */
+  color: #333;
 }

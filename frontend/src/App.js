@@ -82,13 +82,16 @@ function App() {
   };
 
   const handlePlaceOrder = async () => {
-    if (!tableNumber.trim()) {
-      setErrorMessage("Please enter a table number before placing an order.");
+    const tableNum = parseInt(tableNumber, 10); // Convert input to an integer
+
+    if (isNaN(tableNum)) {
+      setErrorMessage("Please enter a valid table number.");
       setShowPopup(true);
       return;
     }
 
-    if (!tables.some((table) => table.number === tableNumber)) {
+    // Validate if the table exists
+    if (!tables.some((table) => table.number === tableNum)) {
       setErrorMessage("Invalid table number. This table number does not exist.");
       setShowPopup(true);
       return;
@@ -104,17 +107,57 @@ function App() {
       }),
     };
 
-    const orderResponse = await createOrder(orderData);
-    if (orderResponse) {
-      setCart({});
-      setOrders([...orders, orderResponse]);
-      setTableNumber("");
-      setErrorMessage("Order placed successfully!");
-      setShowPopup(true);
-    } else {
-      setErrorMessage("Failed to place order. Please try again.");
+    try {
+      const response = await fetch("http://127.0.0.1:8000/cafeApi/orders/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Credentials": "true", // Allow credentials
+        },
+        body: JSON.stringify(orderData),
+        credentials: "include", // Include credentials if you're sending cookies
+      });
+      
+
+      if (response.ok) {
+        const orderResponse = await response.json();
+        setCart({});
+        setOrders([...orders, orderResponse]);
+        setTableNumber("");
+        setErrorMessage("Order placed successfully!");
+        setShowPopup(true);
+      } else {
+        const errorDetails = await response.text(); // Log detailed error message
+        console.error("Response error:", errorDetails);
+        setErrorMessage("Failed to place order. Please try again.");
+        setShowPopup(true);
+      }
+    } catch (error) {
+      console.error("Error placing order:", error);
+      setErrorMessage(`Error placing order: ${error.message || "Unknown error"}`);
       setShowPopup(true);
     }
+  };
+
+  const handleCallWaiter = () => {
+    const tableNum = parseInt(tableNumber, 10); // Convert input to an integer
+
+    if (isNaN(tableNum)) {
+      setErrorMessage("Please enter a valid table number.");
+      setShowPopup(true);
+      return;
+    }
+
+    // Validate if the table exists
+    if (!tables.some((table) => table.number === tableNum)) {
+      setErrorMessage("Invalid table number. This table number does not exist.");
+      setShowPopup(true);
+      return;
+    }
+
+    // If valid, proceed with calling the waiter
+    setErrorMessage("Waiter has been called to your table!");
+    setShowPopup(true);
   };
 
   return (
@@ -176,16 +219,20 @@ function App() {
                     </div>
 
                     <div className="order-summary">
-                      <h4>Order Summary</h4>
                       <label>Enter Table Number:</label>
                       <input
                         type="text"
                         value={tableNumber}
                         onChange={handleTableNumberChange}
-                        placeholder="Enter table number"
+                        placeholder="e.g. 001"
                         className="table-input"
                         maxLength="3"
                       />
+                      <button onClick={handleCallWaiter} className="call-waiter-btn">
+                        Call Waiter
+                      </button>
+
+                      <h4>Order Summary</h4>
 
                       {Object.keys(cart).length > 0 ? (
                         <>
@@ -201,8 +248,9 @@ function App() {
                             );
                           })}
 
-                          <div className="order-total">
-                            <strong>Total: £{totalAmount}</strong>
+                          <div className="order-summary-total">
+                            <span>Total</span>
+                            <span>£{totalAmount}</span>
                           </div>
 
                           <button onClick={handlePlaceOrder} className="order-button">
@@ -210,26 +258,23 @@ function App() {
                           </button>
                         </>
                       ) : (
-                        <p>No items selected</p>
+                        <p>Your cart is empty</p>
                       )}
                     </div>
                   </div>
                 )}
-
-                {role === 1 && <Waiter orders={orders} />}
-                {role === 2 && <Kitchen orders={orders} />}
               </>
             }
           />
+
+          {/* Add your other Routes for Waiter and Kitchen pages */}
         </Routes>
 
-        {/* ✅ Popup Message */}
+        {/* Popup for messages */}
         {showPopup && (
           <div className="custom-popup">
-            <div className="popup-content">
-              <p>{errorMessage}</p>
-              <button onClick={() => setShowPopup(false)}>OK</button>
-            </div>
+            <p>{errorMessage}</p>
+            <button onClick={() => setShowPopup(false)}>Close</button>
           </div>
         )}
       </div>
