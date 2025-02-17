@@ -19,4 +19,15 @@ function Kitchen({ orders }) {
   );
 }
 
-export default Kitchen;
+export default function Kitchens() {
+  return (
+    <div>
+      <Kitchen
+        orders={new Map([
+          ['key1', 'value1'],
+          ['key2', 'value2'],
+          ['key3', 'value3']])}
+      />
+    </div>
+  )
+};

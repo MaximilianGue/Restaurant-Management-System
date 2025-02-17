@@ -27,6 +27,19 @@ const Waiter = ({ orders }) => {  // Use capitalized name and pass 'orders' as a
   );
 };
 
-export default Waiter;
+
+
+export default function Waiters() {
+  return (
+    <div>
+      <Waiter
+        orders={new Map([
+          ['key1', 'value1'],
+          ['key2', 'value2'],
+          ['key3', 'value3']])}
+      />
+    </div>
+  )
+};
 
 

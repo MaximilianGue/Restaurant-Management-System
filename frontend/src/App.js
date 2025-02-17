@@ -268,7 +268,20 @@ function App() {
           />
 
           {/* Add your other Routes for Waiter and Kitchen pages */}
+
+          <Route path="/waiter" element={<Waiter setRole={setRole} />} />
+          <Route
+            path="/"
+              
+          />
+          <Route path="/kitchen" element={<Kitchen setRole={setRole} />} />
+          <Route
+            path="/"
+              
+          />
+
         </Routes>
+          
 
         {/* Popup for messages */}
         {showPopup && (

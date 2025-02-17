@@ -11,8 +11,8 @@ function StaffLogin({ setRole }) {
 
   const handleLogin = () => {
     if ((username === "waiter" && password === "waiter") || (username === "kitchen" && password === "kitchen")) {
-      setRole(username === "waiter" ? 1 : 2);
-      navigate("/");
+      setRole(username === "waiter" ? 1 : username === "kitchen" ? 2 : 3);
+      navigate("/"+username);
     } else {
       setErrorMessage("Invalid username or password");
       setShowPopup(true);
