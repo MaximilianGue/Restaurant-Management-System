@@ -411,6 +411,7 @@ body.kitchen {
   cursor: not-allowed;
   transform: none;
 }
+
 .order-summary-total {
   display: flex;
   justify-content: space-between;
@@ -493,3 +494,21 @@ body.kitchen .staff-login {
   border: none;
   cursor: pointer;
 }
+
+/* Call Waiter Button */
+.call-waiter-btn {
+  background-color: #ff4500; /* Orange color */
+  color: white;
+  font-size: 1.2em;
+  border-radius: 8px;
+  padding: 12px 20px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 20px;
+}
+
+.call-waiter-btn:hover {
+  background-color: #d8402f; /* Darker orange */
+}
+

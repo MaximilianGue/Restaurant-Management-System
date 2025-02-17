@@ -117,6 +117,17 @@ function App() {
     }
   };
 
+  const handleCallWaiter = () => {
+    if (!tableNumber.trim()) {
+      setErrorMessage("Please enter a table number before calling the waiter.");
+      setShowPopup(true);
+      return;
+    }
+
+    setErrorMessage("Waiter has been called!");
+    setShowPopup(true);
+  };
+
   return (
     <Router>
       <div className="container">
@@ -176,7 +187,7 @@ function App() {
                     </div>
 
                     <div className="order-summary">
-                      <h4>Order Summary</h4>
+
                       <label>Enter Table Number:</label>
                       <input
                         type="text"
@@ -186,6 +197,12 @@ function App() {
                         className="table-input"
                         maxLength="3"
                       />
+                        {/* Moved Call Waiter Button */}
+                        <button onClick={handleCallWaiter} className="call-waiter-btn">
+                        Call Waiter
+                      </button>
+                      
+                      <h4>Order Summary</h4>
 
                       {Object.keys(cart).length > 0 ? (
                         <>
@@ -201,8 +218,9 @@ function App() {
                             );
                           })}
 
-                          <div className="order-total">
-                            <strong>Total: £{totalAmount}</strong>
+                          <div className="order-summary-total">
+                            <span>Total</span>
+                            <span>£{totalAmount}</span>
                           </div>
 
                           <button onClick={handlePlaceOrder} className="order-button">
@@ -210,26 +228,25 @@ function App() {
                           </button>
                         </>
                       ) : (
-                        <p>No items selected</p>
+                        <p>Your cart is empty</p>
                       )}
+
+                    
                     </div>
                   </div>
                 )}
-
-                {role === 1 && <Waiter orders={orders} />}
-                {role === 2 && <Kitchen orders={orders} />}
               </>
             }
           />
+
+          {/* Add your other Routes for Waiter and Kitchen pages */}
         </Routes>
 
-        {/* ✅ Popup Message */}
+        {/* Popup for messages */}
         {showPopup && (
           <div className="custom-popup">
-            <div className="popup-content">
-              <p>{errorMessage}</p>
-              <button onClick={() => setShowPopup(false)}>OK</button>
-            </div>
+            <p>{errorMessage}</p>
+            <button onClick={() => setShowPopup(false)}>Close</button>
           </div>
         )}
       </div>
