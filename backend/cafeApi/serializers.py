@@ -11,10 +11,10 @@ class MenuItemSerializer(serializers.ModelSerializer):
             url = obj.image.url
             if not url.startswith("/"):
                 url = "/" + url
-            full_url = request.build_absolute_uri(url)
-            return full_url
-        return None
 
+            return request.build_absolute_uri(url) if request else url
+
+        return None
     class Meta:
         model = MenuItem
         fields = ["id", "name", "price", "image", "allergies"]
