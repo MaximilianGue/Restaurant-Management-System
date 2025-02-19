@@ -1,14 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from "react";
+import { fetchMenuItems, fetchOrders, createOrder } from "./api";
 
-const cancelTopOrder = () => {
+function Waiter() {
 
-};
+  const [orders, setOrders] = useState([]);
 
-const progressTopOrder = () => {
+  useEffect(() => {
+      const loadData = async () => {
+        const ordersData = await fetchOrders();
+        setOrders(ordersData || []);
+      };
+      loadData();
+    }, []);
 
-};
+  const cancelOrder = () => {
 
-const Waiter = ({ orders }) => {  // Use capitalized name and pass 'orders' as a prop
+  };
+
+  const progressOrder = () => {
+
+  };
+  // Use capitalized name and pass 'orders' as a prop
   return (
     <div className="order-list">
       <h3>Orders for Waiters:</h3>
@@ -21,25 +33,13 @@ const Waiter = ({ orders }) => {  // Use capitalized name and pass 'orders' as a
         ))
       ) : (
         <p>No orders available.</p>)}
-        <button onClick={() => cancelTopOrder()} className="waiter-order-btn">Cancel Top Order</button>
-        <button onClick={() => progressTopOrder()} className="waiter-order-btn">Progress Top Order</button>
+        <button onClick={() => cancelOrder()} className="waiter-order-btn">Cancel Top Order</button>
+        <button onClick={() => progressOrder()} className="waiter-order-btn">Progress Top Order</button>
     </div>
   );
-};
 
+}
 
-
-export default function Waiters() {
-  return (
-    <div>
-      <Waiter
-        orders={new Map([
-          ['key1', 'value1'],
-          ['key2', 'value2'],
-          ['key3', 'value3']])}
-      />
-    </div>
-  )
-};
+export default Waiter;
 
 
