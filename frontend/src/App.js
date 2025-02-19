@@ -98,6 +98,7 @@ function App() {
     }
 
     const orderData = {
+      table_id: tableNumber,
       table_number: tableNumber,
       status: "pending",
       total_price: parseFloat(totalAmount),

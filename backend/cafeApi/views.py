@@ -42,7 +42,12 @@ class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 # OrderView to create an order using a POST request
 class OrderView(APIView):
-    @csrf_exempt  # Disable CSRF validation for this view (for API usage)
+    @csrf_exempt
+    def get(self, request):
+        orders = Order.objects.all()
+        serializer = OrderSerializer(orders, many=True, context={"request": request})  
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
     def post(self, request):
         try:
             # Parse the JSON data from the request body
