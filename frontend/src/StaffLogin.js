@@ -11,8 +11,8 @@ function StaffLogin({ setRole }) {
 
   const handleLogin = () => {
     if ((username === "waiter" && password === "waiter") || (username === "kitchen" && password === "kitchen")) {
-      setRole(username === "waiter" ? 1 : 2);
-      navigate("/");
+      setRole(username === "waiter" ? 1 : username === "kitchen" ? 2 : 3);
+      navigate("/"+username);
     } else {
       setErrorMessage("Invalid username or password");
       setShowPopup(true);
@@ -40,7 +40,7 @@ function StaffLogin({ setRole }) {
         Login
       </button>
       <button className="return-button" onClick={() => navigate("/")}>Return to Customer View</button>
-      {/* ✅ Popup Message */}
+      {/* Popup Message */} 
       {showPopup && (
         <div className="custom-popup">
           <div className="popup-content">
@@ -54,3 +54,4 @@ function StaffLogin({ setRole }) {
 }
 
 export default StaffLogin;
+

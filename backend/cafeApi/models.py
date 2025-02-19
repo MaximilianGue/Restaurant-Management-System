@@ -37,7 +37,18 @@ class Customer(models.Model):
     table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name="customers") 
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} | Email: {self.email} | Phone: {self.phone or 'None'}"
+        return f"{self.first_name} {self.last_name} | Email: {self.email} | Phone: {self.phone or 'None'}" 
+
+class Waiter(models.Model):
+    Staff_id = models.CharField(max_length=50, unique=True)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=15, blank=True, null=True)
+
+    def __str__(self):
+        return f"Staff_id {self.Staff_id} | Name: {self.first_name} {self.last_name} | Email: {self.email} | Phone: {self.phone if self.phone else 'None'}"
+
 
 
 class Order(models.Model):
@@ -47,6 +58,7 @@ class Order(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
     items = models.ManyToManyField(MenuItem, related_name="orders")
+    waiter = models.ForeignKey(Waiter, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
 
     def __str__(self):
         return f"Order {self.id} | Customer: {self.customer.first_name} {self.customer.last_name} | Status: {self.status} | Total: £{self.total_price}"

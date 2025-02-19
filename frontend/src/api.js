@@ -63,3 +63,45 @@ export const createOrder = async (orderData) => {
     return null;
   }
 };
+
+export const updateOrderStatus = async (orderId, orderStatus, staffId) => {
+  try {
+    const response = await api.put(
+      `/order/${orderId}/update/`,
+      {
+        status: orderStatus,
+        Staff_id: staffId, 
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(" Response Data:", response.data);
+    return response.data.status;
+  } catch (error) {
+    console.error(" Error Updating Order:", error.response ? error.response.data : error.message);
+    return null;
+  }
+};
+
+export const deleteOrder = async (orderId) => {
+  try {
+    const response = await api.delete(
+      `/orders/${orderId}/`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(" Response Data:", response.data);
+    return response.data.status;
+  } catch (error) {
+    console.error(" Error Cancelling Order:", error.response ? error.response.data : error.message);
+    return null;
+  }
+}
