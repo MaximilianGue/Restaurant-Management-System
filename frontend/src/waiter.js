@@ -20,8 +20,8 @@ function Waiter() {
       loadData();
     }, []);
 
-  const cancelOrder = async () => {
-    const newOrderId = 11;
+  const cancelOrder = async (Id) => {
+    const newOrderId = Id
     setOrderId(newOrderId);
 
     const statusCode = await deleteOrder(newOrderId);
@@ -38,9 +38,9 @@ function Waiter() {
   };
 
 
-  const progressOrder = async () => {
-    const newOrderId = 1;
-    const newStatus = "canceled";
+  const confirmOrder = async (Id) => {
+    const newOrderId = Id;
+    const newStatus = "delivered";
     const newStaffId = "X1";
 
     setOrderId(newOrderId);
@@ -69,8 +69,8 @@ function Waiter() {
           <div key={index} className="order-summary-item">
             <span>Order #{order.id} - £{parseFloat(order.total_price || 0).toFixed(2)}</span>
             <span>Status: {order.status}</span>
-            <button onClick={() => cancelOrder()} className="waiter-order-btn">Cancel Order</button>
-            <button onClick={() => progressOrder()} className="waiter-order-btn">Progress Order</button>
+            <button onClick={() => cancelOrder(order.id)} className="waiter-order-btn">Cancel Order</button>
+            <button onClick={() => confirmOrder(order.id)} className="waiter-order-btn">Confirm Order</button>
           </div>
      
         ))
