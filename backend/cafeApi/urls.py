@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView
+from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView
 
 urlpatterns = [
     path("menu-items/", MenuItemView.as_view(), name="menu-items"),
@@ -11,10 +11,14 @@ urlpatterns = [
     path("customers/", CustomerView.as_view(), name="customers"),
     path("customers/<int:pk>/", CustomerDetailView.as_view(), name="customer-detail"),
     
-    path("Waiters/", WaiterView.as_view(), name="Waiters"),
+    path("waiters/", WaiterView.as_view(), name="waiters"),
     path("waiters/<int:pk>/", WaiterDetailView.as_view(), name="waiters-detail"),
+
+    path("KitchenStaff/", KitchenStaffView.as_view(), name="KitchenStaff"),
+    path("KitchenStaff/<int:pk>/", KitchenStaffDetailView.as_view(), name="Kitchen-detail"),
     
     path("orders/", OrderView.as_view(), name="orders"),
     path("orders/<int:pk>/", OrderDetailView.as_view(), name="order-detail"),
-    path("order/<int:pk>/update/", StatusUpdateView.as_view(), name="order-update"),
+    path("orders/<int:pk>/update/", StatusUpdateView.as_view(), name="order-update"),
+    path("orders/<int:pk>/confirmation/", ConfirmOrderUpdateView.as_view(), name="order-confirm-update"),
 ]
