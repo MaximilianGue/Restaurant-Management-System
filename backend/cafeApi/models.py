@@ -72,3 +72,11 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.id} | Customer: {self.customer.first_name} {self.customer.last_name} | Status: {self.status} | Total: £{self.total_price}"
+
+class WaiterCall(models.Model):
+    table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name="waiter_calls")
+    status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('served', 'Served')], default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Table {self.table.number} - {self.status}"

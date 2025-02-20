@@ -1,13 +1,14 @@
 from rest_framework import generics
 from rest_framework.exceptions import ValidationError
-from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer
+from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer, WaiterCallSerializer
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt  # Import csrf_exempt
-from .models import Order, Table, MenuItem, Customer, Waiter,KitchenStaff
+from .models import Order, Table, MenuItem, Customer, Waiter,KitchenStaff, WaiterCall
 import json
 
 # Views for CRUD operations on MenuItems, Tables, and Customers
@@ -137,3 +138,18 @@ class ConfirmOrderUpdateView(generics.UpdateAPIView):
         kitchenStaff = get_object_or_404(KitchenStaff, Staff_id=Staff_id)
         serializer.instance.KitchenStaff = kitchenStaff  
         serializer.save()
+        
+
+
+@api_view(['POST'])
+def call_waiter(request):
+    table_number = request.data.get('table_number')
+
+    if not table_number:
+        return Response({"error": "Table number is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    table = get_object_or_404(Table, number=table_number)
+    waiter_call = WaiterCall.objects.create(table=table)
+    serializer = WaiterCallSerializer(waiter_call)
+
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
