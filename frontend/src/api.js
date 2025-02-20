@@ -32,7 +32,7 @@ export const fetchMenuItem = async (menuItemId) => {
   }
 };
 
-// Fetch customers
+// Fetch customers -- later on, when customer can have their own accounts for layalty rewards
 export const fetchCustomers = async () => {
   try {
     const response = await api.get("/customers/");
@@ -178,7 +178,7 @@ export const fetchWaiter= async (waiterId) => {
     return null;
   }
 };
-// Fetch KitchenStaff
+// Fetch KitchenStaff 
 export const fetchKitchenStaff = async () => {
   try {
     const response = await api.get("/KitchenStaff/");
@@ -224,5 +224,4 @@ export const confirmOrder = async (orderId, confirmationStatus, staffId) => {
     return null;
   }
 };
-
 
