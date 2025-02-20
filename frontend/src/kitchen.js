@@ -30,7 +30,7 @@ function Kitchen({ setRole }) {
   return (
     <div className="order-list">
       <button className="return-button" onClick={() => { 
-        setRole(0); // Reset role to customer
+        //setRole(0); // Reset role to customer
         navigate("/"); 
       }}>
         Return to Customer View

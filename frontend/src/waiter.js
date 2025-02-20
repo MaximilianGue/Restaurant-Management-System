@@ -1,12 +1,24 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchOrders, updateOrderStatus, deleteOrder } from "./api";
+import "./Dropdown.css"; 
+//import Dropdown from './dropdown.js';
 
 function Waiter({ setRole }) {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [statusChoice, setStatusChoice] = useState("");
+
+  const setStatus = async (status) => {
+    setStatusChoice(status);
+  };
+
+    const toggleDropdown = () => {
+      setIsOpen(!isOpen);
+    };
 
     // Automatically refresh orders every 5 seconds
     useEffect(() => {
@@ -32,20 +44,19 @@ function Waiter({ setRole }) {
   const cancelOrder = async (orderId) => {
     const statusCode = await deleteOrder(orderId);
 
-    if (statusCode === "not_found") {
-      setErrorMessage(`Order #${orderId} does not exist.`);
-    } else if (!statusCode) {
-      setErrorMessage("Failed to cancel the order.");
-    } else {
+    if (statusCode ==undefined) {
       setErrorMessage("Order successfully cancelled!");
       await loadOrders(); // Refresh orders after deletion
-    }
+  
+      } else {
+        setErrorMessage("Failed to cancel the order.");
+      }
 
     setShowPopup(true);
   };
 
   const progressOrder = async (orderId) => {
-    const newStatus = "pending";
+    const newStatus = "completed";
     const staffId = "X1";
 
     const returnStatus = await updateOrderStatus(orderId, newStatus, staffId);
@@ -68,7 +79,18 @@ function Waiter({ setRole }) {
       }}>
         Return to Customer View
       </button>
-
+      {/*<div className="dropdown">
+        <button className="dropdown-button" onClick={toggleDropdown}>
+          Select an option <i className={`fas fa-caret-${isOpen ? 'up' : 'down'}`}></i>
+        </button>
+        {isOpen && (
+          <div className="dropdown-content">
+            <a><i className="PendingDropdown" onClick={() => setStatus("Pending")} ></i> Pending</a>
+            <a><i className="CompletedDropdown" onClick={() => setStatus("Completed")} ></i> Completed</a>
+            <a><i className="CanceledDropdown" onClick={() => setStatus("Canceled")} ></i> Canceled</a>
+          </div>
+        )}
+      </div>*/}
       <h3>Orders for Waiters:</h3>
       {orders.length > 0 ? (
         orders.map((order) => (
