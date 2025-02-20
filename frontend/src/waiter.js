@@ -37,10 +37,14 @@ function Waiter() {
     setShowPopup(true);
   };
 
+  const DropdownContext = React.createContext({
+    open: false,
+    setOpen: () => {},
+  });
 
-  const confirmOrder = async (Id) => {
+  const progressOrder = async (Status,Id) => {
     const newOrderId = Id;
-    const newStatus = "delivered";
+    const newStatus = Status;
     const newStaffId = "X1";
 
     setOrderId(newOrderId);
@@ -71,7 +75,7 @@ function Waiter() {
             <span>| Order #{order.id} - £{parseFloat(order.total_price || 0).toFixed(2)}</span>
             <span>Status: {order.status}</span>
             <button onClick={() => cancelOrder(order.id)} className="waiter-order-btn">Cancel Order</button>
-            <button onClick={() => confirmOrder(order.id)} className="waiter-order-btn">Confirm Order</button>
+            <button onClick={() => progressOrder(order.id)} className="waiter-order-btn">Progress Order</button>
           </div>
      
         ))
