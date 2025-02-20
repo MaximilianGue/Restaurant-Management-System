@@ -17,16 +17,7 @@ function App() {
   const [tables, setTables] = useState([]);
   const [loadingTables, setLoadingTables] = useState(true);
 
-  const location = useLocation(); // Hook to get current location
-
-    // Always set role to 0 when the user visits the home route "/"
-  useEffect(() => {
-    if (location.pathname === "/") {
-      setRole(0);
-      document.body.classList.add("customer");
-    }
-  }, [location]);
-
+  
   useEffect(() => {
     const loadData = async () => {
       const items = await fetchMenuItems();
