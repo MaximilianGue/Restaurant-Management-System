@@ -2,95 +2,95 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchOrders, updateOrderStatus, deleteOrder } from "./api";
 
-function Waiter() {
+function Waiter({ setRole }) {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
-  const [orderId, setOrderId] = useState([]);
-  const [status, setStatus] = useState([]);
-  const [staffId, setStaffId] = useState([]);
-  const [showPopup, setShowPopup] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
 
-
-  useEffect(() => {
-      const loadData = async () => {
-        const ordersData = await fetchOrders();
-        setOrders(ordersData || []);
-      };
-      loadData();
+    // Automatically refresh orders every 5 seconds
+    useEffect(() => {
+      loadOrders();
+  
+      const interval = setInterval(() => {
+        loadOrders();
+      }, 5000);
+  
+      return () => clearInterval(interval); // Cleanup interval on unmount
     }, []);
 
-  const cancelOrder = async () => {
-    const newOrderId = 11;
-    setOrderId(newOrderId);
+  // Fetch orders on load and refresh when needed
+  const loadOrders = async () => {
+    const ordersData = await fetchOrders();
+    setOrders(ordersData || []);
+  };
 
-    const statusCode = await deleteOrder(newOrderId);
+  useEffect(() => {
+    loadOrders();
+  }, []);
 
-    console.log(statusCode);
+  const cancelOrder = async (orderId) => {
+    const statusCode = await deleteOrder(orderId);
 
-    if (statusCode === undefined) {
-        setErrorMessage("order successfully cancelled");
+    if (statusCode === "not_found") {
+      setErrorMessage(`Order #${orderId} does not exist.`);
+    } else if (!statusCode) {
+      setErrorMessage("Failed to cancel the order.");
     } else {
-        setErrorMessage("Failed to cancel the order");
+      setErrorMessage("Order successfully cancelled!");
+      await loadOrders(); // Refresh orders after deletion
     }
 
     setShowPopup(true);
   };
 
+  const progressOrder = async (orderId) => {
+    const newStatus = "pending";
+    const staffId = "X1";
 
-  const progressOrder = async () => {
-    const newOrderId = 1;
-    const newStatus = "canceled";
-    const newStaffId = "X1";
+    const returnStatus = await updateOrderStatus(orderId, newStatus, staffId);
 
-    setOrderId(newOrderId);
-    setStatus(newStatus);
-    setStaffId(newStaffId);
-
-    const returnStatus = await updateOrderStatus(newOrderId, newStatus, newStaffId);
-
-    console.log(returnStatus);
-
-    if (newStatus === returnStatus) {
-        setErrorMessage("Status successfully updated");
+    if (returnStatus === newStatus) {
+      setErrorMessage("Status successfully updated!");
+      await loadOrders(); // Refresh orders after updating status
     } else {
-        setErrorMessage("Failed to update status");
+      setErrorMessage("Failed to update status.");
     }
 
     setShowPopup(true);
-};
-  // Use capitalized name and pass 'orders' as a prop
+  };
+
   return (
     <div className="order-list">
-      <button className="return-button" onClick={() => navigate("/")}>Return to Customer View</button>
+      <button className="return-button" onClick={() => { 
+        setRole(0); // Reset role to customer
+        navigate("/"); 
+      }}>
+        Return to Customer View
+      </button>
+
       <h3>Orders for Waiters:</h3>
       {orders.length > 0 ? (
-        orders.map((order, index) => (
-          <div key={index} className="order-summary-item">
+        orders.map((order) => (
+          <div key={order.id} className="order-summary-item">
             <span>Order #{order.id} - £{parseFloat(order.total_price || 0).toFixed(2)}</span>
             <span>Status: {order.status}</span>
-            <button onClick={() => cancelOrder()} className="waiter-order-btn">Cancel Order</button>
-            <button onClick={() => progressOrder()} className="waiter-order-btn">Progress Order</button>
+            <button onClick={() => cancelOrder(order.id)} className="waiter-order-btn">Cancel Order</button>
+            <button onClick={() => progressOrder(order.id)} className="waiter-order-btn">Progress Order</button>
           </div>
-     
         ))
       ) : (
-        <p>No orders available.</p>)}
-        {showPopup && (
-          <div className="custom-popup">
-            <p>{errorMessage}</p>
-            <button onClick={() => setShowPopup(false)}>Close</button>
-          </div>
-        )}
+        <p>No orders available.</p>
+      )}
+
+      {showPopup && (
+        <div className="custom-popup">
+          <p>{errorMessage}</p>
+          <button onClick={() => setShowPopup(false)}>Close</button>
+        </div>
+      )}
     </div>
   );
-
 }
 
 export default Waiter;
-
-
-
-
-
-

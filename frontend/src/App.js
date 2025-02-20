@@ -17,6 +17,7 @@ function App() {
   const [tables, setTables] = useState([]);
   const [loadingTables, setLoadingTables] = useState(true);
 
+  
   useEffect(() => {
     const loadData = async () => {
       const items = await fetchMenuItems();
