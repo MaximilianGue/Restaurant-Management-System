@@ -19,6 +19,18 @@ export const fetchMenuItems = async () => {
     return [];
   }
 };
+export const fetchMenuItem = async (menuItemId) => {
+  try {
+    const response = await api.get(
+      `/menu-items/${menuItemId}/`);
+
+    console.log(" Response Data:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(" Error getting  menu item data:", error.response ? error.response.data : error.message);
+    return null;
+  }
+};
 
 // Fetch customers
 export const fetchCustomers = async () => {
@@ -28,6 +40,18 @@ export const fetchCustomers = async () => {
   } catch (error) {
     console.error("Error fetching customers:", error);
     return [];
+  }
+};
+export const fetchCustomer = async (customerId) => {
+  try {
+    const response = await api.get(
+      `/order/${customerId}/`);
+
+    console.log(" Response Data:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(" Error getting  customer data:", error.response ? error.response.data : error.message);
+    return null;
   }
 };
 
@@ -42,6 +66,19 @@ export const fetchTables = async () => {
   }
 };
 
+export const fetchTable = async (tableId) => {
+  try {
+    const response = await api.get(
+      `/order/${tableId}/`);
+
+    console.log(" Response Data:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(" Error getting  table data:", error.response ? error.response.data : error.message);
+    return null;
+  }
+};
+
 // Fetch orders
 export const fetchOrders = async () => {
   try {
@@ -50,6 +87,19 @@ export const fetchOrders = async () => {
   } catch (error) {
     console.error("Error fetching orders:", error);
     return [];
+  }
+};
+
+export const fetchOrder = async (orderId) => {
+  try {
+    const response = await api.get(
+      `/orders/${orderId}/`);
+
+    console.log(" Response Data:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(" Error getting order data:", error.response ? error.response.data : error.message);
+    return null;
   }
 };
 
@@ -67,7 +117,7 @@ export const createOrder = async (orderData) => {
 export const updateOrderStatus = async (orderId, orderStatus, staffId) => {
   try {
     const response = await api.put(
-      `/order/${orderId}/update/`,
+      `/orders/${orderId}/update/`,
       {
         status: orderStatus,
         Staff_id: staffId, 
@@ -105,3 +155,74 @@ export const deleteOrder = async (orderId) => {
     return null;
   }
 }
+// Fetch waiters
+export const fetchWaiters = async () => {
+  try {
+    const response = await api.get("/waiters/");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching waiters data:", error);
+    return [];
+  }
+};
+
+export const fetchWaiter= async (waiterId) => {
+  try {
+    const response = await api.get(
+      `/waiter/${waiterId}/`);
+
+    console.log(" Response Data:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(" Error getting waiter  data:", error.response ? error.response.data : error.message);
+    return null;
+  }
+};
+// Fetch KitchenStaff
+export const fetchKitchenStaff = async () => {
+  try {
+    const response = await api.get("/KitchenStaff/");
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching KitchenStaff:", error);
+    return [];
+  }
+};
+
+export const fetchKitchenstaffer = async (KitchenStaffId) => {
+  try {
+    const response = await api.get(
+      `/KitchenStaff/${KitchenStaffId}/`);
+
+    console.log(" Response Data:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(" Error getting kitchen staffer  data:", error.response ? error.response.data : error.message);
+    return null;
+  }
+};
+
+export const confirmOrder = async (orderId, confirmationStatus, staffId) => {
+  try {
+    const response = await api.put(
+      `/orders/${orderId}/confirmation/`,
+      {
+        status: confirmationStatus,
+        Staff_id: staffId, 
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(" Response Data:", response.data);
+    return response.data.status;
+  } catch (error) {
+    console.error(" Error conforming  Order:", error.response ? error.response.data : error.message);
+    return null;
+  }
+};
+
+

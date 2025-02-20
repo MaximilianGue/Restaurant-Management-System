@@ -1,13 +1,13 @@
 from rest_framework import generics
 from rest_framework.exceptions import ValidationError
-from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer
+from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt  # Import csrf_exempt
-from .models import Order, Table, MenuItem, Customer, Waiter
+from .models import Order, Table, MenuItem, Customer, Waiter,KitchenStaff
 import json
 
 # Views for CRUD operations on MenuItems, Tables, and Customers
@@ -115,4 +115,25 @@ class StatusUpdateView(generics.UpdateAPIView):
 
         waiter = get_object_or_404(Waiter, Staff_id=Staff_id)
         serializer.instance.waiter = waiter  
+        serializer.save()
+class KitchenStaffView(generics.ListCreateAPIView):
+    serializer_class = KitchenStaffSerializer
+    queryset = KitchenStaff.objects.all()  # It gets all kitchen staff as a JSON list object
+
+class KitchenStaffDetailView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = KitchenStaffSerializer
+    queryset = KitchenStaff.objects.all()  # It gets a single kitchen staff by ID, allowing update or delete
+    
+class ConfirmOrderUpdateView(generics.UpdateAPIView):
+    queryset = Order.objects.all()
+    serializer_class = ConfirmOrderSerializer
+
+    def perform_update(self, serializer):
+        Staff_id = self.request.data.get("Staff_id", None)
+
+        if not Staff_id:
+            raise ValidationError({"Staff_id": "This field is required."})
+
+        kitchenStaff = get_object_or_404(KitchenStaff, Staff_id=Staff_id)
+        serializer.instance.KitchenStaff = kitchenStaff  
         serializer.save()

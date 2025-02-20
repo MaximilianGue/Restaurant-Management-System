@@ -1,6 +1,6 @@
 # the way to display the models(class) in the database
 from rest_framework import serializers
-from .models import MenuItem, Order, Table,Customer, Waiter
+from .models import MenuItem, Order, Table,Customer, Waiter,KitchenStaff
 
 class MenuItemSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
@@ -55,6 +55,24 @@ class WaiterSerializer(serializers.ModelSerializer):
         
 class UpdateStatusSerializer(serializers.ModelSerializer):
     Staff_id = serializers.CharField(source = "waiter.Staff_id", allow_blank=True, required=False)
+    order_id = serializers.CharField(source = "order.id", allow_blank=True, required=False)
+    class Meta:
+        model = Order
+        fields = ['status', 'Staff_id',  'order_id']
+        
+    def update(self, instance, validated_data):
+    
+        instance.status = validated_data.get("status", instance.status)
+        instance.save()
+        return instance
+    
+class KitchenStaffSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = KitchenStaff
+        fields = '__all__'
+        
+class ConfirmOrderSerializer(serializers.ModelSerializer):
+    Staff_id = serializers.CharField(source="KitchenStaff.Staff_id", allow_blank=True, required=False)
     order_id = serializers.CharField(source = "order.id", allow_blank=True, required=False)
     class Meta:
         model = Order
