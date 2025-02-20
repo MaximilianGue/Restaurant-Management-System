@@ -2,8 +2,11 @@ from rest_framework import generics
 from rest_framework.exceptions import ValidationError
 from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken  
+from django.contrib.auth import authenticate  
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt  # Import csrf_exempt
@@ -137,3 +140,14 @@ class ConfirmOrderUpdateView(generics.UpdateAPIView):
         kitchenStaff = get_object_or_404(KitchenStaff, Staff_id=Staff_id)
         serializer.instance.KitchenStaff = kitchenStaff  
         serializer.save()
+
+@api_view(['POST'])
+def login_view(request):
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    user = authenticate(request, username=username, password=password)
+    if user:
+        refresh = RefreshToken.for_user(user)
+        return Response({"access_token": str(refresh.access_token)}, status=status.HTTP_200_OK)
+    return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
