@@ -33,18 +33,28 @@ function Kitchen() {
 
   // Handle Status Change
   const handleStatusChange = async (orderId, newStatus) => {
-    const updatedStatus = await updateOrderStatus(orderId, newStatus, 1); // Replace 1 with actual staff ID
-    if (updatedStatus) {
-      setOrders((prevOrders) =>
-        prevOrders.map((order) =>
-          order.id === orderId ? { ...order, status: newStatus } : order
-        )
-      );
-    } else {
-      setErrorMessage("Failed to update order status.");
-      setShowPopup(true);
+    try {
+      const staffId = "X1"; // Replace this with actual staff ID if needed
+      const updatedStatus = await updateOrderStatus(orderId, newStatus, staffId);
+  
+      if (updatedStatus === newStatus) {
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order.id === orderId ? { ...order, status: newStatus } : order
+          )
+        );
+        setErrorMessage("Status successfully updated!");
+      } else {
+        setErrorMessage("Failed to update order status.");
+      }
+    } catch (error) {
+      setErrorMessage("Error updating status. Please try again.");
     }
+  
+    setShowPopup(true);
+    await loadOrders(); // Refresh orders after status update
   };
+  
 
   // Separate orders into two categories
   const activeOrders = orders.filter((order) =>
