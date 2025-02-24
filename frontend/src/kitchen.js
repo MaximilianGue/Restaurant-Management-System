@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchOrders } from "./api";
+import { fetchOrders, updateOrderStatus } from "./api";
 import { useNavigate } from "react-router-dom";
 import "./kitchen.css";
 
@@ -9,26 +9,51 @@ function Kitchen() {
   const [errorMessage, setErrorMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
 
+  const statusOptions = [
+    "pending",
+    "confirmed",
+    "being Prepared",
+    "canceled",
+    "ready for Pick Up",
+    "delivered",
+    "paid For",
+  ];
+
+  // Fetch orders and refresh every 5 seconds
   useEffect(() => {
     loadOrders();
-    const interval = setInterval(() => {
-      loadOrders();
-    }, 5000);
+    const interval = setInterval(loadOrders, 5000);
     return () => clearInterval(interval);
   }, []);
 
   const loadOrders = async () => {
-    try {
-      const ordersData = await fetchOrders();
-      setOrders(ordersData || []);
-    } catch (error) {
-      setErrorMessage("Failed to load orders.");
+    const ordersData = await fetchOrders();
+    setOrders(ordersData || []);
+  };
+
+  // Handle Status Change
+  const handleStatusChange = async (orderId, newStatus) => {
+    const updatedStatus = await updateOrderStatus(orderId, newStatus, 1); // Replace 1 with actual staff ID
+    if (updatedStatus) {
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order.id === orderId ? { ...order, status: newStatus } : order
+        )
+      );
+    } else {
+      setErrorMessage("Failed to update order status.");
       setShowPopup(true);
     }
   };
 
-  const activeOrders = orders.filter(order => order.status !== "Completed");
-  const completedOrders = orders.filter(order => order.status === "Completed");
+  // Separate orders into two categories
+  const activeOrders = orders.filter((order) =>
+    ["pending", "confirmed", "being Prepared"].includes(order.status)
+  );
+
+  const completedOrders = orders.filter((order) =>
+    ["canceled", "ready for Pick Up", "delivered", "paid For"].includes(order.status)
+  );
 
   return (
     <div className="kitchen-container">
@@ -43,22 +68,35 @@ function Kitchen() {
           <table>
             <thead>
               <tr>
-                <th>Order ID</th>
+                <th>Order #</th>
                 <th>Total (£)</th>
                 <th>Status</th>
               </tr>
             </thead>
             <tbody>
               {activeOrders.length > 0 ? (
-                activeOrders.map(order => (
+                activeOrders.map((order) => (
                   <tr key={order.id}>
                     <td>{order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
-                    <td>{order.status}</td>
+                    <td>
+                      <select
+                        value={order.status}
+                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                      >
+                        {statusOptions.map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="3">No active orders.</td></tr>
+                <tr>
+                  <td colSpan="3">No active orders</td>
+                </tr>
               )}
             </tbody>
           </table>
@@ -70,29 +108,41 @@ function Kitchen() {
           <table>
             <thead>
               <tr>
-                <th>Order ID</th>
+                <th>Order #</th>
                 <th>Total (£)</th>
                 <th>Status</th>
               </tr>
             </thead>
             <tbody>
               {completedOrders.length > 0 ? (
-                completedOrders.map(order => (
+                completedOrders.map((order) => (
                   <tr key={order.id}>
                     <td>{order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
-                    <td>{order.status}</td>
+                    <td>
+                      <select
+                        value={order.status}
+                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                      >
+                        {statusOptions.map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="3">No completed orders.</td></tr>
+                <tr>
+                  <td colSpan="3">No completed orders</td>
+                </tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Error Popup */}
       {showPopup && (
         <div className="custom-popup">
           <p>{errorMessage}</p>
