@@ -84,10 +84,9 @@ function Waiter({ setRole }) {
                         }
                       >
                         {/* The waiter should only update a “ready” order to “delivered” */}
-                        <option value="ready for pick up">
-                          ready for pick up
-                        </option>
+                        <option value="ready for pick up">ready for pick up</option>
                         <option value="delivered">delivered</option>
+
                       </select>
                     </td>
                   </tr>
@@ -129,8 +128,11 @@ function Waiter({ setRole }) {
                         }
                       >
                         {/* For a delivered order, the next logical status is "paid For" */}
+                        <option value="ready for pick up">ready for pick up</option>
                         <option value="delivered">delivered</option>
-                        <option value="paid For">paid For</option>
+                        <option value="paid for">paid For</option>
+                        <option value="canceled">canceled</option>
+                        
                       </select>
                     </td>
                   </tr>
