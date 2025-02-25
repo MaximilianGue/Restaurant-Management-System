@@ -16,18 +16,9 @@ function App() {
   const [showPopup, setShowPopup] = useState(false);
   const [tables, setTables] = useState([]);
   const [loadingTables, setLoadingTables] = useState(true);
-
-  const location = useLocation(); // Hook to get current location
-
-    // Always set role to 0 when the user visits the home route "/"
+  
   useEffect(() => {
-    if (location.pathname === "/") {
-      setRole(0);
-      document.body.classList.add("customer");
-    }
-  }, [location]);
-
-  useEffect(() => {
+    setRole(0); // Set role to customer when the "/" route is loaded
     const loadData = async () => {
       const items = await fetchMenuItems();
       setMenuItems(items || []);
@@ -182,9 +173,11 @@ function App() {
 
           <Route
             path="/"
+            
             element={
-
+              
               <>
+                
                 <button className="staff-login" onClick={() => (window.location.href = "/staff-login")}>
                   Staff Login
                 </button>

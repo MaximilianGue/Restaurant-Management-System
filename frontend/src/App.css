@@ -282,6 +282,10 @@ span {
   outline: none; /* Remove outline on focus */
 }
 
+body.customer {
+  background-color:  #e0f7fa; 
+}
+
 /* Body background when Waiter role is selected */
 body.waiter {
   background-color: #e5f8e0; /* Lighter, creamier green */
