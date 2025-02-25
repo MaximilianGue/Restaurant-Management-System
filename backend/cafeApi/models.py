@@ -4,10 +4,17 @@ from django.db import models
 
 STATUS_CHOICES = [
     ('unconfirmed', 'Unconfirmed'),
-    ('confirmed','Confirmed'),
-    ('pending', 'Pending'),
     ('completed', 'Completed'),
+
+    ## in use
     ('canceled', 'Canceled'),
+    ('pending', 'Pending'),
+    ('confirmed','Confirmed'),
+    ('being prepared','Being prepared'),
+    ('ready for pick up','Ready for pick up'),
+    ('delivered','Delivered'),
+    ('paid for','Paid for')
+   
 ]
 
 class MenuItem(models.Model):
