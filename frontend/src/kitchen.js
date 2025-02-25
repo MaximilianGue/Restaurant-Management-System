@@ -3,7 +3,8 @@ import { fetchOrders, updateOrderStatus } from "./api";
 import { useNavigate } from "react-router-dom";
 import "./kitchen.css";
 
-function Kitchen() {
+
+function Kitchen({ setRole }) {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
@@ -65,9 +66,13 @@ function Kitchen() {
     ["canceled", "ready for pick Up", "delivered", "paid for"].includes(order.status)
   );
 
+
   return (
     <div className="kitchen-container">
-      <button className="return-button" onClick={() => navigate("/")}>
+      <button className="return-button" onClick={() => {
+          setRole(0);
+          navigate("/");
+        }}>
         Return to Customer View
       </button>
 

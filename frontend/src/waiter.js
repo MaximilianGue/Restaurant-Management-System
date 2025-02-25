@@ -21,6 +21,7 @@ function Waiter({ setRole }) {
     setOrders(ordersData || []);
   };
 
+  
   // Handler to update the order status using the API.
   const handleStatusChange = async (orderId, newStatus) => {
     const staffId = "X1"; // Replace with actual staff ID if available
