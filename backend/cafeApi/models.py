@@ -80,10 +80,27 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.id} | Customer: {self.customer.first_name} {self.customer.last_name} | Status: {self.status} | Total: £{self.total_price}"
 
-class WaiterCall(models.Model):
-    table = models.ForeignKey(Table, on_delete=models.CASCADE, related_name="waiter_calls")
-    status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('served', 'Served')], default='pending')
+class Notification(models.Model):
+    NOTIFICATION_TYPES = [
+        ('waiter_call', 'Waiter Call'),
+        ('order_received', 'Order Received'),
+        ('status_change', 'Status Change'),
+        ('payment', 'Payment'),
+    ]
+    
+    RECIPIENT_CHOICES = [
+        ('waiter', 'Waiter'),
+        ('kitchen', 'Kitchen Staff'),
+        ('both', 'Both'),
+    ]
+
+    table = models.ForeignKey(Table, on_delete=models.CASCADE, null=True, blank=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
+    recipient = models.CharField(max_length=20, choices=RECIPIENT_CHOICES)
+    message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Table {self.table.number} - {self.status}"
+        return f"{self.notification_type} - Table {self.table.number if self.table else 'N/A'}"

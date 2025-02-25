@@ -1,6 +1,6 @@
 # the way to display the models(class) in the database
 from rest_framework import serializers
-from .models import MenuItem, Order, Table,Customer, Waiter,KitchenStaff, WaiterCall
+from .models import MenuItem, Order, Table,Customer, Waiter,KitchenStaff, Notification
 
 class MenuItemSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField()
@@ -84,7 +84,7 @@ class ConfirmOrderSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-class WaiterCallSerializer(serializers.ModelSerializer):
+class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
-        model = WaiterCall
+        model = Notification
         fields = '__all__'
