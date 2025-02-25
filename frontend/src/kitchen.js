@@ -12,11 +12,11 @@ function Kitchen() {
   const statusOptions = [
     "pending",
     "confirmed",
-    "being Prepared",
+    "being prepared",
     "canceled",
-    "ready for Pick Up",
+    "ready for pick up",
     "delivered",
-    "paid For",
+    "paid for",
   ];
 
   // Fetch orders and refresh every 5 seconds
@@ -58,11 +58,11 @@ function Kitchen() {
 
   // Separate orders into two categories
   const activeOrders = orders.filter((order) =>
-    ["pending", "confirmed", "being Prepared"].includes(order.status)
+    ["pending", "confirmed", "being prepared"].includes(order.status)
   );
 
   const completedOrders = orders.filter((order) =>
-    ["canceled", "ready for Pick Up", "delivered", "paid For"].includes(order.status)
+    ["canceled", "ready for pick Up", "delivered", "paid for"].includes(order.status)
   );
 
   return (
