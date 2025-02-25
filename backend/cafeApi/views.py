@@ -1,13 +1,14 @@
 from rest_framework import generics
 from rest_framework.exceptions import ValidationError
-from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer
+from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer, NotificationSerializer
 from rest_framework.views import APIView
+from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt  # Import csrf_exempt
-from .models import Order, Table, MenuItem, Customer, Waiter,KitchenStaff
+from .models import Order, Table, MenuItem, Customer, Waiter,KitchenStaff, Notification
 import json
 
 # Views for CRUD operations on MenuItems, Tables, and Customers
@@ -79,8 +80,21 @@ class OrderView(APIView):
                 menu_item = get_object_or_404(MenuItem, id=item_id)
                 order.items.add(menu_item)
 
+            # Create notification for kitchen staff
+            Notification.objects.create(
+                notification_type='order_received',
+                recipient='kitchen',
+                order=order,
+                message=f"New order received for Table {table.number}",
+                table=table
+            )
+
             # Return a successful response with the created order ID
-            return JsonResponse({"message": "Order created successfully", "order_id": order.id})
+            return JsonResponse({
+                "message": "Order created successfully",
+                "order_id": order.id,
+                "notification": f"Kitchen notified about new order for Table {table.number}"
+            })
 
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON format"}, status=400)
@@ -137,3 +151,53 @@ class ConfirmOrderUpdateView(generics.UpdateAPIView):
         kitchenStaff = get_object_or_404(KitchenStaff, Staff_id=Staff_id)
         serializer.instance.KitchenStaff = kitchenStaff  
         serializer.save()
+        
+
+
+@api_view(['POST'])
+def notifications(request):
+    notification_type = request.data.get('type')
+    table_number = request.data.get('table_number')
+    order_id = request.data.get('order_id')
+    message = request.data.get('message', '')
+    recipient = request.data.get('recipient', 'waiter')
+
+    notification_data = {
+        'notification_type': notification_type,
+        'message': message,
+        'recipient': recipient
+    }
+
+    # Get related objects
+    if table_number:
+        notification_data['table'] = get_object_or_404(Table, number=table_number)
+    if order_id:
+        notification_data['order'] = get_object_or_404(Order, id=order_id)
+
+    notification = Notification.objects.create(**notification_data)
+    
+    # Add automatic notifications
+    if notification_type == 'order_received':
+        # Send to kitchen automatically
+        Notification.objects.create(
+            notification_type='order_received',
+            recipient='kitchen',
+            order=notification.order,
+            message=f"New order received for Table {notification.order.table.number}"
+        )
+
+    serializer = NotificationSerializer(notification)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+class NotificationView(generics.ListAPIView):
+    serializer_class = NotificationSerializer
+    
+    def get_queryset(self):
+        recipient_type = self.request.query_params.get('recipient')
+        return Notification.objects.filter(recipient=recipient_type, is_read=False)
+
+class MarkNotificationRead(APIView):
+    def post(self, request, pk):
+        notification = get_object_or_404(Notification, pk=pk)
+        notification.is_read = True
+        notification.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
