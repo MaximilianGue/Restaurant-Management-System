@@ -83,10 +83,6 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.id} | Customer: {self.customer.first_name} {self.customer.last_name} | Status: {self.status} | Total: £{self.total_price}"
 
-<<<<<<< HEAD
-
-class User(abstract)
-=======
 class Notification(models.Model):
     NOTIFICATION_TYPES = [
         ('waiter_call', 'Waiter Call'),
@@ -111,4 +107,3 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.notification_type} - Table {self.table.number if self.table else 'N/A'}"
->>>>>>> 6499d03f5a3766741e567e1a751e4e0d2add3007
