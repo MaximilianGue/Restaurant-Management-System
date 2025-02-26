@@ -1,6 +1,7 @@
 # Create your models(class) here.
 # For example the customer Model or Order model
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 STATUS_CHOICES = [
     ('unconfirmed', 'Unconfirmed'),
@@ -72,3 +73,6 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.id} | Customer: {self.customer.first_name} {self.customer.last_name} | Status: {self.status} | Total: £{self.total_price}"
+
+
+class User(abstract)
