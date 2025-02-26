@@ -9,20 +9,29 @@ function Waiter({ setRole }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
 
-  // Fetch orders on load and refresh every 5 seconds
+  /**
+   *  calls loadOrders on load and refreshes every 5 seconds.
+   */
   useEffect(() => {
     loadOrders();
     const interval = setInterval(loadOrders, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  const loadOrders = async () => {
+  /**
+   * loadOrders function to fetch order data from the backend.
+   * Accepts no inputs
+   */
+  const loadOrders = async () => { 
     const ordersData = await fetchOrders();
     setOrders(ordersData || []);
   };
 
   
-  // Handler to update the order status using the API.
+  /**
+   * Handler to update the order status using the API.
+   * Accepts 2 inputs, orderId (string) and newStatus (string).
+   */
   const handleStatusChange = async (orderId, newStatus) => {
     const staffId = "X1"; // Replace with actual staff ID if available
     const updatedStatus = await updateOrderStatus(orderId, newStatus, staffId);
@@ -36,9 +45,11 @@ function Waiter({ setRole }) {
     setShowPopup(true);
   };
 
-  // Filter orders into the two categories for waiters:
-  // Left table: orders that are ready for pick up.
-  // Right table: orders that have been delivered (awaiting payment).
+  /** 
+   * Filter orders into the two categories for waiters:
+   * Left table: orders that are ready for pick up.
+   * Right table: orders that have been delivered (awaiting payment).
+   */ 
   const readyOrders = orders.filter(
     (order) => order.status === "ready for pick up"
   );
