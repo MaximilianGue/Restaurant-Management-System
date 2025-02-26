@@ -19,13 +19,15 @@ STATUS_CHOICES = [
 
 class MenuItem(models.Model):
     name = models.CharField(max_length=100)
-    price = models.DecimalField(max_digits=6,decimal_places=2)
+    price = models.DecimalField(max_digits=6, decimal_places=2)
     image = models.ImageField(upload_to="menu_images/", blank=True, null=True)
     allergies = models.JSONField(default=list, blank=True)
+    calories = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+    category = models.JSONField(default=list, blank=True)
+    cooking_time = models.IntegerField(blank=True, null=True) 
 
     def __str__(self):
-        return f"Name: {self.name} | Price: £{self.price} | Allergies: {', '.join(self.allergies) if self.allergies else 'None'}"
-
+        return f"Name: {self.name} | Price: £{self.price} | Cooking Time: {self.cooking_time} min | Allergies: {', '.join(self.allergies) if self.allergies else 'None'}"
 
 class Table(models.Model):
     number = models.IntegerField(unique=True)
