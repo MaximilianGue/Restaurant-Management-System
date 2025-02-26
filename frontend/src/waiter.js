@@ -1,96 +1,163 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchOrders, updateOrderStatus, deleteOrder } from "./api";
+import { fetchOrders, updateOrderStatus } from "./api";
+import "./Dropdown.css";
 
-function Waiter() {
+function Waiter({ setRole }) {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
-  const [orderId, setOrderId] = useState([]);
-  const [status, setStatus] = useState([]);
-  const [staffId, setStaffId] = useState([]);
-  const [showPopup, setShowPopup] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
 
-
+  // Fetch orders on load and refresh every 5 seconds
   useEffect(() => {
-      const loadData = async () => {
-        const ordersData = await fetchOrders();
-        setOrders(ordersData || []);
-      };
-      loadData();
-    }, []);
+    loadOrders();
+    const interval = setInterval(loadOrders, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
-  const cancelOrder = async () => {
-    const newOrderId = 11;
-    setOrderId(newOrderId);
+  const loadOrders = async () => {
+    const ordersData = await fetchOrders();
+    setOrders(ordersData || []);
+  };
 
-    const statusCode = await deleteOrder(newOrderId);
+  
+  // Handler to update the order status using the API.
+  const handleStatusChange = async (orderId, newStatus) => {
+    const staffId = "X1"; // Replace with actual staff ID if available
+    const updatedStatus = await updateOrderStatus(orderId, newStatus, staffId);
 
-    console.log(statusCode);
-
-    if (statusCode === undefined) {
-        setErrorMessage("order successfully cancelled");
+    if (updatedStatus === newStatus) {
+      setErrorMessage("Status successfully updated!");
+      await loadOrders(); // Refresh the orders list
     } else {
-        setErrorMessage("Failed to cancel the order");
+      setErrorMessage("Failed to update order status.");
     }
-
     setShowPopup(true);
   };
 
+  // Filter orders into the two categories for waiters:
+  // Left table: orders that are ready for pick up.
+  // Right table: orders that have been delivered (awaiting payment).
+  const readyOrders = orders.filter(
+    (order) => order.status === "ready for pick up"
+  );
+  const deliveredOrders = orders.filter((order) => order.status === "delivered");
 
-  const progressOrder = async () => {
-    const newOrderId = 1;
-    const newStatus = "canceled";
-    const newStaffId = "X1";
-
-    setOrderId(newOrderId);
-    setStatus(newStatus);
-    setStaffId(newStaffId);
-
-    const returnStatus = await updateOrderStatus(newOrderId, newStatus, newStaffId);
-
-    console.log(returnStatus);
-
-    if (newStatus === returnStatus) {
-        setErrorMessage("Status successfully updated");
-    } else {
-        setErrorMessage("Failed to update status");
-    }
-
-    setShowPopup(true);
-};
-  // Use capitalized name and pass 'orders' as a prop
   return (
-    <div className="order-list">
-      <button className="return-button" onClick={() => navigate("/")}>Return to Customer View</button>
-      <h3>Orders for Waiters:</h3>
-      {orders.length > 0 ? (
-        orders.map((order, index) => (
-          <div key={index} className="order-summary-item">
-            <span>Order #{order.id} - £{parseFloat(order.total_price || 0).toFixed(2)}</span>
-            <span>Status: {order.status}</span>
-            <button onClick={() => cancelOrder()} className="waiter-order-btn">Cancel Order</button>
-            <button onClick={() => progressOrder()} className="waiter-order-btn">Progress Order</button>
-          </div>
-     
-        ))
-      ) : (
-        <p>No orders available.</p>)}
-        {showPopup && (
-          <div className="custom-popup">
-            <p>{errorMessage}</p>
-            <button onClick={() => setShowPopup(false)}>Close</button>
-          </div>
-        )}
+    <div className="waiter-container">
+      <button
+        className="return-button"
+        onClick={() => {
+          setRole(0);
+          navigate("/");
+        }}
+      >
+        Return to Customer View
+      </button>
+      <h3>Waiter Dashboard</h3>
+      <div className="order-tables">
+        {/* Orders Ready for Pick Up */}
+        <div className="order-table">
+          <h4>Orders Ready for Pick Up</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Total (£)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {readyOrders.length > 0 ? (
+                readyOrders.map((order) => (
+                  <tr key={order.id}>
+                    <td>{order.id}</td>
+                    <td>
+                      £
+                      {parseFloat(order.total_price || 0).toFixed(2)}
+                    </td>
+                    <td>
+                      <select
+                        value={order.status}
+                        onChange={(e) =>
+                          handleStatusChange(order.id, e.target.value)
+                        }
+                      >
+                        {/* The waiter should only update a “ready” order to “delivered” */}
+                        <option value="ready for pick up">ready for pick up</option>
+                        <option value="delivered">delivered</option>
+
+                      </select>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3">No orders ready for pick up.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Delivered Orders (Awaiting Payment) */}
+        <div className="order-table">
+          <h4>Delivered Orders (Awaiting Payment)</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Order #</th>
+                <th>Total (£)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {deliveredOrders.length > 0 ? (
+                deliveredOrders.map((order) => (
+                  <tr key={order.id}>
+                    <td>{order.id}</td>
+                    <td>
+                      £
+                      {parseFloat(order.total_price || 0).toFixed(2)}
+                    </td>
+                    <td>
+                      <select
+                        value={order.status}
+                        onChange={(e) =>
+                          handleStatusChange(order.id, e.target.value)
+                        }
+                      >
+                        {/* For a delivered order, the next logical status is "paid For" */}
+                        <option value="ready for pick up">ready for pick up</option>
+                        <option value="delivered">delivered</option>
+                        <option value="paid for">paid For</option>
+                        <option value="canceled">canceled</option>
+                        
+                      </select>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3">
+                    No delivered orders awaiting payment.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {showPopup && (
+        <div className="custom-popup">
+          <p>{errorMessage}</p>
+          <button onClick={() => setShowPopup(false)}>Close</button>
+        </div>
+      )}
     </div>
   );
-
 }
 
 export default Waiter;
-
-
-
-
-
-

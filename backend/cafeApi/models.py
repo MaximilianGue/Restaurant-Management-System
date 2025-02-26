@@ -5,21 +5,30 @@ from django.contrib.auth.models import AbstractUser
 
 STATUS_CHOICES = [
     ('unconfirmed', 'Unconfirmed'),
-    ('confirmed','Confirmed'),
-    ('pending', 'Pending'),
     ('completed', 'Completed'),
+
+    ## in use
     ('canceled', 'Canceled'),
+    ('pending', 'Pending'),
+    ('confirmed','Confirmed'),
+    ('being prepared','Being prepared'),
+    ('ready for pick up','Ready for pick up'),
+    ('delivered','Delivered'),
+    ('paid for','Paid for')
+   
 ]
 
 class MenuItem(models.Model):
     name = models.CharField(max_length=100)
-    price = models.DecimalField(max_digits=6,decimal_places=2)
+    price = models.DecimalField(max_digits=6, decimal_places=2)
     image = models.ImageField(upload_to="menu_images/", blank=True, null=True)
     allergies = models.JSONField(default=list, blank=True)
+    calories = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+    category = models.JSONField(default=list, blank=True)
+    cooking_time = models.IntegerField(blank=True, null=True) 
 
     def __str__(self):
-        return f"Name: {self.name} | Price: £{self.price} | Allergies: {', '.join(self.allergies) if self.allergies else 'None'}"
-
+        return f"Name: {self.name} | Price: £{self.price} | Cooking Time: {self.cooking_time} min | Allergies: {', '.join(self.allergies) if self.allergies else 'None'}"
 
 class Table(models.Model):
     number = models.IntegerField(unique=True)
@@ -74,5 +83,32 @@ class Order(models.Model):
     def __str__(self):
         return f"Order {self.id} | Customer: {self.customer.first_name} {self.customer.last_name} | Status: {self.status} | Total: £{self.total_price}"
 
+<<<<<<< HEAD
 
 class User(abstract)
+=======
+class Notification(models.Model):
+    NOTIFICATION_TYPES = [
+        ('waiter_call', 'Waiter Call'),
+        ('order_received', 'Order Received'),
+        ('status_change', 'Status Change'),
+        ('payment', 'Payment'),
+    ]
+    
+    RECIPIENT_CHOICES = [
+        ('waiter', 'Waiter'),
+        ('kitchen', 'Kitchen Staff'),
+        ('both', 'Both'),
+    ]
+
+    table = models.ForeignKey(Table, on_delete=models.CASCADE, null=True, blank=True)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
+    recipient = models.CharField(max_length=20, choices=RECIPIENT_CHOICES)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.notification_type} - Table {self.table.number if self.table else 'N/A'}"
+>>>>>>> 6499d03f5a3766741e567e1a751e4e0d2add3007

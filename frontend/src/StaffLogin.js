@@ -39,7 +39,10 @@ function StaffLogin({ setRole }) {
       <button className="staff-button login-button" onClick={handleLogin}>
         Login
       </button>
-      <button className="return-button" onClick={() => navigate("/")}>Return to Customer View</button>
+      <button className="ret-button" onClick={() => {
+          setRole(0);
+          navigate("/");
+        }}>Return to Customer View</button>
       {/* Popup Message */} 
       {showPopup && (
         <div className="custom-popup">

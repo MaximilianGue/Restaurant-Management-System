@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation} from "react-router-dom";
 import { fetchMenuItems, fetchOrders, createOrder } from "./api";
 import StaffLogin from "./StaffLogin";
 import Waiter from "./waiter";
@@ -16,8 +16,9 @@ function App() {
   const [showPopup, setShowPopup] = useState(false);
   const [tables, setTables] = useState([]);
   const [loadingTables, setLoadingTables] = useState(true);
-
+  
   useEffect(() => {
+    setRole(0); // Set role to customer when the "/" route is loaded
     const loadData = async () => {
       const items = await fetchMenuItems();
       setMenuItems(items || []);
@@ -28,7 +29,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    document.body.classList.remove("waiter", "kitchen");
+    document.body.classList.remove("waiter", "kitchen", "customer");
+    if (role === 0) document.body.classList.add("customer");
     if (role === 1) document.body.classList.add("waiter");
     if (role === 2) document.body.classList.add("kitchen");
   }, [role]);
@@ -162,7 +164,7 @@ function App() {
   };
 
   return (
-    <Router>
+ 
       <div className="container">
         <h1 className="restaurant-title">Oaxaca</h1>
 
@@ -171,13 +173,16 @@ function App() {
 
           <Route
             path="/"
+            
             element={
+              
               <>
+                
                 <button className="staff-login" onClick={() => (window.location.href = "/staff-login")}>
                   Staff Login
                 </button>
 
-                {role === 0 && (
+                {(
                   <div className="menu-container">
                     <div className="menu-grid">
                       {menuItems.length > 0 ? (
@@ -264,6 +269,10 @@ function App() {
                     </div>
                   </div>
                 )}
+
+
+
+
               </>
             }
           />
@@ -292,7 +301,7 @@ function App() {
           </div>
         )}
       </div>
-    </Router>
+
   );
 }
 
