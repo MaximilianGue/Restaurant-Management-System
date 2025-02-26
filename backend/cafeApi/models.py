@@ -107,3 +107,18 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.notification_type} - Table {self.table.number if self.table else 'N/A'}"
+
+
+class User(AbstractUser):
+    ROLE_CHOICES = [
+        ('waiter', 'Waiter'),
+        ('kitchen_staff', 'Kitchen Staff'),
+    ]
+
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)  # Added role field
+    staff_id = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return f"{self.username} ({self.role}) - Staff ID: {self.staff_id}"
+    
+    
