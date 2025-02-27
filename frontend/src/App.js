@@ -266,9 +266,35 @@ function App() {
                       ) : (
                         <p>Your cart is empty</p>
                       )}
+             
+                    <h4>Placed Orders</h4>
+
+                      <div>
+                        {orders.length === 0 ? (
+                          <p>No orders placed for this table.</p>
+                        ) : (
+                          orders
+                            .filter((order) => order.table && order.table.number === parseInt(tableNumber)) // Added check for order.table
+                            .map((order) => (
+                              <div key={order.id} className="placed-order">
+                                <p>Order #{order.id}</p>
+                                <p>Status: {order.status}</p>
+                                <p>Total: £{order.total_price}</p>
+                              </div>
+                            ))
+                        )}
+                      </div>
+
+
+
+
+
                     </div>
+                    
                   </div>
                 )}
+
+                
 
 
 
