@@ -1,9 +1,12 @@
 from django.urls import path
-from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, notifications, NotificationView, MarkNotificationRead
+from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, notifications, NotificationView, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView
 
 urlpatterns = [
     path("menu-items/", MenuItemView.as_view(), name="menu-items"),
     path("menu-items/<int:pk>/", MenuItemDetailView.as_view(), name="menu-item-detail"),
+    path('menu-item/<int:pk>/availability/', MenuItemAvailabilityView.as_view(), name='menu-item-availability'),
+    path('menu-item/<int:pk>/update-availability/', AvailabilityUpdateView.as_view(), name='update-menu-item-availability'),
+
 
     path("tables/", TableView.as_view(), name="tables"),
     path("tables/<int:pk>/", TableDetailView.as_view(), name="table-detail"),

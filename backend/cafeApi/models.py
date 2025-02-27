@@ -25,9 +25,10 @@ class MenuItem(models.Model):
     calories = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
     category = models.JSONField(default=list, blank=True)
     cooking_time = models.IntegerField(blank=True, null=True) 
+    availability= models.IntegerField(blank=True, null=True) 
 
     def __str__(self):
-        return f"Name: {self.name} | Price: £{self.price} | Cooking Time: {self.cooking_time} min | Allergies: {', '.join(self.allergies) if self.allergies else 'None'}"
+        return f"Name: {self.name} | Price: £{self.price} | Cooking Time: {self.cooking_time} min  | availability: {self.availability} | Allergies: {', '.join(self.allergies) if self.allergies else 'None'}"
 
 class Table(models.Model):
     number = models.IntegerField(unique=True)
