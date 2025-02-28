@@ -38,6 +38,7 @@ class Table(models.Model):
 
     def __str__(self):
         return f"Table {self.number} | Status: {self.status} | Capacity: {self.capacity}"
+ 
 
 
 class Customer(models.Model):
@@ -81,6 +82,9 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.id} | Customer: {self.customer.first_name} {self.customer.last_name} | Status: {self.status} | Total: £{self.total_price}"
+    #def getTableNumber(self):
+    #    return self.table.number
+
 
 class Notification(models.Model):
     NOTIFICATION_TYPES = [
