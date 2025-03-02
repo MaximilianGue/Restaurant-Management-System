@@ -1,6 +1,6 @@
 from rest_framework import generics
 from rest_framework.exceptions import ValidationError
-from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer, NotificationSerializer
+from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer, NotificationSerializer,UpdateAvailabilitySerializer
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -26,6 +26,25 @@ class MenuItemView(generics.ListCreateAPIView):
 class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MenuItemSerializer
     queryset = MenuItem.objects.all()
+
+class MenuItemAvailabilityView(APIView):
+    def get(self,pk):
+        menu_item = get_object_or_404(MenuItem, pk=pk)
+        serializer = MenuItemSerializer(menu_item)
+        return Response({"id": menu_item.id, "availability": serializer.data["availability"]})
+
+class AvailabilityUpdateView(generics.UpdateAPIView):
+  
+    queryset = MenuItem.objects.all()
+    serializer_class = UpdateAvailabilitySerializer
+
+    def perform_update(self, serializer):
+        availability = self.request.data.get("availability", None)
+
+        if availability is None:
+            raise ValidationError({"availability": "This field is required."})
+
+        serializer.save()
 
 class TableView(generics.ListCreateAPIView):
     serializer_class = TableSerializer

@@ -17,7 +17,18 @@ class MenuItemSerializer(serializers.ModelSerializer):
         return None
     class Meta:
         model = MenuItem
-        fields = ["id", "name", "price", "image", "allergies","calories","category","cooking_time"]
+        fields = ["id", "name", "price", "image", "allergies","calories","category","cooking_time","availability"]
+
+
+class UpdateAvailabilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MenuItem
+        fields = ['availability']  # Only allow updating the availability field
+
+    def update(self, instance, validated_data):
+        instance.availability = validated_data.get("availability", instance.availability)
+        instance.save()
+        return instance
 
 
 class TableSerializer(serializers.ModelSerializer):

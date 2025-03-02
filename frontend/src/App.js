@@ -78,6 +78,9 @@ function App() {
 
   const handleTableNumberChange = (e) => {
     const value = e.target.value.replace(/\D/g, "");
+    setTableNumber(value ? parseInt(value, 10) : ""); // Ensure valid number or empty string
+  
+    
     if (value.length <= 3) {
       setTableNumber(value);
     }
@@ -126,7 +129,7 @@ function App() {
         const orderResponse = await response.json();
         setCart({});
         setOrders([...orders, orderResponse]);
-        setTableNumber("");
+        //setTableNumber("");
         setErrorMessage("Order placed successfully!");
         setShowPopup(true);
       } else {
@@ -229,7 +232,8 @@ function App() {
                       <input
                         type="text"
                         value={tableNumber}
-                        onChange={handleTableNumberChange}
+                        onChange={handleTableNumberChange} 
+                        
                         placeholder="e.g. 001"
                         className="table-input"
                         maxLength="3"
@@ -266,9 +270,36 @@ function App() {
                       ) : (
                         <p>Your cart is empty</p>
                       )}
+             
+              
+
+                    <h4>Placed Orders</h4>
+
+                      <div>
+                        {orders.length === 0 ? (
+                          <p>No orders placed for this table.</p>
+                        ) : (
+                          orders
+                            .filter((order) => order.table_id === parseInt(tableNumber, 10)) // Corrected filter
+                            .map((order) => (
+                              <div key={order.id} className="placed-order">
+                                <p>Order #{order.id}</p>
+                                <p>Status: {order.status}</p>
+                                <p>Total: £{order.total_price}</p>
+                              </div>
+                            ))
+
+                        )}
+
+                      </div>
+
+
                     </div>
+                    
                   </div>
                 )}
+
+                
 
 
 
