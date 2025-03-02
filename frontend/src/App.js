@@ -299,7 +299,7 @@ function App() {
 
                     <h4>Placed Orders</h4>
 
-                      <div>
+                      <div className="placed-orders-container">
                         {orders.length === 0 ? (
                           <p>No orders placed for this table.</p>
                         ) : (
