@@ -16,6 +16,7 @@ function App() {
   const [showPopup, setShowPopup] = useState(false);
   const [tables, setTables] = useState([]);
   const [loadingTables, setLoadingTables] = useState(true);
+  const [filter, setFilter] = useState("All");
   
   useEffect(() => {
     setRole(0); // Set role to customer when the "/" route is loaded
@@ -166,6 +167,20 @@ function App() {
     setShowPopup(true);
   };
 
+  const handleFilterChange = (category) => {
+    setFilter(category);
+  };
+
+  const filteredMenuItems =
+  filter === "All"
+    ? menuItems
+    : menuItems.filter((item) =>
+        item.category.includes(filter) // Check if filter is in the item.category list
+      );
+
+
+
+
   return (
  
       <div className="container">
@@ -178,9 +193,20 @@ function App() {
             path="/"
             
             element={
-              
               <>
-                
+              
+              <button className="staff-login" onClick={() => (window.location.href = "/staff-login")}>
+                Staff Login
+              </button>
+
+              <div className="filter-container">
+                {["All", "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian", "Gluten-Free", "Breakfast", "Dessert"].map((category) => (
+                  <button key={category} onClick={() => handleFilterChange(category)} className="filter-button">
+                    {category}
+                  </button>
+                ))}
+              </div>
+
                 <button className="staff-login" onClick={() => (window.location.href = "/staff-login")}>
                   Staff Login
                 </button>
@@ -188,8 +214,7 @@ function App() {
                 {(
                   <div className="menu-container">
                     <div className="menu-grid">
-                      {menuItems.length > 0 ? (
-                        menuItems.map((item, index) => (
+                      {filteredMenuItems.length > 0 ? (filteredMenuItems.map((item, index) => (
                           <div className="menu-item" key={index}>
                             <img
                               src={item.image}
@@ -200,9 +225,8 @@ function App() {
                             <div className="menu-item-details">
                               <h4>{item.name}</h4>
                               <p className="price">£{item.price}</p>
-                              <p>
-                                <strong>Allergies:</strong> {item.allergies.join(", ")}
-                              </p>
+                              <p><strong>Allergies:</strong> {item.allergies.join(", ")} </p>
+                              <p><strong>Calories</strong> {item.calories}</p>
 
                               {cart[item.name] ? (
                                 <div className="counter">
@@ -223,7 +247,7 @@ function App() {
                           </div>
                         ))
                       ) : (
-                        <p>Loading menu...</p>
+                        <p>Loading menu.../No items available in this category...</p>
                       )}
                     </div>
 
@@ -275,7 +299,7 @@ function App() {
 
                     <h4>Placed Orders</h4>
 
-                      <div>
+                      <div className="placed-orders-container">
                         {orders.length === 0 ? (
                           <p>No orders placed for this table.</p>
                         ) : (
@@ -292,18 +316,10 @@ function App() {
                         )}
 
                       </div>
-
-
                     </div>
                     
                   </div>
                 )}
-
-                
-
-
-
-
               </>
             }
           />
@@ -323,7 +339,6 @@ function App() {
 
         </Routes>
           
-
         {/* Popup for messages */}
         {showPopup && (
           <div className="custom-popup">
