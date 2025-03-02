@@ -225,9 +225,8 @@ function App() {
                             <div className="menu-item-details">
                               <h4>{item.name}</h4>
                               <p className="price">£{item.price}</p>
-                              <p>
-                                <strong>Allergies:</strong> {item.allergies.join(", ")}
-                              </p>
+                              <p><strong>Allergies:</strong> {item.allergies.join(", ")} </p>
+                              <p><strong>Calories</strong> {item.calories}</p>
 
                               {cart[item.name] ? (
                                 <div className="counter">
