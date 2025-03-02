@@ -542,3 +542,53 @@ body.kitchen .staff-login {
   margin-bottom: 10px; /* Space between label and input field */
   color: #333;
 }
+
+/* Filter Container */
+.filter-container {
+  display: flex;
+  justify-content: center; /* Center the filter buttons */
+  gap: 20px; /* Add space between buttons */
+  margin-bottom: 30px; /* Add some space below */
+}
+
+/* Filter Button */
+.filter-button {
+  background-color: #fbe4b0; /* Creamy orange background */
+  color: #333; /* Dark text */
+  font-size: 1.2em; /* Slightly larger font size */
+  padding: 12px 25px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  text-transform: uppercase; /* Make the text uppercase */
+}
+
+/* Filter Button on Hover */
+.filter-button:hover {
+  background-color: #f39c12; /* Darker orange on hover */
+  transform: scale(1.05); /* Slight zoom effect on hover */
+}
+
+/* Active Filter Button */
+.filter-button.active {
+  background-color: #3b82f6; /* Blue for active filter */
+  color: white; /* White text when active */
+}
+
+/* Filter Labels */
+.filter-button-label {
+  font-size: 0.9em;
+  color: #666; /* Slightly muted gray */
+  margin-top: 5px;
+  display: block;
+  text-transform: none;
+}
+
+/* Style for the selected category text */
+.selected-category {
+  margin-top: 10px;
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #333;
+}
