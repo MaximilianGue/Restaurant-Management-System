@@ -120,7 +120,7 @@ class User(AbstractUser):
         ('kitchen_staff', 'Kitchen Staff'),
     ]
 
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)  # Added role field
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES) 
     staff_id = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
