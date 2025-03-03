@@ -16,6 +16,7 @@ function App() {
   const [showPopup, setShowPopup] = useState(false);
   const [tables, setTables] = useState([]);
   const [loadingTables, setLoadingTables] = useState(true);
+  const [filter, setFilter] = useState("All");
   
   useEffect(() => {
     setRole(0); // Set role to customer when the "/" route is loaded
@@ -87,63 +88,52 @@ function App() {
   };
 
   const handlePlaceOrder = async () => {
-    const tableNum = parseInt(tableNumber, 10); // Convert input to an integer
+    const tableNum = parseInt(tableNumber, 10);
 
     if (isNaN(tableNum)) {
-      setErrorMessage("Please enter a valid table number.");
-      setShowPopup(true);
-      return;
+        setErrorMessage("Please enter a valid table number.");
+        setShowPopup(true);
+        return;
     }
 
-    // Validate if the table exists
     if (!tables.some((table) => table.number === tableNum)) {
-      setErrorMessage("Invalid table number. This table number does not exist.");
-      setShowPopup(true);
-      return;
+        setErrorMessage("Invalid table number. This table number does not exist.");
+        setShowPopup(true);
+        return;
     }
 
     const orderData = {
-      table_id: tableNumber,
-      table_number: tableNumber,
-      status: "pending",
-      total_price: parseFloat(totalAmount),
-      item_ids: Object.keys(cart).map((itemName) => {
-        const item = menuItems.find((menuItem) => menuItem.name === itemName);
-        return item?.id;
-      }),
+        table_number: tableNumber,
+        status: "pending",
+        total_price: parseFloat(totalAmount),
+        items: Object.keys(cart).map((itemName) => {
+            const item = menuItems.find((menuItem) => menuItem.name === itemName);
+            return {
+                item_id: item?.id,
+                quantity: cart[itemName]  // Track quantity directly
+            };
+        }),
     };
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/cafeApi/orders/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Credentials": "true", // Allow credentials
-        },
-        body: JSON.stringify(orderData),
-        credentials: "include", // Include credentials if you're sending cookies
-      });
-      
+        const response = await createOrder(orderData); 
 
-      if (response.ok) {
-        const orderResponse = await response.json();
-        setCart({});
-        setOrders([...orders, orderResponse]);
-        //setTableNumber("");
-        setErrorMessage("Order placed successfully!");
-        setShowPopup(true);
-      } else {
-        const errorDetails = await response.text(); // Log detailed error message
-        console.error("Response error:", errorDetails);
-        setErrorMessage("Failed to place order. Please try again.");
-        setShowPopup(true);
-      }
+        if (response) {
+            setCart({});
+            setOrders([...orders, response]);
+            setErrorMessage("Order placed successfully!");
+            setShowPopup(true);
+        } else {
+            setErrorMessage("Failed to place order. Please try again.");
+            setShowPopup(true);
+        }
     } catch (error) {
-      console.error("Error placing order:", error);
-      setErrorMessage(`Error placing order: ${error.message || "Unknown error"}`);
-      setShowPopup(true);
+        console.error("Error placing order:", error);
+        setErrorMessage(`Error placing order: ${error.message || "Unknown error"}`);
+        setShowPopup(true);
     }
-  };
+};
+
 
   const handleCallWaiter = () => {
     const tableNum = parseInt(tableNumber, 10); // Convert input to an integer
@@ -166,6 +156,20 @@ function App() {
     setShowPopup(true);
   };
 
+  const handleFilterChange = (category) => {
+    setFilter(category);
+  };
+
+  const filteredMenuItems =
+  filter === "All"
+    ? menuItems
+    : menuItems.filter((item) =>
+        item.category.includes(filter) // Check if filter is in the item.category list
+      );
+
+
+
+
   return (
  
       <div className="container">
@@ -178,9 +182,20 @@ function App() {
             path="/"
             
             element={
-              
               <>
-                
+              
+              <button className="staff-login" onClick={() => (window.location.href = "/staff-login")}>
+                Staff Login
+              </button>
+
+              <div className="filter-container">
+                {["All", "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian", "Gluten-Free", "Breakfast", "Dessert"].map((category) => (
+                  <button key={category} onClick={() => handleFilterChange(category)} className="filter-button">
+                    {category}
+                  </button>
+                ))}
+              </div>
+
                 <button className="staff-login" onClick={() => (window.location.href = "/staff-login")}>
                   Staff Login
                 </button>
@@ -188,8 +203,7 @@ function App() {
                 {(
                   <div className="menu-container">
                     <div className="menu-grid">
-                      {menuItems.length > 0 ? (
-                        menuItems.map((item, index) => (
+                      {filteredMenuItems.length > 0 ? (filteredMenuItems.map((item, index) => (
                           <div className="menu-item" key={index}>
                             <img
                               src={item.image}
@@ -200,9 +214,8 @@ function App() {
                             <div className="menu-item-details">
                               <h4>{item.name}</h4>
                               <p className="price">£{item.price}</p>
-                              <p>
-                                <strong>Allergies:</strong> {item.allergies.join(", ")}
-                              </p>
+                              <p><strong>Allergies:</strong> {item.allergies.join(", ")} </p>
+                              <p><strong>Calories</strong> {item.calories}</p>
 
                               {cart[item.name] ? (
                                 <div className="counter">
@@ -223,7 +236,7 @@ function App() {
                           </div>
                         ))
                       ) : (
-                        <p>Loading menu...</p>
+                        <p>Loading menu.../No items available in this category...</p>
                       )}
                     </div>
 
@@ -275,7 +288,7 @@ function App() {
 
                     <h4>Placed Orders</h4>
 
-                      <div>
+                      <div className="placed-orders-container">
                         {orders.length === 0 ? (
                           <p>No orders placed for this table.</p>
                         ) : (
@@ -292,18 +305,10 @@ function App() {
                         )}
 
                       </div>
-
-
                     </div>
                     
                   </div>
                 )}
-
-                
-
-
-
-
               </>
             }
           />
@@ -323,7 +328,6 @@ function App() {
 
         </Routes>
           
-
         {/* Popup for messages */}
         {showPopup && (
           <div className="custom-popup">
