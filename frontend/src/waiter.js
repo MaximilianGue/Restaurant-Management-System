@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchOrders, updateOrderStatus } from "./api";
 import "./Dropdown.css";
 
-function Waiter({ setRole }) {
+function Waiter({ setRole, hiddenItems, setHiddenItems }) {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
@@ -40,6 +40,14 @@ function Waiter({ setRole }) {
   const pendingOrders = orders.filter((order) => order.status === "pending");
   const readyOrders = orders.filter((order) => order.status === "ready for pick up");
   const deliveredOrders = orders.filter((order) => order.status === "delivered");
+
+  const toggleHiddenItem = (itemName) => {
+    setHiddenItems(prevHiddenItems =>
+      prevHiddenItems.includes(itemName)
+        ? prevHiddenItems.filter(item => item !== itemName)
+        : [...prevHiddenItems, itemName]
+    );
+  };
 
   return (
     <div className="waiter-container">
@@ -155,6 +163,25 @@ function Waiter({ setRole }) {
           </table>
         </div>
 
+        <div className="menu-select">
+        <h4>Hide/Unhide Menu Items</h4>
+        {orders.length > 0 ? (
+          orders.map(order => (
+            <div key={order.id} className="menu-item">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={hiddenItems.includes(order.item_name)}
+                  onChange={() => toggleHiddenItem(order.item_name)}
+                />
+                {order.item_name}
+              </label>
+            </div>
+          ))
+        ) : (
+          <p>No menu items available.</p>
+        )}
+        </div>
 
       </div>
 
