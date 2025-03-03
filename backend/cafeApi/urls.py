@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, notifications, NotificationView, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView
+from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, notifications, NotificationView, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView
 
 urlpatterns = [
     path("menu-items/", MenuItemView.as_view(), name="menu-items"),
@@ -27,5 +27,9 @@ urlpatterns = [
     
     path("notifications/", notifications, name="notifications"),
     path("notifications/list/", NotificationView.as_view(), name="notification-list"),
-    path("notifications/<int:pk>/read/", MarkNotificationRead.as_view(), name="mark-read"), 
+    path("notifications/<int:pk>/read/", MarkNotificationRead.as_view(), name="mark-read"),
+
+    path('register/', RegisterView.as_view(), name='register'),
+    path('login/', LoginView.as_view(), name='login'),
+    path('users/', UserListView.as_view(), name='user-list'),
 ]
