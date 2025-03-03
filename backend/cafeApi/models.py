@@ -78,14 +78,17 @@ class Order(models.Model):
     order_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    items = models.ManyToManyField(MenuItem, related_name="orders")
+    items = models.ManyToManyField(MenuItem, through='OrderItem')
     waiter = models.ForeignKey(Waiter, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
 
     def __str__(self):
         return f"Order {self.id} | Customer: {self.customer.first_name} {self.customer.last_name} | Status: {self.status} | Total: £{self.total_price}"
-    #def getTableNumber(self):
-    #    return self.table.number
 
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=1) 
 
 class Notification(models.Model):
     NOTIFICATION_TYPES = [
