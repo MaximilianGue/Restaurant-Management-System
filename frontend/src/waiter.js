@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchOrders, updateOrderStatus } from "./api";
+import { fetchOrders, fetchMenuItems, updateOrderStatus } from "./api";
 import "./Dropdown.css";
 
 function Waiter({ setRole, hiddenItems, setHiddenItems }) {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
 
   useEffect(() => {
     loadOrders();
+    loadMenuItems(); // Fetch menu items
     const interval = setInterval(loadOrders, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -18,6 +20,11 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
   const loadOrders = async () => {
     const ordersData = await fetchOrders();
     setOrders(ordersData || []);
+  };
+
+  const loadMenuItems = async () => {
+    const items = await fetchMenuItems();
+    setMenuItems(items || []);
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
@@ -49,6 +56,9 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
     );
   };
 
+  // The filteredMenuItems should show only items that are NOT in the hiddenItems array
+  const filteredMenuItems = menuItems.filter(item => !hiddenItems.includes(item.name));
+
   return (
     <div className="waiter-container">
       <button className="return-button" onClick={() => {
@@ -58,9 +68,9 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
         Return to Customer View
       </button>
       <h3>Waiter Dashboard</h3>
+
+      {/* Orders Section */}
       <div className="order-tables">
-        
-     
         {/* Orders Ready for Pick Up */}
         <div className="order-table">
           <h4>Orders Ready for Pick Up</h4>
@@ -130,7 +140,7 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
           </table>
         </div>
 
-       {/* Pending Orders - Can be Canceled */}
+        {/* Pending Orders - Can be Canceled */}
         <div className="order-table">
           <h4>Pending Orders</h4>
           <table>
@@ -163,29 +173,30 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
           </table>
         </div>
 
+        {/* Hide/Unhide Menu Items */}
         <div className="menu-select">
-        <h4>Hide/Unhide Menu Items</h4>
-        {orders.length > 0 ? (
-          orders.map(order => (
-            <div key={order.id} className="menu-item">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={hiddenItems.includes(order.item_name)}
-                  onChange={() => toggleHiddenItem(order.item_name)}
-                />
-                {order.item_name}
-              </label>
-            </div>
-          ))
-        ) : (
-          <p>No menu items available.</p>
-        )}
+          <h4>Hide/Unhide Menu Items</h4>
+          {menuItems.length > 0 ? (
+            menuItems.map(item => (
+              <div key={item.id} className="menu-item">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={!hiddenItems.includes(item.name)} 
+                    onChange={() => toggleHiddenItem(item.name)} 
+                  />
+                  {item.name}
+                </label>
+              </div>
+            ))
+          ) : (
+            <p>No menu items available.</p>
+          )}
         </div>
 
       </div>
 
-
+      {/* Popup for error messages */}
       {showPopup && (
         <div className="custom-popup">
           <p>{errorMessage}</p>
