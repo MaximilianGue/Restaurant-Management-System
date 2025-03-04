@@ -16,6 +16,7 @@ function App() {
   const [showPopup, setShowPopup] = useState(false);
   const [tables, setTables] = useState([]);
   const [loadingTables, setLoadingTables] = useState(true);
+  const [filter, setFilter] = useState("All");
   
   useEffect(() => {
     setRole(0); // Set role to customer when the "/" route is loaded
@@ -78,6 +79,9 @@ function App() {
 
   const handleTableNumberChange = (e) => {
     const value = e.target.value.replace(/\D/g, "");
+    setTableNumber(value ? parseInt(value, 10) : ""); // Ensure valid number or empty string
+  
+    
     if (value.length <= 3) {
       setTableNumber(value);
     }
@@ -126,7 +130,7 @@ function App() {
         const orderResponse = await response.json();
         setCart({});
         setOrders([...orders, orderResponse]);
-        setTableNumber("");
+        //setTableNumber("");
         setErrorMessage("Order placed successfully!");
         setShowPopup(true);
       } else {
@@ -163,6 +167,17 @@ function App() {
     setShowPopup(true);
   };
 
+  const handleFilterChange = (category) => {
+    setFilter(category);
+  };
+
+  const [hiddenItems, setHiddenItems] = useState([]);
+
+  const filteredMenuItems = menuItems
+    .filter(item => !hiddenItems.includes(item.name)) // Exclude hidden items
+    .filter(item => filter === "All" || item.category.includes(filter));
+
+
   return (
  
       <div className="container">
@@ -175,9 +190,20 @@ function App() {
             path="/"
             
             element={
-              
               <>
-                
+              
+              <button className="staff-login" onClick={() => (window.location.href = "/staff-login")}>
+                Staff Login
+              </button>
+
+              <div className="filter-container">
+                {["All", "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian", "Gluten-Free", "Breakfast", "Dessert"].map((category) => (
+                  <button key={category} onClick={() => handleFilterChange(category)} className="filter-button">
+                    {category}
+                  </button>
+                ))}
+              </div>
+
                 <button className="staff-login" onClick={() => (window.location.href = "/staff-login")}>
                   Staff Login
                 </button>
@@ -185,8 +211,7 @@ function App() {
                 {(
                   <div className="menu-container">
                     <div className="menu-grid">
-                      {menuItems.length > 0 ? (
-                        menuItems.map((item, index) => (
+                      {filteredMenuItems.length > 0 ? (filteredMenuItems.map((item, index) => (
                           <div className="menu-item" key={index}>
                             <img
                               src={item.image}
@@ -197,9 +222,8 @@ function App() {
                             <div className="menu-item-details">
                               <h4>{item.name}</h4>
                               <p className="price">£{item.price}</p>
-                              <p>
-                                <strong>Allergies:</strong> {item.allergies.join(", ")}
-                              </p>
+                              <p><strong>Allergies:</strong> {item.allergies.join(", ")} </p>
+                              <p><strong>Calories</strong> {item.calories}</p>
 
                               {cart[item.name] ? (
                                 <div className="counter">
@@ -220,7 +244,7 @@ function App() {
                           </div>
                         ))
                       ) : (
-                        <p>Loading menu...</p>
+                        <p>Loading menu.../No items available in this category...</p>
                       )}
                     </div>
 
@@ -229,7 +253,8 @@ function App() {
                       <input
                         type="text"
                         value={tableNumber}
-                        onChange={handleTableNumberChange}
+                        onChange={handleTableNumberChange} 
+                        
                         placeholder="e.g. 001"
                         className="table-input"
                         maxLength="3"
@@ -266,20 +291,39 @@ function App() {
                       ) : (
                         <p>Your cart is empty</p>
                       )}
+             
+              
+
+                    <h4>Placed Orders</h4>
+
+                      <div className="placed-orders-com">
+                        {orders.length === 0 ? (
+                          <p>No orders placed for this table.</p>
+                        ) : (
+                          orders
+                            .filter((order) => order.table_id === parseInt(tableNumber, 10)) // Corrected filter
+                            .map((order) => (
+                              <div key={order.id} className="placed-order">
+                                <p>Order #{order.id}</p>
+                                <p>Status: {order.status}</p>
+                                <p>Total: £{order.total_price}</p>
+                              </div>
+                            ))
+
+                        )}
+
+                      </div>
                     </div>
+                    
                   </div>
                 )}
-
-
-
-
               </>
             }
           />
 
           {/* Add your other Routes for Waiter and Kitchen pages */}
 
-          <Route path="/waiter" element={<Waiter setRole={setRole} />} />
+          <Route path="/waiter" element={<Waiter setRole={setRole} hiddenItems={hiddenItems} setHiddenItems={setHiddenItems} />} />
           <Route
             path="/"
               
@@ -292,7 +336,6 @@ function App() {
 
         </Routes>
           
-
         {/* Popup for messages */}
         {showPopup && (
           <div className="custom-popup">

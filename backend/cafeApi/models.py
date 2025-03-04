@@ -1,6 +1,7 @@
 # Create your models(class) here.
 # For example the customer Model or Order model
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 STATUS_CHOICES = [
     ('unconfirmed', 'Unconfirmed'),
@@ -25,9 +26,10 @@ class MenuItem(models.Model):
     calories = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
     category = models.JSONField(default=list, blank=True)
     cooking_time = models.IntegerField(blank=True, null=True) 
+    availability= models.IntegerField(blank=True, null=True) 
 
     def __str__(self):
-        return f"Name: {self.name} | Price: £{self.price} | Cooking Time: {self.cooking_time} min | Allergies: {', '.join(self.allergies) if self.allergies else 'None'}"
+        return f"Name: {self.name} | Price: £{self.price} | Cooking Time: {self.cooking_time} min  | availability: {self.availability} | Allergies: {', '.join(self.allergies) if self.allergies else 'None'}"
 
 class Table(models.Model):
     number = models.IntegerField(unique=True)
@@ -38,6 +40,7 @@ class Table(models.Model):
 
     def __str__(self):
         return f"Table {self.number} | Status: {self.status} | Capacity: {self.capacity}"
+ 
 
 
 class Customer(models.Model):
@@ -76,11 +79,17 @@ class Order(models.Model):
     order_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     total_price = models.DecimalField(max_digits=10, decimal_places=2)
-    items = models.ManyToManyField(MenuItem, related_name="orders")
+    items = models.ManyToManyField(MenuItem, through='OrderItem')
     waiter = models.ForeignKey(Waiter, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
 
     def __str__(self):
         return f"Order {self.id} | Customer: {self.customer.first_name} {self.customer.last_name} | Status: {self.status} | Total: £{self.total_price}"
+
+
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
+    quantity = models.IntegerField(default=1) 
 
 class Notification(models.Model):
     NOTIFICATION_TYPES = [
@@ -106,3 +115,18 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.notification_type} - Table {self.table.number if self.table else 'N/A'}"
+
+
+class User(AbstractUser):
+    ROLE_CHOICES = [
+        ('waiter', 'Waiter'),
+        ('kitchen_staff', 'Kitchen Staff'),
+    ]
+
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES) 
+    staff_id = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return f"{self.username} ({self.role}) - Staff ID: {self.staff_id}"
+    
+    

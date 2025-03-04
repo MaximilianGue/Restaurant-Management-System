@@ -225,3 +225,36 @@ export const confirmOrder = async (orderId, confirmationStatus, staffId) => {
   }
 };
 
+export const fetchAvailability = async (menuItemId) => {
+  try {
+    const response = await api.get(`menu-item/${menuItemId}/availability/`);
+
+    console.log(" Response Data:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(" Error getting availability data:", error.response ? error.response.data : error.message);
+    return null;
+  }
+};
+
+export const updateAvailability = async (menuItemId,availabilityNum) => {
+  try {
+    const response = await api.put(
+      `menu-item/${menuItemId}/update-availability/`,
+      {
+        availability: availabilityNum,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(" Response Data:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(" Error updating availability data:", error.response ? error.response.data : error.message);
+    return null;
+  }
+};

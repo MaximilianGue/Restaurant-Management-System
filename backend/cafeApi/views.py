@@ -1,14 +1,17 @@
-from rest_framework import generics
+from rest_framework import generics, permissions
 from rest_framework.exceptions import ValidationError
-from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer, NotificationSerializer
+from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer, NotificationSerializer,UpdateAvailabilitySerializer, get_user_model, UserSerializer
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework_simplejwt.tokens import RefreshToken  
+from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated 
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt  # Import csrf_exempt
-from .models import Order, Table, MenuItem, Customer, Waiter,KitchenStaff, Notification
+from .models import Order, Table, MenuItem, Customer, Waiter,KitchenStaff, Notification,OrderItem
 import json
 
 # Views for CRUD operations on MenuItems, Tables, and Customers
@@ -24,6 +27,25 @@ class MenuItemView(generics.ListCreateAPIView):
 class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MenuItemSerializer
     queryset = MenuItem.objects.all()
+
+class MenuItemAvailabilityView(APIView):
+    def get(self,pk):
+        menu_item = get_object_or_404(MenuItem, pk=pk)
+        serializer = MenuItemSerializer(menu_item)
+        return Response({"id": menu_item.id, "availability": serializer.data["availability"]})
+
+class AvailabilityUpdateView(generics.UpdateAPIView):
+  
+    queryset = MenuItem.objects.all()
+    serializer_class = UpdateAvailabilitySerializer
+
+    def perform_update(self, serializer):
+        availability = self.request.data.get("availability", None)
+
+        if availability is None:
+            raise ValidationError({"availability": "This field is required."})
+
+        serializer.save()
 
 class TableView(generics.ListCreateAPIView):
     serializer_class = TableSerializer
@@ -44,43 +66,67 @@ class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 # OrderView to create an order using a POST request
 class OrderView(APIView):
-    @csrf_exempt
     def get(self, request):
         orders = Order.objects.all()
-        serializer = OrderSerializer(orders, many=True, context={"request": request})  
-        return Response(serializer.data, status=status.HTTP_200_OK)
+
+        orders_data = []
+        for order in orders:
+            order_data = {
+                "id": order.id,
+                "table_id": order.table.id,
+                "order_date": order.order_date,
+                "status": order.status,
+                "total_price": order.total_price,
+                "items": []
+            }
+
+            order_items = OrderItem.objects.filter(order=order).select_related('menu_item')
+
+            for order_item in order_items:
+                menu_item = order_item.menu_item
+                order_data["items"].append({
+                    "id": menu_item.id,
+                    "name": menu_item.name,
+                    "price": menu_item.price,
+                    "image": request.build_absolute_uri(menu_item.image.url) if menu_item.image else None,
+                    "allergies": menu_item.allergies,
+                    "calories": menu_item.calories,
+                    "category": menu_item.category,
+                    "cooking_time": menu_item.cooking_time,
+                    "availability": menu_item.availability,
+                    "quantity": order_item.quantity  # <- Directly from the database, always correct
+                })
+
+            orders_data.append(order_data)
+
+        return Response(orders_data, status=200)
+
 
     def post(self, request):
         try:
-            # Parse the JSON data from the request body
             data = json.loads(request.body)
-            print("Received data:", data)  # Debugging: Print request data
 
-            # Validate the table number
             table_number = data.get("table_number")
-            if not table_number:
-                return JsonResponse({"error": "Table number is required"}, status=400)
-
             table = get_object_or_404(Table, number=table_number)
 
-            # Validate menu items (item_ids must be provided)
-            item_ids = data.get("item_ids", [])
-            if not item_ids:
-                return JsonResponse({"error": "No items provided in the order"}, status=400)
+            items_data = data.get("items", [])
+            if not items_data:
+                return JsonResponse({"error": "No items provided"}, status=400)
 
-            # Create the order
             order = Order.objects.create(
                 table=table,
-                status=data.get("status", "pending"),  # Default to "pending"
+                status=data.get("status", "pending"),
                 total_price=data["total_price"]
             )
 
-            # Add items to the order
-            for item_id in item_ids:
+            # Loop over items and create OrderItem entries
+            for item_data in items_data:
+                item_id = item_data.get("item_id")
+                quantity = item_data.get("quantity", 1)
                 menu_item = get_object_or_404(MenuItem, id=item_id)
-                order.items.add(menu_item)
 
-            # Create notification for kitchen staff
+                OrderItem.objects.create(order=order, menu_item=menu_item, quantity=quantity)
+
             Notification.objects.create(
                 notification_type='order_received',
                 recipient='kitchen',
@@ -89,21 +135,15 @@ class OrderView(APIView):
                 table=table
             )
 
-            # Return a successful response with the created order ID
             return JsonResponse({
                 "message": "Order created successfully",
-                "order_id": order.id,
-                "notification": f"Kitchen notified about new order for Table {table.number}"
+                "order_id": order.id
             })
 
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON format"}, status=400)
-        except KeyError as e:
-            return JsonResponse({"error": f"Missing field: {str(e)}"}, status=400)
         except Exception as e:
-            return JsonResponse({"error": f"An unexpected error occurred: {str(e)}"}, status=500)
+            return JsonResponse({"error": str(e)}, status=500)
 
-
+   
 # OrderDetailView for retrieving, updating, or deleting a specific order
 class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = OrderSerializer
@@ -201,3 +241,40 @@ class MarkNotificationRead(APIView):
         notification.is_read = True
         notification.save()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+
+class RegisterView(generics.CreateAPIView):
+    queryset = get_user_model().objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
+
+    def perform_create(self, serializer):
+        serializer.save()
+
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        password = request.data.get('password')
+
+        if not username or not password:
+            return Response({'detail': 'Username and password are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = get_user_model().objects.filter(username=username).first()
+
+        if user and user.check_password(password):
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'access_token': str(refresh.access_token),
+                'refresh_token': str(refresh)
+            })
+
+        return Response({'detail': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class UserListView(generics.ListAPIView):
+    queryset = get_user_model().objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [AllowAny]
