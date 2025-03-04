@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { fetchOrders, fetchMenuItems, updateOrderStatus } from "./api";
+import { fetchOrders, fetchMenuItems, fetchTables, updateOrderStatus } from "./api";
 import "./Dropdown.css";
 
 function Waiter({ setRole, hiddenItems, setHiddenItems }) {
@@ -9,6 +9,7 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
   const [menuItems, setMenuItems] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
+  const [tables, setTables] = useState([]);
 
   /**
    *  calls loadOrders on load and refreshes every 5 seconds.
@@ -16,6 +17,7 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
   useEffect(() => {
     loadOrders();
     loadMenuItems(); // Fetch menu items
+    loadTables();
     const interval = setInterval(loadOrders, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -27,6 +29,11 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
   const loadOrders = async () => { 
     const ordersData = await fetchOrders();
     setOrders(ordersData || []);
+  };
+
+  const loadTables = async () => {
+    const tablesData = await fetchTables();
+    setTables(tablesData || []);
   };
 
   /**
@@ -55,9 +62,15 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
     await handleStatusChange(orderId, "canceled");
   };
 
+  const tableAlert = async (tableNumber) => {
+    setErrorMessage("Table #"+tableNumber+" is in need of assistance!");
+    setShowPopup(true);
+  };
+
   const pendingOrders = orders.filter((order) => order.status === "pending");
   const readyOrders = orders.filter((order) => order.status === "ready for pick up");
   const deliveredOrders = orders.filter((order) => order.status === "delivered");
+  const knownTables = tables;
 
   const toggleHiddenItem = (itemName) => {
     setHiddenItems(prevHiddenItems =>
@@ -205,6 +218,41 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
           )}
         </div>
 
+      </div>
+
+      {/* Table Alert System */}
+      <div className="table-alert">
+        <h4>Table Alert System</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Table #</th>
+              <th>Status</th>
+              <th>Assigned Waiter</th>
+              <th>Alert</th>
+            </tr>
+          </thead>
+          <tbody>
+            {knownTables.length > 0 ? (
+              knownTables.map((table) => (
+                <tr key={table.number}>
+                  <td>{table.number}</td>
+                  <td>{table.status}</td>
+                  <td>{table.waiter_name}</td>
+                  <td>
+                    <button className="alert-button" onClick={() => tableAlert(table.number)}>
+                    Alert!
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="3">No pending orders.</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Popup for error messages */}
