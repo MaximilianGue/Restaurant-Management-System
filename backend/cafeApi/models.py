@@ -83,13 +83,13 @@ class Order(models.Model):
     waiter = models.ForeignKey(Waiter, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
 
     def __str__(self):
-        return f"Order {self.id} | Customer: {self.customer.first_name} {self.customer.last_name} | Status: {self.status} | Total: £{self.total_price}"
-
+        return f"Order {self.id} | Customer: {self.customer.first_name if self.customer else 'No Customer'} {self.customer.last_name if self.customer else ''} | Status: {self.status} | Total: £{self.total_price}"
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1) 
+
 
 class Notification(models.Model):
     NOTIFICATION_TYPES = [
@@ -98,24 +98,28 @@ class Notification(models.Model):
         ('status_change', 'Status Change'),
         ('payment', 'Payment'),
     ]
-    
-    RECIPIENT_CHOICES = [
-        ('waiter', 'Waiter'),
-        ('kitchen', 'Kitchen Staff'),
-        ('both', 'Both'),
-    ]
-
+    waiter = models.ForeignKey(Waiter, on_delete=models.CASCADE, null=True, blank=True)
+    kitchen_staff = models.ForeignKey(KitchenStaff, on_delete=models.CASCADE, null=True, blank=True)
     table = models.ForeignKey(Table, on_delete=models.CASCADE, null=True, blank=True)
     order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
     notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
-    recipient = models.CharField(max_length=20, choices=RECIPIENT_CHOICES)
-    message = models.TextField()
+    message = models.TextField(blank=True, default="") 
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.notification_type} - Table {self.table.number if self.table else 'N/A'}"
+        waiter_name = self.waiter.first_name if self.waiter else "No Waiter"
+        kitchen_staff_name = self.kitchen_staff.first_name if self.kitchen_staff and isinstance(self.kitchen_staff, KitchenStaff) else "No Kitchen Staff"
 
+        if self.waiter:
+            target = f"Waiter {waiter_name}"
+        elif self.kitchen_staff:
+            target = f"KitchenStaff {kitchen_staff_name}"
+        else:
+            target = "Unknown recipient"  # Prevents crashing if no recipient exists
+
+        table_number = self.table.number if self.table else "N/A"
+        return f"{self.notification_type} to {target} - Table {table_number}"
 
 class User(AbstractUser):
     ROLE_CHOICES = [

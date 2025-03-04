@@ -1,3 +1,7 @@
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions
 from rest_framework.exceptions import ValidationError
 from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer, NotificationSerializer,UpdateAvailabilitySerializer, get_user_model, UserSerializer
@@ -194,46 +198,108 @@ class ConfirmOrderUpdateView(generics.UpdateAPIView):
         
 
 
-@api_view(['POST'])
-def notifications(request):
-    notification_type = request.data.get('type')
-    table_number = request.data.get('table_number')
-    order_id = request.data.get('order_id')
-    message = request.data.get('message', '')
-    recipient = request.data.get('recipient', 'waiter')
-
-    notification_data = {
-        'notification_type': notification_type,
-        'message': message,
-        'recipient': recipient
-    }
-
-    # Get related objects
-    if table_number:
-        notification_data['table'] = get_object_or_404(Table, number=table_number)
-    if order_id:
-        notification_data['order'] = get_object_or_404(Order, id=order_id)
-
-    notification = Notification.objects.create(**notification_data)
-    
-    # Add automatic notifications
-    if notification_type == 'order_received':
-        # Send to kitchen automatically
-        Notification.objects.create(
-            notification_type='order_received',
-            recipient='kitchen',
-            order=notification.order,
-            message=f"New order received for Table {notification.order.table.number}"
-        )
-
-    serializer = NotificationSerializer(notification)
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
-class NotificationView(generics.ListAPIView):
+class NotificationViewSet(viewsets.ModelViewSet):
+    """
+    A viewset to manage notifications between waiters and kitchen staff.
+    """
+    queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
+    permission_classes = [AllowAny]
     
-    def get_queryset(self):
-        recipient_type = self.request.query_params.get('recipient')
-        return Notification.objects.filter(recipient=recipient_type, is_read=False)
+    @action(detail=False, methods=['POST'])
+    def notify_waiter(self, request):
+        """
+        Kitchen staff sends a notification to a specific waiter when an order is ready.
+        """
+        staff_id = request.data.get('Staff_id')
+        order_id = request.data.get('order_id')
+        message = request.data.get('message', '')
+
+        if not staff_id or not order_id:
+            return Response({"detail": "Staff_id and order_id are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        kitchen_staff = KitchenStaff.objects.filter(Staff_id=staff_id).first()
+        if not kitchen_staff:
+            return Response({"detail": "Only kitchen staff can send order-ready notifications."}, status=status.HTTP_403_FORBIDDEN)
+
+        order = get_object_or_404(Order, id=order_id)
+        if not order.waiter:
+            return Response({"detail": "No waiter assigned to this order."}, status=status.HTTP_400_BAD_REQUEST)
+
+        notification = Notification.objects.create(
+            notification_type='status_change',
+            waiter=order.waiter,
+            order=order,
+            table=order.table,
+            message=message or f"Order {order.id} is ready for pickup."
+        )
+        return Response(NotificationSerializer(notification).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['POST'])
+    def notify_kitchen(self, request):
+        """
+        Waiter sends a notification to a specific kitchen staff member requesting assistance.
+        """
+        staff_id = request.data.get('Staff_id')
+        target_staff_id = request.data.get('kitchen_staff_id')
+        message = request.data.get('message', '')
+        table_number = request.data.get('table_number')
+
+        if not waiter and not kitchen_staff:
+            return Response({"detail": "A notification must have either a waiter or kitchen staff recipient."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not staff_id or not target_staff_id:
+            return Response({"detail": "Staff_id and kitchen_staff_id are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        waiter = Waiter.objects.filter(Staff_id=staff_id).first()
+        if not waiter:
+            return Response({"detail": "Only waiters can send assistance requests to kitchen staff."}, status=status.HTTP_403_FORBIDDEN)
+
+        kitchen_staff = get_object_or_404(KitchenStaff, id=target_staff_id)
+
+        note_message = message if message else f"Waiter {waiter.first_name} {waiter.last_name} needs assistance."
+        if table_number:
+            note_message += f" at Table {table_number}."
+
+        table = Table.objects.filter(number=table_number).first() if table_number else None
+
+        notification = Notification.objects.create(
+            notification_type='waiter_call',
+            kitchen_staff=kitchen_staff,
+            table=table,
+            message=note_message
+        )
+        return Response(NotificationSerializer(notification).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=['GET'])
+    def list_notifications(self, request):
+        """
+        List unread notifications for a specific recipient (waiter or kitchen staff).
+        """
+        waiter_id = request.query_params.get('waiter_id')
+        kitchen_staff_id = request.query_params.get('kitchen_staff_id')
+
+        if waiter_id:
+            notifications = Notification.objects.filter(waiter__id=waiter_id, is_read=False)
+        elif kitchen_staff_id:
+            notifications = Notification.objects.filter(kitchen_staff__id=kitchen_staff_id, is_read=False)
+        else:
+            return Response({"detail": "Must provide either waiter_id or kitchen_staff_id."}, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(NotificationSerializer(notifications, many=True).data)
+
+    @action(detail=True, methods=['POST'])
+    def mark_as_read(self, request, pk=None):
+        """
+        Marks a notification as read.
+        """
+        notification = get_object_or_404(Notification, pk=pk)
+        notification.is_read = True
+        notification.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    
+
 
 class MarkNotificationRead(APIView):
     def post(self, request, pk):
