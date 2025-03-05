@@ -133,11 +133,12 @@ class OrderView(APIView):
 
             Notification.objects.create(
                 notification_type='order_received',
-                recipient='kitchen',
+                kitchen_staff=None,  # Or find a real kitchen staff
                 order=order,
                 message=f"New order received for Table {table.number}",
                 table=table
             )
+
 
             return JsonResponse({
                 "message": "Order created successfully",
