@@ -107,10 +107,10 @@ export const fetchOrder = async (orderId) => {
 export const createOrder = async (orderData) => {
   try {
     const response = await api.post("/orders/", orderData);
-    return response.data;
+    return response.data;  // This is the correct pattern.
   } catch (error) {
-    console.error("Error creating order:", error.response ? error.response.data : error.message);
-    return null;
+    console.error("Error creating order:", error.response?.data || error.message);
+    return null;  // Just return `null` to indicate failure. Don't try to set errors here.
   }
 };
 
