@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { fetchOrders, fetchMenuItems, fetchTables, updateOrderStatus } from "./api";
 import "./Dropdown.css";
 
-function Waiter({ setRole, hiddenItems, setHiddenItems }) {
+function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
@@ -46,7 +46,7 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
-    const staffId = "X1"; 
+    const staffId = "X1";
     const updatedStatus = await updateOrderStatus(orderId, newStatus, staffId);
 
     if (updatedStatus === newStatus) {
@@ -73,15 +73,16 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
   const knownTables = tables;
 
   const toggleHiddenItem = (itemName) => {
-    setHiddenItems(prevHiddenItems =>
+    setHiddenItems((prevHiddenItems) =>
       prevHiddenItems.includes(itemName)
-        ? prevHiddenItems.filter(item => item !== itemName)
+        ? prevHiddenItems.filter((item) => item !== itemName)
         : [...prevHiddenItems, itemName]
     );
   };
 
-  // The filteredMenuItems should show only items that are NOT in the hiddenItems array
-  const filteredMenuItems = menuItems.filter(item => !hiddenItems.includes(item.name));
+  const pendingOrders = orders.filter((order) => order.status === "pending");
+  const readyOrders = orders.filter((order) => order.status === "ready for pick up");
+  const deliveredOrders = orders.filter((order) => order.status === "delivered");
 
   return (
     <div className="waiter-container">
@@ -93,18 +94,12 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
       </button>
       <h3>Waiter Dashboard</h3>
 
-      {/* Orders Section */}
       <div className="order-tables">
-        {/* Orders Ready for Pick Up */}
         <div className="order-table">
           <h4>Orders Ready for Pick Up</h4>
           <table>
             <thead>
-              <tr>
-                <th>Order #</th>
-                <th>Total (£)</th>
-                <th>Status</th>
-              </tr>
+              <tr><th>Order #</th><th>Total (£)</th><th>Status</th></tr>
             </thead>
             <tbody>
               {readyOrders.length > 0 ? (
@@ -121,24 +116,17 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
                   </tr>
                 ))
               ) : (
-                <tr>
-                  <td colSpan="3">No orders ready for pick up.</td>
-                </tr>
+                <tr><td colSpan="3">No orders ready for pick up.</td></tr>
               )}
             </tbody>
           </table>
         </div>
 
-        {/* Delivered Orders (Awaiting Payment) */}
         <div className="order-table">
           <h4>Delivered Orders (Awaiting Payment)</h4>
           <table>
             <thead>
-              <tr>
-                <th>Order #</th>
-                <th>Total (£)</th>
-                <th>Status</th>
-              </tr>
+              <tr><th>Order #</th><th>Total (£)</th><th>Status</th></tr>
             </thead>
             <tbody>
               {deliveredOrders.length > 0 ? (
@@ -156,24 +144,17 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
                   </tr>
                 ))
               ) : (
-                <tr>
-                  <td colSpan="3">No delivered orders awaiting payment.</td>
-                </tr>
+                <tr><td colSpan="3">No delivered orders awaiting payment.</td></tr>
               )}
             </tbody>
           </table>
         </div>
 
-        {/* Pending Orders - Can be Canceled */}
         <div className="order-table">
           <h4>Pending Orders</h4>
           <table>
             <thead>
-              <tr>
-                <th>Order #</th>
-                <th>Total (£)</th>
-                <th>Action</th>
-              </tr>
+              <tr><th>Order #</th><th>Total (£)</th><th>Action</th></tr>
             </thead>
             <tbody>
               {pendingOrders.length > 0 ? (
@@ -189,25 +170,22 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
                   </tr>
                 ))
               ) : (
-                <tr>
-                  <td colSpan="3">No pending orders.</td>
-                </tr>
+                <tr><td colSpan="3">No pending orders.</td></tr>
               )}
             </tbody>
           </table>
         </div>
 
-        {/* Hide/Unhide Menu Items */}
         <div className="menu-select">
           <h4>Hide/Unhide Menu Items</h4>
           {menuItems.length > 0 ? (
-            menuItems.map(item => (
+            menuItems.map((item) => (
               <div key={item.id} className="menu-item">
                 <label>
                   <input
                     type="checkbox"
-                    checked={!hiddenItems.includes(item.name)} 
-                    onChange={() => toggleHiddenItem(item.name)} 
+                    checked={!hiddenItems?.includes?.(item.name)}
+                    onChange={() => toggleHiddenItem(item.name)}
                   />
                   {item.name}
                 </label>
@@ -217,7 +195,6 @@ function Waiter({ setRole, hiddenItems, setHiddenItems }) {
             <p>No menu items available.</p>
           )}
         </div>
-
       </div>
 
       {/* Table Alert System */}
