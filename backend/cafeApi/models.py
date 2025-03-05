@@ -33,7 +33,7 @@ class MenuItem(models.Model):
 
 class Table(models.Model):
     number = models.IntegerField(unique=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Ok')
     waiter_name = models.CharField(max_length=100, blank=True, null=True)
     estimated_time = models.IntegerField(blank=True, null=True)
     capacity = models.IntegerField(default=4)
