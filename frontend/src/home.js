@@ -86,7 +86,6 @@ function Home() {
 
   const handlePlaceOrder = async () => {
     const tableNum = parseInt(tableNumber, 10);
-
     if (isNaN(tableNum)) {
         setErrorMessage("Please enter a valid table number.");
         setShowPopup(true);
@@ -149,6 +148,8 @@ function Home() {
     }
 
     // If valid, proceed with calling the waiter
+    const table = tables.find(table => table.number == tableNum);
+    table.status = "Alert!";
     setErrorMessage("Waiter has been called to your table!");
     setShowPopup(true);
   };

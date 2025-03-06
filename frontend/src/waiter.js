@@ -76,8 +76,14 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     await loadOrders();
   };
 
-  const tableAlert = async (tableNumber) => {
-    setErrorMessage("Table #" + tableNumber + " is in need of assistance!");
+  const tableAlert = async (table) => {
+    if (table.status == "pending") {
+      table.status = "Alert!"
+      setErrorMessage("Table #" + table.number + " is in need of assistance!");
+    } else {
+      table.status = "pending"
+      setErrorMessage("Table #" + table.number + " has been responded to.");
+    }
     setShowPopup(true);
   };
 
@@ -230,8 +236,8 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                   <td>{table.status}</td>
                   <td>{table.waiter_name}</td>
                   <td>
-                    <button className="alert-button" onClick={() => tableAlert(table.number)}>
-                      Alert!
+                    <button className="alert-button" onClick={() => tableAlert(table)}>
+                      Toggle Alert!
                     </button>
                   </td>
                 </tr>
