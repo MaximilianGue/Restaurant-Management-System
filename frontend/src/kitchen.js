@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchOrders, updateOrderStatus } from "./api";
+import { fetchOrders, confirmOrder } from "./api";
 import { useNavigate } from "react-router-dom";
 import "./kitchen.css";
 import { STAFF_ID } from "./constants";
@@ -35,7 +35,7 @@ function Kitchen({ setRole }) {
   // Handle Status Change
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      const updatedStatus = await updateOrderStatus(orderId, newStatus, staffId);
+      const updatedStatus = await confirmOrder(orderId, newStatus, staffId);
   
       if (updatedStatus === newStatus) {
         setOrders((prevOrders) =>
