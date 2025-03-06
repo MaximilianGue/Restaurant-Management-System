@@ -2,14 +2,14 @@ import React, { useState, useEffect } from "react";
 import { fetchOrders, updateOrderStatus } from "./api";
 import { useNavigate } from "react-router-dom";
 import "./kitchen.css";
-
+import { STAFF_ID } from "./constants";
 
 function Kitchen({ setRole }) {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
-
+ const staffId =  localStorage.getItem(STAFF_ID);
   const statusOptions = [
     "pending",
     "confirmed",
@@ -35,7 +35,6 @@ function Kitchen({ setRole }) {
   // Handle Status Change
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      const staffId = "X1"; // Replace this with actual staff ID if needed
       const updatedStatus = await updateOrderStatus(orderId, newStatus, staffId);
   
       if (updatedStatus === newStatus) {

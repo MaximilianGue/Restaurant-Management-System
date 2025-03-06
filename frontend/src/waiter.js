@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { fetchOrders, fetchMenuItems, fetchTables, updateOrderStatus } from "./api";
 import "./Dropdown.css";
-
+import { STAFF_ID } from "./constants";
 function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
@@ -10,7 +10,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
   const [tables, setTables] = useState([]);
-
+  const staffId =  localStorage.getItem(STAFF_ID);
   useEffect(() => {
     loadOrders();
     loadMenuItems();
@@ -35,7 +35,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
-    const staffId = "X1";
     const updatedStatus = await updateOrderStatus(orderId, newStatus, staffId);
 
     if (updatedStatus === newStatus) {
@@ -59,7 +58,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
       setShowPopup(true);
       return;
     }
-    const staffId = "X1";
     let allSuccess = true;
     for (const order of pendingOrders) {
       const updatedStatus = await updateOrderStatus(order.id, "canceled", staffId);
