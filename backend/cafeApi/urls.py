@@ -1,7 +1,9 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, NotificationViewSet, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView
-
+from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, NotificationViewSet, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView,WaiterDetailView,TableStaffIDView
+notification_list = NotificationViewSet.as_view({'get': 'list', 'post': 'create'})
+notify_staff = NotificationViewSet.as_view({'post': 'notify_staff'})
+notify_waiter = NotificationViewSet.as_view({'post': 'notify_waiter'})
 urlpatterns = [
     path("menu-items/", MenuItemView.as_view(), name="menu-items"),
     path("menu-items/<int:pk>/", MenuItemDetailView.as_view(), name="menu-item-detail"),
@@ -11,12 +13,16 @@ urlpatterns = [
 
     path("tables/", TableView.as_view(), name="tables"),
     path("tables/<int:pk>/", TableDetailView.as_view(), name="table-detail"),
+    path('tables/<int:table_number>/staff_id/', TableStaffIDView.as_view(), name='table-staff-id'),
+
 
     path("customers/", CustomerView.as_view(), name="customers"),
     path("customers/<int:pk>/", CustomerDetailView.as_view(), name="customer-detail"),
     
     path("waiters/", WaiterView.as_view(), name="waiters"),
     path("waiters/<int:pk>/", WaiterDetailView.as_view(), name="waiters-detail"),
+    path('waiters/<str:Staff_id>/', WaiterDetailView.as_view(), name='waiter-detail'),
+
 
     path("KitchenStaff/", KitchenStaffView.as_view(), name="KitchenStaff"),
     path("KitchenStaff/<int:pk>/", KitchenStaffDetailView.as_view(), name="Kitchen-detail"),
@@ -28,6 +34,8 @@ urlpatterns = [
     
     path("notifications/", NotificationViewSet.as_view({'get': 'list', 'post': 'create'}), name="notifications"),
     path("notifications/<int:pk>/read/", MarkNotificationRead.as_view(), name="mark-read"),
+    path("notifications/notify_staff/", notify_staff, name="notify-staff"),
+    path("notifications/notify_waiter/", notify_waiter, name="notify-waiter"),
 
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),

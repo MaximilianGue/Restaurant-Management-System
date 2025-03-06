@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchMenuItems, fetchOrders, createOrder } from "./api";
+import { fetchMenuItems, fetchOrders, createOrder,fetchStaffIdForTable,callWaiter } from "./api";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
 
@@ -132,26 +132,52 @@ function Home() {
 };
 
 
-  const handleCallWaiter = () => {
-    const tableNum = parseInt(tableNumber, 10); // Convert input to an integer
+const handleCallWaiter = async () => {
+  const tableNum = parseInt(tableNumber, 10);
 
-    if (isNaN(tableNum)) {
+  if (isNaN(tableNum)) {
       setErrorMessage("Please enter a valid table number.");
       setShowPopup(true);
       return;
-    }
+  }
 
-    // Validate if the table exists
-    if (!tables.some((table) => table.number === tableNum)) {
+  if (!tables.some((table) => table.number === tableNum)) {
       setErrorMessage("Invalid table number. This table number does not exist.");
       setShowPopup(true);
       return;
-    }
+  }
 
-    // If valid, proceed with calling the waiter
-    setErrorMessage("Waiter has been called to your table!");
-    setShowPopup(true);
-  };
+  // Step 1: Fetch waiter staff_id for the table
+  const staffId = await fetchStaffIdForTable(tableNum);
+  if (!staffId) {
+      setErrorMessage("No waiter is assigned to this table.");
+      setShowPopup(true);
+      return;
+  }
+
+  // Step 2: Find the most recent order for this table (assuming orders is already loaded)
+  const tableOrders = orders.filter(order => order.table_id === tableNum);
+  if (tableOrders.length === 0) {
+      setErrorMessage("No orders found for this table. Cannot call waiter.");
+      setShowPopup(true);
+      return;
+  }
+
+  // Get latest order by order date (or by highest ID if dates not reliable)
+  const latestOrder = tableOrders[tableOrders.length - 1];
+
+  // Step 3: Call the waiter using the latest order ID
+  const response = await callWaiter(staffId, latestOrder.id,"","waiter_call");
+
+  if (response) {
+      setErrorMessage("Waiter has been called successfully!");
+  } else {
+      setErrorMessage("Failed to call waiter. Please try again.");
+  }
+
+  setShowPopup(true);
+};
+
 
   const handleFilterChange = (category) => {
     setFilter(category);
