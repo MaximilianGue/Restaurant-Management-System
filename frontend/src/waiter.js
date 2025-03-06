@@ -80,10 +80,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     );
   };
 
-  const pendingOrders = orders.filter((order) => order.status === "pending");
-  const readyOrders = orders.filter((order) => order.status === "ready for pick up");
-  const deliveredOrders = orders.filter((order) => order.status === "delivered");
-
   return (
     <div className="waiter-container">
       <button className="return-button" onClick={() => {
