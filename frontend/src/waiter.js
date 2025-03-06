@@ -11,21 +11,14 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
   const [showPopup, setShowPopup] = useState(false);
   const [tables, setTables] = useState([]);
 
-  /**
-   *  calls loadOrders on load and refreshes every 5 seconds.
-   */
   useEffect(() => {
     loadOrders();
-    loadMenuItems(); // Fetch menu items
+    loadMenuItems();
     loadTables();
     const interval = setInterval(loadOrders, 5000);
     return () => clearInterval(interval);
   }, []);
 
-  /**
-   * loadOrders function to fetch order data from the backend.
-   * Accepts no inputs
-   */
   const loadOrders = async () => { 
     const ordersData = await fetchOrders();
     setOrders(ordersData || []);
@@ -36,10 +29,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     setTables(tablesData || []);
   };
 
-  /**
-   * Handler to update the order status using the API.
-   * Accepts 2 inputs, orderId (string) and newStatus (string).
-   */
   const loadMenuItems = async () => {
     const items = await fetchMenuItems();
     setMenuItems(items || []);
@@ -62,8 +51,33 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     await handleStatusChange(orderId, "canceled");
   };
 
+  // New function to cancel all pending orders
+  const cancelAllOrders = async () => {
+    const pendingOrders = orders.filter((order) => order.status === "pending");
+    if (pendingOrders.length === 0) {
+      setErrorMessage("No pending orders to cancel.");
+      setShowPopup(true);
+      return;
+    }
+    const staffId = "X1";
+    let allSuccess = true;
+    for (const order of pendingOrders) {
+      const updatedStatus = await updateOrderStatus(order.id, "canceled", staffId);
+      if (updatedStatus !== "canceled") {
+        allSuccess = false;
+      }
+    }
+    if (allSuccess) {
+      setErrorMessage("All pending orders have been canceled successfully!");
+    } else {
+      setErrorMessage("Some pending orders could not be canceled.");
+    }
+    setShowPopup(true);
+    await loadOrders();
+  };
+
   const tableAlert = async (tableNumber) => {
-    setErrorMessage("Table #"+tableNumber+" is in need of assistance!");
+    setErrorMessage("Table #" + tableNumber + " is in need of assistance!");
     setShowPopup(true);
   };
 
@@ -79,10 +93,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
         : [...prevHiddenItems, itemName]
     );
   };
-
-  const pendingOrders = orders.filter((order) => order.status === "pending");
-  const readyOrders = orders.filter((order) => order.status === "ready for pick up");
-  const deliveredOrders = orders.filter((order) => order.status === "delivered");
 
   return (
     <div className="waiter-container">
@@ -174,6 +184,10 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
               )}
             </tbody>
           </table>
+          {/* New Cancel All Orders Button */}
+          <button className="cancel-all-button" onClick={cancelAllOrders}>
+            Cancel All Orders
+          </button>
         </div>
 
         <div className="menu-select">
@@ -197,7 +211,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
         </div>
       </div>
 
-      {/* Table Alert System */}
       <div className="table-alert">
         <h4>Table Alert System</h4>
         <table>
@@ -218,7 +231,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                   <td>{table.waiter_name}</td>
                   <td>
                     <button className="alert-button" onClick={() => tableAlert(table.number)}>
-                    Alert!
+                      Alert!
                     </button>
                   </td>
                 </tr>
@@ -232,7 +245,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
         </table>
       </div>
 
-      {/* Popup for error messages */}
       {showPopup && (
         <div className="custom-popup">
           <p>{errorMessage}</p>
