@@ -33,9 +33,9 @@ urlpatterns = [
     path("orders/<int:pk>/confirmation/", ConfirmOrderUpdateView.as_view(), name="order-confirm-update"),
     
     path("notifications/", NotificationViewSet.as_view({'get': 'list', 'post': 'create'}), name="notifications"),
-    path("notifications/<int:pk>/read/", MarkNotificationRead.as_view(), name="mark-read"),
     path("notifications/notify_staff/", notify_staff, name="notify-staff"),
     path("notifications/notify_waiter/", notify_waiter, name="notify-waiter"),
+    path("notifications/<int:pk>/mark_as_read/", MarkNotificationRead.as_view(), name="mark-read"),
 
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),

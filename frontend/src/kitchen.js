@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { fetchOrders, updateOrderStatus, fetchNotificationsForStaff, callWaiter } from "./api";
 import { useNavigate } from "react-router-dom";
+import axios from "axios"; // For marking notifications as read
+import { 
+  fetchOrders, 
+  updateOrderStatus, 
+  fetchNotificationsForStaff, 
+  callWaiter 
+} from "./api";
 import "./kitchen.css";
 import { STAFF_ID } from "./constants";
 
 function Kitchen({ setRole }) {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
-  const [latestNotification, setLatestNotification] = useState(null);
 
-  const staffId = localStorage.getItem(STAFF_ID);  // Current logged-in kitchen staff ID
+  const staffId = localStorage.getItem(STAFF_ID); // Logged-in kitchen staff ID
 
   const statusOptions = [
     "pending",
@@ -25,10 +31,10 @@ function Kitchen({ setRole }) {
 
   useEffect(() => {
     loadOrders();
-    loadLatestNotification();
+    loadNotifications();
     const interval = setInterval(() => {
       loadOrders();
-      loadLatestNotification();
+      loadNotifications();
     }, 5000);
     return () => clearInterval(interval);
   }, []);
@@ -38,60 +44,70 @@ function Kitchen({ setRole }) {
     setOrders(ordersData || []);
   };
 
-  const loadLatestNotification = async () => {
-    const notifications = await fetchNotificationsForStaff(staffId);
-    if (notifications && notifications.length > 0) {
-      setLatestNotification(notifications[0]);  // Most recent (assuming backend sorts it)
-    } else {
-      setLatestNotification(null);
-    }
+  const loadNotifications = async () => {
+    // fetchNotificationsForStaff is assumed to return only unread notifications for this staff member
+    const notificationsData = await fetchNotificationsForStaff(staffId);
+    setNotifications(notificationsData || []);
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       const updatedStatus = await updateOrderStatus(orderId, newStatus, staffId);
-
       if (updatedStatus === newStatus) {
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
             order.id === orderId ? { ...order, status: newStatus } : order
           )
         );
-
         setErrorMessage("Status successfully updated!");
-
         if (newStatus === "ready for pick up") {
           await notifyWaiterForReadyOrder(orderId);
         }
-
       } else {
         setErrorMessage("Failed to update order status.");
       }
     } catch (error) {
       setErrorMessage("Error updating status. Please try again.");
     }
-
     setShowPopup(true);
     await loadOrders();
   };
 
+  // Sends an "order_ready" notification to the waiter for the given order
   const notifyWaiterForReadyOrder = async (orderId) => {
-    const order = orders.find(o => o.id === orderId);
+    const order = orders.find((o) => o.id === orderId);
     if (!order || !order.waiter) {
       setErrorMessage("No waiter assigned to this order.");
       setShowPopup(true);
       return;
     }
-
     const waiterStaffId = order.waiter.Staff_id;
-
     const message = `Order #${orderId} is ready for pickup.`;
-
-    const response = await callWaiter(waiterStaffId, orderId, message, "status_change");
-
+    const response = await callWaiter(waiterStaffId, orderId, message, "order_ready");
     if (!response) {
       setErrorMessage("Failed to notify waiter about order readiness.");
       setShowPopup(true);
+    }
+    else{
+      setErrorMessage("Successfully notified waiter about order ");
+      setShowPopup(true);
+    }
+
+  };
+
+  // Allows manual notification when an "order_received" notification is clicked
+  const handleNotifyWaiterFromNotification = async (orderId) => {
+    await notifyWaiterForReadyOrder(orderId);
+    // Optionally, mark the notification as read after notifying
+  };
+
+  // Marks a notification as read and removes it from the list
+  const handleMarkNotificationRead = async (notificationId) => {
+    try {
+      await axios.post(`http://127.0.0.1:8000/cafeApi/notifications/${notificationId}/mark_as_read/`);
+      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
     }
   };
 
@@ -182,18 +198,49 @@ function Kitchen({ setRole }) {
           </table>
         </div>
 
-        {/* Latest Notification */}
-        <div className="latest-notification">
-          <h3>Latest Notification Received</h3>
-          {latestNotification ? (
-            <div>
-              <p><strong>Type:</strong> {latestNotification.notification_type}</p>
-              <p><strong>Message:</strong> {latestNotification.message}</p>
-              <p><strong>Table:</strong> {latestNotification.table_number || 'N/A'}</p>
-              <p><strong>Received At:</strong> {new Date(latestNotification.created_at).toLocaleString()}</p>
-            </div>
+        {/* Combined Unread Notifications Table */}
+        <div className="notifications">
+          <h3>Unread Notifications</h3>
+          {notifications.length > 0 ? (
+            <table>
+              <thead>
+                <tr>
+                  <th>Type</th>
+                  <th>Order #</th>
+                  <th>Message</th>
+                  <th>Time</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {notifications.map((notif) => (
+                  <tr key={notif.id}>
+                    <td>{notif.notification_type}</td>
+                    <td>{notif.order || "N/A"}</td>
+                    <td>{notif.message}</td>
+                    <td>{new Date(notif.created_at).toLocaleString()}</td>
+                    <td>
+                      {notif.notification_type === "order_received" && (
+                        <button 
+                          onClick={() => handleNotifyWaiterFromNotification(notif.order)}
+                          className="order-button"
+                        >
+                          Notify Waiter
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleMarkNotificationRead(notif.id)}
+                        className="filter-button"
+                      >
+                        Mark as Read
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : (
-            <p>No notifications received.</p>
+            <p>No unread notifications.</p>
           )}
         </div>
       </div>

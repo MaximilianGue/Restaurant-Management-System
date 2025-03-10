@@ -86,7 +86,7 @@ function Home() {
 
   const handlePlaceOrder = async () => {
     const tableNum = parseInt(tableNumber, 10);
-
+    const staffId = await fetchStaffIdForTable(tableNum);
     if (isNaN(tableNum)) {
         setErrorMessage("Please enter a valid table number.");
         setShowPopup(true);
@@ -98,11 +98,12 @@ function Home() {
         setShowPopup(true);
         return;
     }
-
+   
     const orderData = {
         table_number: tableNumber,
         status: "pending",
         total_price: parseFloat(totalAmount),
+        Staff_id : staffId,
         items: Object.keys(cart).map((itemName) => {
             const item = menuItems.find((menuItem) => menuItem.name === itemName);
             return {
@@ -134,7 +135,6 @@ function Home() {
 
 const handleCallWaiter = async () => {
   const tableNum = parseInt(tableNumber, 10);
-
   if (isNaN(tableNum)) {
       setErrorMessage("Please enter a valid table number.");
       setShowPopup(true);

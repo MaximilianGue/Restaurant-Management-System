@@ -280,7 +280,7 @@ export const callWaiter = async (staffId,orderId,messages,type) => {
     console.log(" Response Data:", response.data);
     return response.data;
   } catch (error) {
-    console.error(" Error calling waiter:", error.response ? error.response.data : error.message);
+    console.error(error.response);
     return null;
   }
 };
