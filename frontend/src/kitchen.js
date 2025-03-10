@@ -52,7 +52,8 @@ function Kitchen({ setRole }) {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      const updatedStatus = await updateOrderStatus(orderId, newStatus, staffId);
+      const updatedStatus = await confirmOrder(orderId, newStatus, staffId);
+  
       if (updatedStatus === newStatus) {
         setOrders((prevOrders) =>
           prevOrders.map((order) =>
