@@ -95,8 +95,9 @@ class Notification(models.Model):
     NOTIFICATION_TYPES = [
         ('waiter_call', 'Waiter Call'),
         ('order_received', 'Order Received'),
-        ('status_change', 'Status Change'),
         ('payment', 'Payment'),
+        ('alert','Alert'),
+        ('order_ready', 'Order_ready'),
     ]
     waiter = models.ForeignKey(Waiter, on_delete=models.CASCADE, null=True, blank=True)
     kitchen_staff = models.ForeignKey(KitchenStaff, on_delete=models.CASCADE, null=True, blank=True)

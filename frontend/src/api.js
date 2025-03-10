@@ -258,3 +258,85 @@ export const updateAvailability = async (menuItemId,availabilityNum) => {
     return null;
   }
 };
+
+export const callWaiter = async (staffId,orderId,messages,type) => {
+  try {
+    const response = await api.post(
+      `/notifications/notify_waiter/`,
+      {
+        Staff_id: staffId,
+        order_id:orderId,
+        message :messages,
+        notification_type :type
+
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(" Response Data:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(error.response);
+    return null;
+  }
+};
+
+export const notifyStaff = async (staffId,target,messages,tableNumber) => {
+  try {
+    const response = await api.post(
+      `/notifications/notify_staff/`,
+      {
+        Staff_id: staffId,
+        target_staff_id:target,
+        message :messages,
+        table_number:tableNumber
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(" Response Data:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error(" Error alerting staff :", error.response ? error.response.data : error.message);
+    return null;
+  }
+};
+
+export const fetchWaiterDetails = async (staffId) => {
+  try {
+    const response = await api.get(`/waiters/${staffId}/`);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching waiter details:", error.response ? error.response.data : error.message);
+    return null;
+  }
+};
+
+// Fetch staff_id for a given table number
+export const fetchStaffIdForTable = async (tableNumber) => {
+  try {
+    const response = await api.get(`/tables/${tableNumber}/staff_id/`);
+    return response.data.staff_id;
+  } catch (error) {
+    console.error(`Error fetching staff ID for table ${tableNumber}:`, error.response ? error.response.data : error.message);
+    return null;
+  }
+};
+
+export const fetchNotificationsForStaff = async (staffId) => {
+  try {
+    const response = await api.get(`/notifications/?staff_id=${staffId}`);
+    return response.data;  // Expect list of notifications sorted by `created_at` desc
+  } catch (error) {
+    console.error("Error fetching notifications for staff:", error.response ? error.response.data : error.message);
+    return [];
+  }
+};
