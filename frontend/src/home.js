@@ -132,7 +132,10 @@ function Home() {
     }
 };
 
-
+/**
+ * this function converts the tableNumber inputted into a consistent format and
+ * performs checks on whether the table inputted is valid
+ */
 const handleCallWaiter = async () => {
   const tableNum = parseInt(tableNumber, 10);
   if (isNaN(tableNum)) {

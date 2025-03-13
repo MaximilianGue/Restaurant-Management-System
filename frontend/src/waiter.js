@@ -118,7 +118,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     await loadOrders();
   };
 
-<<<<<<< HEAD
   const tableAlert = async (table) => {
     if (table.status == "pending") {
       table.status = "Alert!"
@@ -128,7 +127,8 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
       setErrorMessage("Table #" + table.number + " has been responded to.");
     }
     setShowPopup(true);
-=======
+  };
+  
   // Open the alert form modal for a specific table
   const openAlertForm = (tableNumber) => {
     setAlertTableNumber(tableNumber);
@@ -136,7 +136,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     setAlertTargetId("");
     setAlertAlertMessage(`Table ${tableNumber} needs assistance!`);
     setShowAlertForm(true);
->>>>>>> integration
   };
 
   const pendingOrders = orders.filter((order) => order.status === "pending");
@@ -334,13 +333,8 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                   <td>{table.status}</td>
                   <td>{table.waiter_name}</td>
                   <td>
-<<<<<<< HEAD
-                    <button className="alert-button" onClick={() => tableAlert(table)}>
-                      Toggle Alert!
-=======
                     <button className="alert-button" onClick={() => openAlertForm(table.number)}>
                       Alert!
->>>>>>> integration
                     </button>
                   </td>
                 </tr>
