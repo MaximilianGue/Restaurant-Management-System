@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchMenuItems, fetchOrders, createOrder } from "./api";
+import { fetchMenuItems, fetchOrders, createOrder,fetchStaffIdForTable,callWaiter } from "./api";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
 
@@ -86,6 +86,7 @@ function Home() {
 
   const handlePlaceOrder = async () => {
     const tableNum = parseInt(tableNumber, 10);
+    const staffId = await fetchStaffIdForTable(tableNum);
     if (isNaN(tableNum)) {
         setErrorMessage("Please enter a valid table number.");
         setShowPopup(true);
@@ -97,11 +98,12 @@ function Home() {
         setShowPopup(true);
         return;
     }
-
+   
     const orderData = {
         table_number: tableNumber,
         status: "pending",
         total_price: parseFloat(totalAmount),
+        Staff_id : staffId,
         items: Object.keys(cart).map((itemName) => {
             const item = menuItems.find((menuItem) => menuItem.name === itemName);
             return {
@@ -131,28 +133,56 @@ function Home() {
 };
 
 
-  const handleCallWaiter = () => {
-    const tableNum = parseInt(tableNumber, 10); // Convert input to an integer
-
-    if (isNaN(tableNum)) {
+const handleCallWaiter = async () => {
+  const tableNum = parseInt(tableNumber, 10);
+  if (isNaN(tableNum)) {
       setErrorMessage("Please enter a valid table number.");
       setShowPopup(true);
       return;
-    }
+  }
 
-    // Validate if the table exists
-    if (!tables.some((table) => table.number === tableNum)) {
+  if (!tables.some((table) => table.number === tableNum)) {
       setErrorMessage("Invalid table number. This table number does not exist.");
       setShowPopup(true);
       return;
-    }
+  }
 
+  // Step 1: Fetch waiter staff_id for the table
+  const staffId = await fetchStaffIdForTable(tableNum);
+  if (!staffId) {
+      setErrorMessage("No waiter is assigned to this table.");
+      setShowPopup(true);
+      return;
+  }
+
+  // Step 2: Find the most recent order for this table (assuming orders is already loaded)
+  const tableOrders = orders.filter(order => order.table_id === tableNum);
+  if (tableOrders.length === 0) {
+      setErrorMessage("No orders found for this table. Cannot call waiter.");
+      setShowPopup(true);
+      return;
+  }
+
+  // Get latest order by order date (or by highest ID if dates not reliable)
+  const latestOrder = tableOrders[tableOrders.length - 1];
+
+  // Step 3: Call the waiter using the latest order ID
+  const response = await callWaiter(staffId, latestOrder.id,"","waiter_call");
+
+  if (response) {
     // If valid, proceed with calling the waiter
     const table = tables.find(table => table.number == tableNum);
     table.status = "Alert!";
     setErrorMessage("Waiter has been called to your table!");
     setShowPopup(true);
-  };
+  } else {
+      setErrorMessage("Failed to call waiter. Please try again.");
+  }
+
+  setShowPopup(true);
+};
+
+    
 
   const handleFilterChange = (category) => {
     setFilter(category);

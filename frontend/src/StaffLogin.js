@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StaffLogin.css";
-import { ACCESS_TOKEN, REFRESH_TOKEN } from "./constants";
+import { ACCESS_TOKEN, REFRESH_TOKEN ,STAFF_ID} from "./constants";
 function StaffLogin({ setRole }) {
     const navigate = useNavigate();
     const [username, setUsername] = useState("");
@@ -22,7 +22,8 @@ function StaffLogin({ setRole }) {
             if (response.ok) {
                 localStorage.setItem(ACCESS_TOKEN, data.access_token);
                 localStorage.setItem(REFRESH_TOKEN, data.refresh_token);
-
+                localStorage.setItem(STAFF_ID, data.staff_id);
+                console.log(localStorage.getItem(STAFF_ID));
                 // Fetch user list to determine role for this logged-in user
                 const usersResponse = await fetch("http://127.0.0.1:8000/cafeApi/users/", {
                     headers: {
