@@ -10,7 +10,6 @@ body {
   background-color: #FFF8ED; /* Light desert hue */
 }
 
-/* OPTIONAL WRAPPER if you want to manage global spacing */
 .page-wrapper {
   width: 100%;
   overflow-x: hidden;
@@ -74,30 +73,22 @@ body {
   margin-bottom: 2rem;
 }
 
-/*
-  team-roles:
-  - Flex container to show categories side by side.
-  - Gap for spacing, wrap for responsive stacking.
-*/
 .team-roles {
   display: flex;
   gap: 2rem;
   justify-content: center;
   flex-wrap: wrap;
+  margin-top: 2rem;
 }
 
-/*
-  team-category:
-  - Each category is like a "card."
-  - Constrain to a max-width so they don't stretch too wide.
-*/
 .team-category {
-  flex: 1 1 200px;  /* flex property allows columns to wrap on smaller screens */
+  flex: 1 1 200px;
   max-width: 300px;
-  background-color: #FDF6EC; /* Slightly lighter neutral for contrast */
+  background-color: #FDF6EC;
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem; /* extra spacing when wrapping */
 }
 
 .team-category h3 {
@@ -107,8 +98,51 @@ body {
 }
 
 .team-category p {
-  margin: 0;
+  margin: 0 0 1.5rem 0;
   line-height: 1.5;
+}
+
+/* 
+   TEAM MEMBERS:
+   - Each staff member is in a row (flex).
+   - The image is on the left, info (name, quote) on the right.
+*/
+.team-members {
+  display: flex;
+  flex-direction: column; /* stack each staff-member vertically */
+  gap: 1.5rem;            /* space between each staff member */
+}
+
+.staff-member {
+  display: flex;
+  align-items: flex-start;  /* aligns top edges of image & text */
+  gap: 1rem;
+}
+
+.profile-pic {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;  /* ensures the image doesn't stretch oddly */
+  border-radius: 50%; /* round profile picture */
+}
+
+.staff-info {
+  display: flex;
+  flex-direction: column;
+  text-align: left; /* keep text aligned left even in a center parent */
+}
+
+.staff-info h4 {
+  margin: 0 0 0.25rem 0; /* small spacing below name */
+  color: #4B2E27;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.staff-quote {
+  margin: 0;
+  font-style: italic;
+  color: #5B463A;
 }
 
 /* --- RESPONSIVE LAYOUT (for smaller screens) --- */
