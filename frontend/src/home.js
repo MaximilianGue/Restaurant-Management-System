@@ -179,10 +179,6 @@ function Home() {
                 ))}
               </div>
 
-                 <button className="staff-login" onClick={() => navigate("/login")}>
-                  Staff Login
-                </button>
-
                 {(
                   <div className="menu-container">
                     <div className="menu-grid">
