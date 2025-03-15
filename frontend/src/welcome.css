@@ -69,7 +69,7 @@ body {
 
 .team-title {
   font-size: 2rem;
-  color: #C85250;  /* Same terracotta accent */
+  color: #C85250; /* Same terracotta accent */
   margin-bottom: 2rem;
 }
 
@@ -88,7 +88,7 @@ body {
   padding: 2rem;
   border-radius: 8px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem; /* extra spacing when wrapping */
+  margin-bottom: 2rem; /* Extra spacing when wrapping */
 }
 
 .team-category h3 {
@@ -102,11 +102,7 @@ body {
   line-height: 1.5;
 }
 
-/* 
-   TEAM MEMBERS:
-   - Each staff member is in a row (flex).
-   - The image is on the left, info (name, quote) on the right.
-*/
+/* TEAM MEMBERS (profile pics, names, quotes) */
 .team-members {
   display: flex;
   flex-direction: column; /* stack each staff-member vertically */
@@ -115,34 +111,36 @@ body {
 
 .staff-member {
   display: flex;
-  align-items: flex-start;  /* aligns top edges of image & text */
+  align-items: flex-start;
   gap: 1rem;
 }
 
 .profile-pic {
   width: 60px;
   height: 60px;
-  object-fit: cover;  /* ensures the image doesn't stretch oddly */
+  object-fit: cover;
   border-radius: 50%; /* round profile picture */
 }
 
 .staff-info {
   display: flex;
   flex-direction: column;
-  text-align: left; /* keep text aligned left even in a center parent */
+  text-align: left; /* keep text left-aligned inside center container */
 }
 
 .staff-info h4 {
-  margin: 0 0 0.25rem 0; /* small spacing below name */
+  margin: 0 0 0.25rem 0;
   color: #4B2E27;
   font-size: 1.1rem;
   font-weight: bold;
 }
 
+/* The original staff-quote (default) */
 .staff-quote {
   margin: 0;
   font-style: italic;
   color: #5B463A;
+  position: relative; /* so we can place new text in ::after at same spot */
 }
 
 /* --- RESPONSIVE LAYOUT (for smaller screens) --- */
@@ -159,4 +157,191 @@ body {
     width: 100%;
     margin-bottom: 2rem;
   }
+}
+
+/* ---------- HOVER TO CHANGE H3 TEXT ---------- */
+
+/* WAITERS -> FRONTEND DEVS */
+.team-category.waiters h3 {
+  position: relative;
+  transition: color 0.3s;
+}
+.team-category.waiters h3::after {
+  content: "Frontend Devs";
+  position: absolute;
+  top: 0;  
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+
+  color: #C85250; /* Terracotta accent */
+  opacity: 0;     /* hidden by default */
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.team-category.waiters:hover h3 {
+  color: transparent; /* hide original text */
+}
+.team-category.waiters:hover h3::after {
+  opacity: 1;         /* show new text */
+}
+
+/* KITCHEN STAFF -> BACKEND DEVS */
+.team-category.kitchen-staff h3 {
+  position: relative;
+  transition: color 0.3s;
+}
+.team-category.kitchen-staff h3::after {
+  content: "Backend Devs";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+
+  color: #C85250;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.team-category.kitchen-staff:hover h3 {
+  color: transparent;
+}
+.team-category.kitchen-staff:hover h3::after {
+  opacity: 1;
+}
+
+/* MANAGERS -> DEVOPS */
+.team-category.managers h3 {
+  position: relative;
+  transition: color 0.3s;
+}
+.team-category.managers h3::after {
+  content: "DevOps";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+
+  color: #C85250;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+.team-category.managers:hover h3 {
+  color: transparent;
+}
+.team-category.managers:hover h3::after {
+  opacity: 1;
+}
+
+/* ---------- HOVER TO CHANGE QUOTES BY CATEGORY ---------- */
+
+/* ================== WAITERS -> FRONTEND QUOTES ================== */
+/* On .team-category.waiters:hover, hide original and show new text */
+.team-category.waiters:hover .james .staff-quote {
+  color: transparent;
+}
+.team-category.waiters:hover .james .staff-quote::after {
+  content: "“I love building dynamic UIs with React!”";
+  position: absolute;
+  width: 100%;
+  color: #5B463A;
+  font-style: italic;
+  top: 0; 
+  left: 0;
+}
+
+.team-category.waiters:hover .connor .staff-quote {
+  color: transparent;
+}
+.team-category.waiters:hover .connor .staff-quote::after {
+  content: "“Vanilla JS is the best way to master the basics!”";
+  position: absolute;
+  width: 100%;
+  color: #5B463A;
+  font-style: italic;
+  top: 0; 
+  left: 0;
+}
+
+.team-category.waiters:hover .markus .staff-quote {
+  color: transparent;
+}
+.team-category.waiters:hover .markus .staff-quote::after {
+  content: "“CSS is my playground—I love crafting beautiful layouts!”";
+  position: absolute;
+  width: 100%;
+  color: #5B463A;
+  font-style: italic;
+  top: 0;
+  left: 0;
+}
+
+/* ================== KITCHEN STAFF -> BACKEND QUOTES ================== */
+.team-category.kitchen-staff:hover .arion .staff-quote {
+  color: transparent;
+}
+.team-category.kitchen-staff:hover .arion .staff-quote::after {
+  content: "“Node.js microservices keep my code spicy!”";
+  position: absolute;
+  width: 100%;
+  color: #5B463A;
+  font-style: italic;
+  top: 0; 
+  left: 0;
+}
+
+.team-category.kitchen-staff:hover .leand .staff-quote {
+  color: transparent;
+}
+.team-category.kitchen-staff:hover .leand .staff-quote::after {
+  content: "“Optimizing databases is just like seasoning to perfection.”";
+  position: absolute;
+  width: 100%;
+  color: #5B463A;
+  font-style: italic;
+  top: 0; 
+  left: 0;
+}
+
+.team-category.kitchen-staff:hover .amit .staff-quote {
+  color: transparent;
+}
+.team-category.kitchen-staff:hover .amit .staff-quote::after {
+  content: "“APIs are the secret sauce—data flows like salsa!”";
+  position: absolute;
+  width: 100%;
+  color: #5B463A;
+  font-style: italic;
+  top: 0;
+  left: 0;
+}
+
+/* ================== MANAGERS -> DEVOPS QUOTES ================== */
+.team-category.managers:hover .joshua .staff-quote {
+  color: transparent;
+}
+.team-category.managers:hover .joshua .staff-quote::after {
+  content: "“Deploying with CI/CD is the best way to keep everyone happy!”";
+  position: absolute;
+  width: 100%;
+  color: #5B463A;
+  font-style: italic;
+  top: 0; 
+  left: 0;
+}
+
+.team-category.managers:hover .max .staff-quote {
+  color: transparent;
+}
+.team-category.managers:hover .max .staff-quote::after {
+  content: "“Infrastructure as code keeps our kitchen running smoothly!”";
+  position: absolute;
+  width: 100%;
+  color: #5B463A;
+  font-style: italic;
+  top: 0;
+  left: 0;
 }

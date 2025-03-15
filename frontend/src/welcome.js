@@ -1,12 +1,12 @@
 import React from "react";
 import kitchenGif from "./assets/kitchen.gif";
-import unknownImg from "./assets/unknown.jpg"; // Import the placeholder profile picture
+import unknownImg from "./assets/unknown.jpg"; // Placeholder profile picture
 import "./welcome.css";
 
 function Welcome() {
   return (
     <div className="page-wrapper">
-      {/* --- Hero Section (unchanged) --- */}
+      {/* --- Hero (Side-by-Side) Section --- */}
       <div className="welcome-container">
         <div className="welcome-text-section">
           <h1 className="welcome-title">
@@ -32,21 +32,17 @@ function Welcome() {
       {/* --- Meet the Team Section --- */}
       <div className="team-section">
         <h2 className="team-title">Meet the Team</h2>
-
         <div className="team-roles">
-          {/* Waiters */}
-          <div className="team-category">
+
+          {/* WAITERS -> FRONTEND DEVS */}
+          <div className="team-category waiters">
             <h3>Waiters</h3>
             <p>Our friendly wait staff is here to serve you with a smile.</p>
             <div className="team-members">
-
+              
               {/* James */}
-              <div className="staff-member">
-                <img
-                  src={unknownImg}
-                  alt="James"
-                  className="profile-pic"
-                />
+              <div className="staff-member james">
+                <img src={unknownImg} alt="James" className="profile-pic" />
                 <div className="staff-info">
                   <h4>James</h4>
                   <p className="staff-quote">
@@ -56,12 +52,8 @@ function Welcome() {
               </div>
 
               {/* Connor */}
-              <div className="staff-member">
-                <img
-                  src={unknownImg}
-                  alt="Connor"
-                  className="profile-pic"
-                />
+              <div className="staff-member connor">
+                <img src={unknownImg} alt="Connor" className="profile-pic" />
                 <div className="staff-info">
                   <h4>Connor</h4>
                   <p className="staff-quote">
@@ -71,12 +63,8 @@ function Welcome() {
               </div>
 
               {/* Markus */}
-              <div className="staff-member">
-                <img
-                  src={unknownImg}
-                  alt="Markus"
-                  className="profile-pic"
-                />
+              <div className="staff-member markus">
+                <img src={unknownImg} alt="Markus" className="profile-pic" />
                 <div className="staff-info">
                   <h4>Markus</h4>
                   <p className="staff-quote">
@@ -87,19 +75,15 @@ function Welcome() {
             </div>
           </div>
 
-          {/* Kitchen Staff */}
-          <div className="team-category">
+          {/* KITCHEN STAFF -> BACKEND DEVS */}
+          <div className="team-category kitchen-staff">
             <h3>Kitchen Staff</h3>
             <p>Passionate chefs and cooks bringing authentic Mexican flavors to life.</p>
             <div className="team-members">
 
               {/* Arion */}
-              <div className="staff-member">
-                <img
-                  src={unknownImg}
-                  alt="Arion"
-                  className="profile-pic"
-                />
+              <div className="staff-member arion">
+                <img src={unknownImg} alt="Arion" className="profile-pic" />
                 <div className="staff-info">
                   <h4>Arion</h4>
                   <p className="staff-quote">
@@ -109,12 +93,8 @@ function Welcome() {
               </div>
 
               {/* Leand */}
-              <div className="staff-member">
-                <img
-                  src={unknownImg}
-                  alt="Leand"
-                  className="profile-pic"
-                />
+              <div className="staff-member leand">
+                <img src={unknownImg} alt="Leand" className="profile-pic" />
                 <div className="staff-info">
                   <h4>Leand</h4>
                   <p className="staff-quote">
@@ -124,12 +104,8 @@ function Welcome() {
               </div>
 
               {/* Amit */}
-              <div className="staff-member">
-                <img
-                  src={unknownImg}
-                  alt="Amit"
-                  className="profile-pic"
-                />
+              <div className="staff-member amit">
+                <img src={unknownImg} alt="Amit" className="profile-pic" />
                 <div className="staff-info">
                   <h4>Amit</h4>
                   <p className="staff-quote">
@@ -140,19 +116,15 @@ function Welcome() {
             </div>
           </div>
 
-          {/* Managers */}
-          <div className="team-category">
+          {/* MANAGERS -> DEVOPS */}
+          <div className="team-category managers">
             <h3>Managers</h3>
             <p>Keeping everything running smoothly, from opening time to last call.</p>
             <div className="team-members">
-
+              
               {/* Joshua */}
-              <div className="staff-member">
-                <img
-                  src={unknownImg}
-                  alt="Joshua"
-                  className="profile-pic"
-                />
+              <div className="staff-member joshua">
+                <img src={unknownImg} alt="Joshua" className="profile-pic" />
                 <div className="staff-info">
                   <h4>Joshua</h4>
                   <p className="staff-quote">
@@ -162,12 +134,8 @@ function Welcome() {
               </div>
 
               {/* Max */}
-              <div className="staff-member">
-                <img
-                  src={unknownImg}
-                  alt="Max"
-                  className="profile-pic"
-                />
+              <div className="staff-member max">
+                <img src={unknownImg} alt="Max" className="profile-pic" />
                 <div className="staff-info">
                   <h4>Max</h4>
                   <p className="staff-quote">
@@ -175,8 +143,10 @@ function Welcome() {
                   </p>
                 </div>
               </div>
+
             </div>
           </div>
+
         </div>
       </div>
     </div>
