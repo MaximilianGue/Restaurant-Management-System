@@ -96,6 +96,10 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     await handleStatusChange(orderId, "canceled");
   };
 
+  const handleConfirmOrder = async (orderId) => {
+    await handleStatusChange(orderId, "confirmed");
+  };
+
   // Cancel all pending orders
   const cancelAllOrders = async () => {
     const pendingOrders = orders.filter((order) => order.status === "pending");
@@ -277,6 +281,9 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                     <td>
                       <button className="cancel-button" onClick={() => handleCancelOrder(order.id)}>
                         Cancel Order
+                      </button>
+                      <button className="confirm-button" onClick={() => handleConfirmOrder(order.id)}>
+                        Confirm Order
                       </button>
                     </td>
                   </tr>
