@@ -114,7 +114,7 @@ function Kitchen({ setRole }) {
   };
 
   const activeOrders = orders.filter((order) =>
-    ["pending", "confirmed", "being prepared"].includes(order.status)
+    ["confirmed", "being prepared"].includes(order.status)
   );
 
   const completedOrders = orders.filter((order) =>
@@ -151,13 +151,10 @@ function Kitchen({ setRole }) {
                     <td>
                       <select
                         value={order.status}
-                        onChange={(e) => handleStatusChange(order.id, e.target.value)}
-                      >
-                        {statusOptions.map((status) => (
-                          <option key={status} value={status}>
-                            {status}
-                          </option>
-                        ))}
+                        onChange={(e) => handleStatusChange(order.id, e.target.value)}>
+                        <option value="being prepared">being prepared</option>
+                        <option value="ready for pick up">ready for pick up</option>
+                        <option value="canceled">canceled</option>
                       </select>
                     </td>
                   </tr>

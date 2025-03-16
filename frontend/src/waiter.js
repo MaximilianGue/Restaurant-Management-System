@@ -217,6 +217,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                       <select value={order.status} onChange={(e) => handleStatusChange(order.id, e.target.value)}>
                         <option value="ready for pick up">ready for pick up</option>
                         <option value="delivered">delivered</option>
+                        <option value="canceled">canceled</option>
                       </select>
                     </td>
                   </tr>
