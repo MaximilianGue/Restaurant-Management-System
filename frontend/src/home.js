@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { fetchMenuItems, fetchOrders, createOrder } from "./api";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
+import "./home.css";
 
 function Home() {
   const [role, setRole] = useState(0);
@@ -266,7 +267,7 @@ function Home() {
               
 
                     <h4>Placed Orders</h4>
-
+                      Scroll to see all your orders
                       <div className="placed-orders-container">
                         {orders.length === 0 ? (
                           <p>No orders placed for this table.</p>

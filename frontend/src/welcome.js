@@ -2,6 +2,7 @@ import React from "react";
 import kitchenGif from "./assets/kitchen.gif";
 import unknownImg from "./assets/unknown.jpg"; // Placeholder profile picture
 import "./welcome.css";
+import "./App.css"
 
 function Welcome() {
   return (
