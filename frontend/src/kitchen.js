@@ -5,7 +5,8 @@ import {
   fetchOrders, 
   updateOrderStatus, 
   fetchNotificationsForStaff, 
-  callWaiter 
+  callWaiter,
+  confirmOrder 
 } from "./api";
 import "./kitchen.css";
 import { STAFF_ID } from "./constants";
