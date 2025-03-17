@@ -220,7 +220,8 @@ const handleCallWaiter = async () => {
                             <div className="menu-item-details">
                               <h4>{item.name}</h4>
                               <p className="price">£{item.price}</p>
-                              <p><strong>Allergies:</strong> {item.allergies.join(", ")} </p>
+                              <p><strong>Allergies:</strong> {Array.isArray(item.allergies) ? item.allergies.join(", ") : item.allergies} </p>
+
                               <p><strong>Calories</strong> {item.calories}</p>
 
                               {cart[item.name] ? (

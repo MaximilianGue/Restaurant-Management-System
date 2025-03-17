@@ -340,3 +340,30 @@ export const fetchNotificationsForStaff = async (staffId) => {
     return [];
   }
 };
+
+
+
+
+export const deleteMenuItem = async (menuItemId) => {
+  try {
+    const response = await api.delete(`/menu-items/${menuItemId}/`);
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting menu item:", error.response?.data || error.message);
+    return null;
+  }
+};
+export const addMenuItem = async (menuItemData) => {
+  try {
+      const response = await api.post("/menu-items/", menuItemData, {
+          headers: { "Content-Type": "multipart/form-data" }
+      });
+      return response.data;
+  } catch (error) {
+      console.error("Error adding menu item:", error.response?.data || error.message);
+      return null;
+  }
+};
+
+
+
