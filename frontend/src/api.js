@@ -344,15 +344,27 @@ export const fetchNotificationsForStaff = async (staffId) => {
 
 
 
-export const deleteMenuItem = async (menuItemId) => {
+export const deleteMenuItem = async (id) => {
   try {
-    const response = await api.delete(`/menu-items/${menuItemId}/`);
-    return response.data;
+      const response = await fetch(`http://127.0.0.1:8000/cafeApi/menu-items/${id}/`, {
+          method: "DELETE",
+          headers: {
+              "Content-Type": "application/json",
+          },
+      });
+
+      if (!response.ok) {
+          throw new Error(`Failed to delete item. Server responded with status: ${response.status}`);
+      }
+
+      return true; // Return true on successful deletion
   } catch (error) {
-    console.error("Error deleting menu item:", error.response?.data || error.message);
-    return null;
+      console.error("Error deleting menu item:", error);
+      return false; // Return false if there's an error
   }
 };
+
+
 export const addMenuItem = async (menuItemData) => {
   try {
       const response = await api.post("/menu-items/", menuItemData, {

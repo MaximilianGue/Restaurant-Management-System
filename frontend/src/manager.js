@@ -8,7 +8,7 @@ function Manager() {
         name: "",
         calories: "",
         allergies: "",
-        category: [],  // Should be an array
+        category: [],  
         cooking_time: "",
         availability: "",
         price: "",
@@ -19,7 +19,6 @@ function Manager() {
 
     // List of available categories
     const availableCategories = ["Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian", "Gluten-Free", "Breakfast", "Dessert", "Drinks"];
-
 
     useEffect(() => {
         const loadMenu = async () => {
@@ -34,9 +33,16 @@ function Manager() {
         setNewItem({ ...newItem, [name]: value });
     };
 
-    const handleCategoryChange = (e) => {
-        const selectedCategories = Array.from(e.target.selectedOptions, option => option.value);
-        setNewItem({ ...newItem, category: selectedCategories });
+    const handleCategoryChange = (category) => {
+        setNewItem((prevState) => {
+            const isSelected = prevState.category.includes(category);
+            return {
+                ...prevState,
+                category: isSelected
+                    ? prevState.category.filter((c) => c !== category) // Remove if already selected
+                    : [...prevState.category, category], // Add if not selected
+            };
+        });
     };
 
     const handleImageChange = (file) => {
@@ -71,7 +77,7 @@ function Manager() {
         formData.append("availability", newItem.availability);
         formData.append("price", newItem.price);
         formData.append("image", newItem.image);
-        formData.append("category", JSON.stringify(newItem.category));  // Send as JSON
+        formData.append("category", JSON.stringify(newItem.category)); 
 
         const response = await addMenuItem(formData);
         if (response) {
@@ -106,13 +112,17 @@ function Manager() {
                 <input type="number" name="calories" value={newItem.calories} onChange={handleInputChange} placeholder="Calories" />
                 <input type="text" name="allergies" value={newItem.allergies} onChange={handleInputChange} placeholder="Allergies (comma-separated)" />
                 
-                {/* Multi-Select Category Dropdown */}
+                {/* Multi-Select Category with Checkboxes */}
                 <label>Category</label>
-                <select multiple onChange={handleCategoryChange} value={newItem.category}>
+                <div className="category-container">
                     {availableCategories.map((category) => (
-                        <option key={category} value={category}>{category}</option>
+                        <div key={category} className="category-item" onClick={() => handleCategoryChange(category)}>
+                            <input type="checkbox" checked={newItem.category.includes(category)} readOnly />
+                            <span>{category}</span>
+                            {newItem.category.includes(category) && <span className="checkmark">✔</span>}
+                        </div>
                     ))}
-                </select>
+                </div>
 
                 <input type="number" name="cooking_time" value={newItem.cooking_time} onChange={handleInputChange} placeholder="Cooking Time (minutes)" />
                 <input type="number" name="availability" value={newItem.availability} onChange={handleInputChange} placeholder="Availability (stock count)" />
