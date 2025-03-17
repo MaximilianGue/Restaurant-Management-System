@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { fetchMenuItems, fetchOrders, createOrder,fetchStaffIdForTable,callWaiter } from "./api";
 import { useNavigate } from "react-router-dom";
 import "./App.css";
+import "./home.css";
 
 function Home() {
   const [role, setRole] = useState(0);
@@ -205,10 +206,6 @@ const handleCallWaiter = async () => {
                 ))}
               </div>
 
-                 <button className="staff-login" onClick={() => navigate("/login")}>
-                  Staff Login
-                </button>
-
                 {(
                   <div className="menu-container">
                     <div className="menu-grid">
@@ -296,7 +293,7 @@ const handleCallWaiter = async () => {
               
 
                     <h4>Placed Orders</h4>
-
+                      Scroll to see all your orders
                       <div className="placed-orders-container">
                         {orders.length === 0 ? (
                           <p>No orders placed for this table.</p>

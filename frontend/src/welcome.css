@@ -1,0 +1,267 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Inter', 'Poppins', 'Segoe UI', sans-serif;
+  background-color: #f9fafb;
+}
+
+.page-wrapper {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.welcome-container {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  padding: 3rem;
+  box-sizing: border-box;
+}
+
+.welcome-text-section {
+  flex: 1;
+  text-align: left;
+  color: #111827;
+}
+
+.welcome-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #ea580c;
+}
+
+.welcome-text {
+  font-size: 1.1rem;
+  line-height: 1.6;
+  margin-bottom: 1rem;
+  max-width: 600px;
+  color: #374151;
+}
+
+.welcome-image-section {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.kitchen-image {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 12px;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
+}
+
+.team-section {
+  padding: 3rem;
+  text-align: center;
+  color: #111827;
+  background-color: #ffffff;
+}
+
+.team-title {
+  font-size: 2rem;
+  color: #ea580c;
+  margin-bottom: 2rem;
+}
+
+.team-roles {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+}
+
+.team-category {
+  flex: 1 1 240px;
+  max-width: 320px;
+  background-color: #f3f4f6;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  margin-bottom: 2rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.team-category:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.team-category h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #ea580c;
+  font-size: 1.25rem;
+}
+
+.team-category p {
+  margin: 0 0 1.5rem 0;
+  line-height: 1.5;
+  color: #374151;
+}
+
+.team-members {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.staff-member {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.profile-pic {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.staff-info h4 {
+  margin: 0 0 0.25rem 0;
+  color: #111827;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.staff-quote {
+  margin: 0;
+  font-style: italic;
+  color: #6b7280;
+  position: relative;
+  line-height: 1.4;
+}
+
+.team-category.waiters h3,
+.team-category.kitchen-staff h3,
+.team-category.managers h3 {
+  position: relative;
+  transition: color 0.3s;
+}
+
+.team-category.waiters h3::after,
+.team-category.kitchen-staff h3::after,
+.team-category.managers h3::after {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: #ea580c;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  white-space: nowrap; /* ensures the text stays on one line */
+}
+
+.team-category.waiters h3::after {
+  content: "Frontend Devs";
+}
+
+.team-category.waiters:hover h3 {
+  color: transparent;
+}
+
+.team-category.waiters:hover h3::after {
+  opacity: 1;
+}
+
+.team-category.kitchen-staff h3::after {
+  content: "Backend Devs";
+}
+
+.team-category.kitchen-staff:hover h3 {
+  color: transparent;
+}
+
+.team-category.kitchen-staff:hover h3::after {
+  opacity: 1;
+}
+
+.team-category.managers h3::after {
+  content: "DevOps";
+}
+
+.team-category.managers:hover h3 {
+  color: transparent;
+}
+
+.team-category.managers:hover h3::after {
+  opacity: 1;
+}
+
+.team-category.waiters:hover .staff-quote,
+.team-category.kitchen-staff:hover .staff-quote,
+.team-category.managers:hover .staff-quote {
+  color: transparent;
+}
+
+.team-category.waiters:hover .james .staff-quote::after {
+  content: "“I love building dynamic UIs with React!”";
+}
+
+.team-category.waiters:hover .connor .staff-quote::after {
+  content: "“Vanilla JS is the best way to master the basics!”";
+}
+
+.team-category.waiters:hover .markus .staff-quote::after {
+  content: "“CSS is my playground—I love crafting beautiful layouts!”";
+}
+
+.team-category.kitchen-staff:hover .arion .staff-quote::after {
+  content: "“Node.js microservices keep my code spicy!”";
+}
+
+.team-category.kitchen-staff:hover .leand .staff-quote::after {
+  content: "“Optimizing databases is like seasoning to perfection.”";
+}
+
+.team-category.kitchen-staff:hover .amit .staff-quote::after {
+  content: "“APIs are the secret sauce—data flows like salsa!”";
+}
+
+.team-category.managers:hover .joshua .staff-quote::after {
+  content: "“Deploying with CI/CD keeps everything smooth!”";
+}
+
+.team-category.managers:hover .max .staff-quote::after {
+  content: "“Infrastructure as code keeps our kitchen running!”";
+}
+
+.team-category .staff-quote::after {
+  position: absolute;
+  width: 100%;
+  color: #6b7280;
+  font-style: italic;
+  top: 0;
+  left: 0;
+  opacity: 1;
+}
+
+@media (max-width: 768px) {
+  .welcome-container {
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+
+  .welcome-text-section,
+  .welcome-image-section {
+    flex: unset;
+    width: 100%;
+    margin-bottom: 2rem;
+  }
+
+  .kitchen-image {
+    max-width: 100%;
+  }
+}
