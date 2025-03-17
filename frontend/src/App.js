@@ -8,6 +8,7 @@ import NotFound from "./NotFound";
 import Home from "./home";
 import Register from "./Register";
 import Welcome from "./welcome"
+import Manager from "./manager"
 
 
 function Logout() {
@@ -55,6 +56,8 @@ function App() {
                         </ProtectedRoute>
                     } 
                 />
+
+                <Route path="/manager" element={<Manager />} />
                 
                 {/* Public Routes */}
                 <Route path="/login" element={<StaffLogin setRole={setRole} />} />
@@ -62,6 +65,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/" element={<Navigate to="/welcome" replace />} />  {/*Where the user is first directed to*/}
                 <Route path="*" element={<NotFound />} />
+                
             </Routes>
         </BrowserRouter>
     );
