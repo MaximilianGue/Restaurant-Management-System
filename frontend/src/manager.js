@@ -8,7 +8,7 @@ function Manager() {
         name: "",
         calories: "",
         allergies: "",
-        category: "",
+        category: [],  // Should be an array
         cooking_time: "",
         availability: "",
         price: "",
@@ -16,6 +16,10 @@ function Manager() {
     });
     const [previewImage, setPreviewImage] = useState("");
     const [dragging, setDragging] = useState(false);
+
+    // List of available categories
+    const availableCategories = ["Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian", "Gluten-Free", "Breakfast", "Dessert", "Drinks"];
+
 
     useEffect(() => {
         const loadMenu = async () => {
@@ -28,6 +32,11 @@ function Manager() {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setNewItem({ ...newItem, [name]: value });
+    };
+
+    const handleCategoryChange = (e) => {
+        const selectedCategories = Array.from(e.target.selectedOptions, option => option.value);
+        setNewItem({ ...newItem, category: selectedCategories });
     };
 
     const handleImageChange = (file) => {
@@ -49,20 +58,25 @@ function Manager() {
     };
 
     const handleAddItem = async () => {
-        if (!newItem.name || !newItem.calories || !newItem.price || !newItem.category || !newItem.image) {
+        if (!newItem.name || !newItem.calories || !newItem.price || newItem.category.length === 0 || !newItem.image) {
             alert("Please fill out all fields and upload an image.");
             return;
         }
 
         const formData = new FormData();
-        Object.keys(newItem).forEach((key) => {
-            formData.append(key, newItem[key]);
-        });
+        formData.append("name", newItem.name);
+        formData.append("calories", newItem.calories);
+        formData.append("allergies", newItem.allergies);
+        formData.append("cooking_time", newItem.cooking_time);
+        formData.append("availability", newItem.availability);
+        formData.append("price", newItem.price);
+        formData.append("image", newItem.image);
+        formData.append("category", JSON.stringify(newItem.category));  // Send as JSON
 
         const response = await addMenuItem(formData);
         if (response) {
             setMenuItems([...menuItems, response]);
-            setNewItem({ name: "", calories: "", allergies: "", category: "", cooking_time: "", availability: "", price: "", image: null });
+            setNewItem({ name: "", calories: "", allergies: "", category: [], cooking_time: "", availability: "", price: "", image: null });
             setPreviewImage("");
         } else {
             alert("Failed to add item.");
@@ -72,8 +86,11 @@ function Manager() {
     const handleDeleteItem = async (id) => {
         if (window.confirm("Are you sure you want to remove this item?")) {
             const response = await deleteMenuItem(id);
-            if (response) setMenuItems(menuItems.filter(item => item.id !== id));
-            else alert("Failed to delete item.");
+            if (response) {
+                setMenuItems(menuItems.filter(item => item.id !== id));
+            } else {
+                alert("Failed to delete item.");
+            }
         }
     };
 
@@ -88,7 +105,15 @@ function Manager() {
                 <input type="text" name="name" value={newItem.name} onChange={handleInputChange} placeholder="Item Name" />
                 <input type="number" name="calories" value={newItem.calories} onChange={handleInputChange} placeholder="Calories" />
                 <input type="text" name="allergies" value={newItem.allergies} onChange={handleInputChange} placeholder="Allergies (comma-separated)" />
-                <input type="text" name="category" value={newItem.category} onChange={handleInputChange} placeholder="Category (e.g. Dessert, Main Course)" />
+                
+                {/* Multi-Select Category Dropdown */}
+                <label>Category</label>
+                <select multiple onChange={handleCategoryChange} value={newItem.category}>
+                    {availableCategories.map((category) => (
+                        <option key={category} value={category}>{category}</option>
+                    ))}
+                </select>
+
                 <input type="number" name="cooking_time" value={newItem.cooking_time} onChange={handleInputChange} placeholder="Cooking Time (minutes)" />
                 <input type="number" name="availability" value={newItem.availability} onChange={handleInputChange} placeholder="Availability (stock count)" />
                 <input type="number" name="price" value={newItem.price} onChange={handleInputChange} placeholder="Price (£)" />
@@ -120,7 +145,7 @@ function Manager() {
                             <img src={item.image} alt={item.name} className="menu-image" />
                             <div className="menu-details">
                                 <h4>{item.name}</h4>
-                                <p><strong>Category:</strong> {item.category}</p>
+                                <p><strong>Category:</strong> {Array.isArray(item.category) ? item.category.join(", ") : item.category}</p>
                                 <p><strong>Calories:</strong> {item.calories}</p>
                                 <p><strong>Allergies:</strong> {item.allergies || "None"}</p>
                                 <p><strong>Cooking Time:</strong> {item.cooking_time} min</p>

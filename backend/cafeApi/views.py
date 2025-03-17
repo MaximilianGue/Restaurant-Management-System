@@ -27,12 +27,16 @@ class MenuItemView(generics.ListCreateAPIView):
     def post(self, request, *args, **kwargs):
         data = request.data
         image = request.FILES.get('image')
+        
+        # Convert category back into a string for storage
+        category = json.loads(data.get("category", "[]"))
+        category_str = ",".join(category)  
 
         menu_item = MenuItem.objects.create(
             name=data.get('name'),
             calories=data.get('calories'),
             allergies=data.get('allergies'),
-            category=data.get('category'),
+            category=category_str,  # Store as a string
             cooking_time=data.get('cooking_time'),
             availability=data.get('availability'),
             price=data.get('price'),
