@@ -133,7 +133,10 @@ function Home() {
     }
 };
 
-
+/**
+ * this function converts the tableNumber inputted into a consistent format and
+ * performs checks on whether the table inputted is valid
+ */
 const handleCallWaiter = async () => {
   const tableNum = parseInt(tableNumber, 10);
   if (isNaN(tableNum)) {
@@ -171,7 +174,11 @@ const handleCallWaiter = async () => {
   const response = await callWaiter(staffId, latestOrder.id,"","waiter_call");
 
   if (response) {
-      setErrorMessage("Waiter has been called successfully!");
+    // If valid, proceed with calling the waiter
+    const table = tables.find(table => table.number == tableNum);
+    table.status = "Alert!";
+    setErrorMessage("Waiter has been called to your table!");
+    setShowPopup(true);
   } else {
       setErrorMessage("Failed to call waiter. Please try again.");
   }
@@ -179,6 +186,7 @@ const handleCallWaiter = async () => {
   setShowPopup(true);
 };
 
+    
 
   const handleFilterChange = (category) => {
     setFilter(category);
