@@ -96,6 +96,10 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     await handleStatusChange(orderId, "canceled");
   };
 
+  const handleConfirmOrder = async (orderId) => {
+    await handleStatusChange(orderId, "confirmed");
+  };
+
   // Cancel all pending orders
   const cancelAllOrders = async () => {
     const pendingOrders = orders.filter((order) => order.status === "pending");
@@ -118,6 +122,17 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     await loadOrders();
   };
 
+  const tableAlert = async (table) => {
+    if (table.status == "pending") {
+      table.status = "Alert!"
+      setErrorMessage("Table #" + table.number + " is in need of assistance!");
+    } else {
+      table.status = "pending"
+      setErrorMessage("Table #" + table.number + " has been responded to.");
+    }
+    setShowPopup(true);
+  };
+  
   // Open the alert form modal for a specific table
   const openAlertForm = (tableNumber) => {
     setAlertTableNumber(tableNumber);
@@ -202,6 +217,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                       <select value={order.status} onChange={(e) => handleStatusChange(order.id, e.target.value)}>
                         <option value="ready for pick up">ready for pick up</option>
                         <option value="delivered">delivered</option>
+                        <option value="canceled">canceled</option>
                       </select>
                     </td>
                   </tr>
@@ -266,6 +282,9 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                     <td>
                       <button className="cancel-button" onClick={() => handleCancelOrder(order.id)}>
                         Cancel Order
+                      </button>
+                      <button className="confirm-button" onClick={() => handleConfirmOrder(order.id)}>
+                        Confirm Order
                       </button>
                     </td>
                   </tr>
