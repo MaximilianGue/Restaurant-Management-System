@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchMenuItems, addMenuItem, deleteMenuItem } from "./api"; 
+import { fetchMenuItems, addMenuItem, deleteMenuItem, updateMenuItem } from "./api"; 
 import "./manager.css";
 
 function Manager() {
@@ -14,10 +14,13 @@ function Manager() {
         price: "",
         image: null,
     });
-    const [previewImage, setPreviewImage] = useState("");
-    const [dragging, setDragging] = useState(false);
 
-    // List of available categories
+    const [previewImage, setPreviewImage] = useState("");
+    const [editItem, setEditItem] = useState(null);
+    const [showEditPopup, setShowEditPopup] = useState(false);
+    const [showAddPopup, setShowAddPopup] = useState(false);
+    const [editPreviewImage, setEditPreviewImage] = useState("");
+
     const availableCategories = [
         "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian",
         "Gluten-Free", "Breakfast", "Dessert", "Drinks"
@@ -31,39 +34,47 @@ function Manager() {
         loadMenu();
     }, []);
 
-    const handleInputChange = (e) => {
+    const handleInputChange = (e, isEdit = false) => {
         const { name, value } = e.target;
-        setNewItem({ ...newItem, [name]: value });
-    };
-
-    const handleCategoryChange = (category) => {
-        setNewItem((prevState) => {
-            const isSelected = prevState.category.includes(category);
-            return {
-                ...prevState,
-                category: isSelected
-                    ? prevState.category.filter((c) => c !== category) // Remove if already selected
-                    : [...prevState.category, category], // Add if not selected
-            };
-        });
-    };
-
-    const handleImageChange = (file) => {
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setPreviewImage(reader.result);
-                setNewItem({ ...newItem, image: file });
-            };
-            reader.readAsDataURL(file);
+        if (isEdit) {
+            setEditItem({ ...editItem, [name]: value });
+        } else {
+            setNewItem({ ...newItem, [name]: value });
         }
     };
 
-    const handleDrop = (e) => {
-        e.preventDefault();
-        setDragging(false);
-        const file = e.dataTransfer.files[0];
-        if (file) handleImageChange(file);
+    const handleCategoryChange = (category, isEdit = false) => {
+        if (isEdit) {
+            setEditItem((prevState) => ({
+                ...prevState,
+                category: prevState.category.includes(category)
+                    ? prevState.category.filter((c) => c !== category)
+                    : [...prevState.category, category],
+            }));
+        } else {
+            setNewItem((prevState) => ({
+                ...prevState,
+                category: prevState.category.includes(category)
+                    ? prevState.category.filter((c) => c !== category)
+                    : [...prevState.category, category],
+            }));
+        }
+    };
+
+    const handleImageChange = (file, isEdit = false) => {
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                if (isEdit) {
+                    setEditPreviewImage(reader.result);
+                    setEditItem({ ...editItem, image: file });
+                } else {
+                    setPreviewImage(reader.result);
+                    setNewItem({ ...newItem, image: file });
+                }
+            };
+            reader.readAsDataURL(file);
+        }
     };
 
     const handleAddItem = async () => {
@@ -73,108 +84,159 @@ function Manager() {
         }
 
         const formData = new FormData();
-        formData.append("name", newItem.name);
-        formData.append("calories", newItem.calories);
-        formData.append("allergies", newItem.allergies);
-        formData.append("cooking_time", newItem.cooking_time);
-        formData.append("availability", newItem.availability);
-        formData.append("price", newItem.price);
-        formData.append("image", newItem.image);
-        formData.append("category", JSON.stringify(newItem.category)); 
+        Object.keys(newItem).forEach(key => formData.append(key, newItem[key]));
+        formData.append("category", JSON.stringify(newItem.category));
 
         const response = await addMenuItem(formData);
         if (response) {
             setMenuItems([...menuItems, response]);
             setNewItem({ name: "", calories: "", allergies: "", category: [], cooking_time: "", availability: "", price: "", image: null });
             setPreviewImage("");
+            setShowAddPopup(false);
         } else {
             alert("Failed to add item.");
         }
     };
 
     const handleDeleteItem = async (id) => {
-        if (window.confirm("Are you sure you want to remove this item?")) {
+        if (window.confirm("Are you sure?")) {
             const response = await deleteMenuItem(id);
             if (response) {
                 setMenuItems(menuItems.filter(item => item.id !== id));
-            } else {
-                alert("Failed to delete item.");
             }
+        }
+    };
+
+    const handleEditItem = (item) => {
+        setEditItem(item);
+        setEditPreviewImage(item.image);
+        setShowEditPopup(true);
+    };
+
+    const handleUpdateItem = async () => {
+        if (!editItem.name || !editItem.calories || !editItem.price || editItem.category.length === 0) {
+            alert("Please fill out all fields.");
+            return;
+        }
+
+        const formData = new FormData();
+        Object.keys(editItem).forEach(key => formData.append(key, editItem[key]));
+        formData.append("category", JSON.stringify(editItem.category));
+
+        if (editItem.image instanceof File) {
+            formData.append("image", editItem.image);
+        }
+
+        const response = await updateMenuItem(editItem.id, formData);
+        if (response) {
+            setMenuItems(menuItems.map(item => item.id === editItem.id ? response : item));
+            setShowEditPopup(false);
+        } else {
+            alert("Failed to update item.");
         }
     };
 
     return (
         <div className="manager-container">
             <h2>Manager Dashboard</h2>
-            <p>Manage the menu by adding or removing items.</p>
-
-            {/* Add New Item Form */}
-            <div className="add-item-form">
-                <h3>Add a New Menu Item</h3>
-                <input type="text" name="name" value={newItem.name} onChange={handleInputChange} placeholder="Item Name" />
-                <input type="number" name="calories" value={newItem.calories} onChange={handleInputChange} placeholder="Calories" />
-
-                {/* Allergies Input */}
-                <input type="text" name="allergies" value={newItem.allergies} onChange={handleInputChange} placeholder="Allergies (comma-separated)" />
-
-                {/* Category Section - Now Positioned Below Allergies */}
-                <div className="category-section">
-                    <label>Category</label>
-                    <div className="category-grid">
-                        {availableCategories.map((category) => (
-                            <div key={category} className="category-cell" onClick={() => handleCategoryChange(category)}>
-                                <input type="checkbox" checked={newItem.category.includes(category)} readOnly />
-                                <span>{category}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <input type="number" name="cooking_time" value={newItem.cooking_time} onChange={handleInputChange} placeholder="Cooking Time (minutes)" />
-                <input type="number" name="availability" value={newItem.availability} onChange={handleInputChange} placeholder="Availability (stock count)" />
-                <input type="number" name="price" value={newItem.price} onChange={handleInputChange} placeholder="Price (£)" />
-
-                {/* Drag and Drop Image Upload */}
-                <div
-                    className={`drop-zone ${dragging ? "dragging" : ""}`}
-                    onDragOver={(e) => {
-                        e.preventDefault();
-                        setDragging(true);
-                    }}
-                    onDragLeave={() => setDragging(false)}
-                    onDrop={handleDrop}
-                >
-                    <p>Drag & Drop an Image or Click to Upload</p>
-                    <input type="file" accept="image/*" onChange={(e) => handleImageChange(e.target.files[0])} />
-                </div>
-                
-                {previewImage && <img src={previewImage} alt="Preview" className="image-preview" />}
-                <button onClick={handleAddItem}>Add Item</button>
-            </div>
+            <button className="add-btn" onClick={() => setShowAddPopup(true)}>Add Item</button>
 
             {/* Menu List */}
-            <div className="menu-list">
-                <h3>Current Menu Items</h3>
-                {menuItems.length > 0 ? (
-                    menuItems.map((item) => (
+            <div className="menu-container">
+                <h3 className="menu-title">Current Menu Items</h3> {/* Moves title outside grid */}
+                <div className="menu-list">
+                    {menuItems.map((item) => (
                         <div key={item.id} className="menu-item">
                             <img src={item.image} alt={item.name} className="menu-image" />
-                            <div className="menu-details">
-                                <h4>{item.name}</h4>
-                                <p><strong>Category:</strong> {Array.isArray(item.category) ? item.category.join(", ") : item.category}</p>
-                                <p><strong>Calories:</strong> {item.calories}</p>
-                                <p><strong>Allergies:</strong> {item.allergies || "None"}</p>
-                                <p><strong>Cooking Time:</strong> {item.cooking_time} min</p>
-                                <p><strong>Availability:</strong> {item.availability}</p>
-                                <p><strong>Price:</strong> £{item.price}</p>
-                                <button onClick={() => handleDeleteItem(item.id)} className="delete-btn">Remove</button>
-                            </div>
+                            <h4>{item.name}</h4>
+                            <button className="edit-btn" onClick={() => handleEditItem(item)}>Edit</button>
+                            <button className="delete-btn" onClick={() => handleDeleteItem(item.id)}>Remove</button>
                         </div>
-                    ))
-                ) : (
-                    <p>No menu items available.</p>
-                )}
+                    ))}
+                </div>
             </div>
+
+
+            {/* Add Item Pop-Up */}
+            {showAddPopup && (
+                <>
+                    <div className="overlay" onClick={() => setShowAddPopup(false)}></div>
+                    <div className="edit-popup">
+                        <h3>Add Menu Item</h3>
+                        <div className="edit-grid">
+                            <label>Name<input type="text" name="name" value={newItem.name} onChange={handleInputChange} /></label>
+                            <label>Calories<input type="number" name="calories" value={newItem.calories} onChange={handleInputChange} /></label>
+                            <label>Allergies<input type="text" name="allergies" value={newItem.allergies} onChange={handleInputChange} /></label>
+                            <label>Cooking Time<input type="number" name="cooking_time" value={newItem.cooking_time} onChange={handleInputChange} /></label>
+                            <label>Availability<input type="number" name="availability" value={newItem.availability} onChange={handleInputChange} /></label>
+                            <label>Price<input type="number" name="price" value={newItem.price} onChange={handleInputChange} /></label>
+                        </div>
+                        <h4>Category</h4>
+                        <div className="category-grid">
+                            {availableCategories.map((category) => (
+                                <button key={category} className={`category-button ${newItem.category.includes(category) ? "selected" : ""}`} onClick={() => handleCategoryChange(category)}>
+                                    {category}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="drop-zone">
+                            <p>Drag & Drop an Image or Click to Upload</p>
+                            <input type="file" accept="image/*" onChange={(e) => handleImageChange(e.target.files[0])} />
+                        </div>
+                        {/* Image Preview */}
+                        {previewImage && <img src={previewImage} alt="Preview" className="image-preview" />}
+
+                        {/* Buttons */}
+                        <div className="popup-buttons">
+                            <button onClick={handleAddItem}>Add Item</button>
+                            <button onClick={() => setShowAddPopup(false)}>Cancel</button>
+                        </div>
+
+                    </div>
+                </>
+            )}
+
+            {/* Edit Item Pop-Up */}
+            {showEditPopup && (
+                <>
+                    <div className="overlay" onClick={() => setShowEditPopup(false)}></div>
+                    <div className="edit-popup">
+                        <h3>Edit Menu Item</h3>
+                        <div className="edit-grid">
+                            <label>Name<input type="text" name="name" value={editItem.name} onChange={(e) => handleInputChange(e, true)} /></label>
+                            <label>Calories<input type="number" name="calories" value={editItem.calories} onChange={(e) => handleInputChange(e, true)} /></label>
+                            <label>Allergies<input type="text" name="allergies" value={editItem.allergies} onChange={(e) => handleInputChange(e, true)} /></label>
+                            <label>Cooking Time<input type="number" name="cooking_time" value={editItem.cooking_time} onChange={(e) => handleInputChange(e, true)} /></label>
+                            <label>Availability<input type="number" name="availability" value={editItem.availability} onChange={(e) => handleInputChange(e, true)} /></label>
+                            <label>Price<input type="number" name="price" value={editItem.price} onChange={(e) => handleInputChange(e, true)} /></label>
+                        </div>
+                        <h4>Category</h4>
+                        <div className="category-grid">
+                            {availableCategories.map((category) => (
+                                <button key={category} className={`category-button ${editItem.category.includes(category) ? "selected" : ""}`} onClick={() => handleCategoryChange(category, true)}>
+                                    {category}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="drop-zone">
+                            <p>Update Item Image</p>
+                            <input type="file" accept="image/*" onChange={(e) => handleImageChange(e.target.files[0], true)} />
+                        </div>
+                        {/* Image Preview */}
+                        {editPreviewImage && <img src={editPreviewImage} alt="Preview" className="image-preview" />}
+
+                        {/* Buttons */}
+                        <div className="popup-buttons">
+                            <button onClick={handleUpdateItem}>Update Item</button>
+                            <button onClick={() => setShowEditPopup(false)}>Cancel</button>
+                        </div>
+
+
+                    </div>
+                </>
+            )}
+        
+
         </div>
     );
 }
