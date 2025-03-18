@@ -271,6 +271,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                 <th>Order #</th>
                 <th>Total (£)</th>
                 <th>Action</th>
+                <th>Time (Min)</th>
               </tr>
             </thead>
             <tbody>
@@ -287,10 +288,11 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                         Confirm Order
                       </button>
                     </td>
+                    <td>{Math.round((new Date().getTime() - new Date(order.order_date))/60000)}</td>
                   </tr>
                 ))
               ) : (
-                <tr><td colSpan="3">No pending orders.</td></tr>
+                <tr><td colSpan="4">No pending orders.</td></tr>
               )}
             </tbody>
           </table>

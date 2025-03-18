@@ -140,6 +140,7 @@ function Kitchen({ setRole }) {
                 <th>Order #</th>
                 <th>Total (£)</th>
                 <th>Status</th>
+                <th>Time (Min)</th>
               </tr>
             </thead>
             <tbody>
@@ -157,11 +158,12 @@ function Kitchen({ setRole }) {
                         <option value="canceled">canceled</option>
                       </select>
                     </td>
+                    <td>{Math.round((new Date().getTime() - new Date(order.order_date))/60000)}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3">No active orders</td>
+                  <td colSpan="4">No active orders</td>
                 </tr>
               )}
             </tbody>
