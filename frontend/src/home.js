@@ -328,7 +328,6 @@ const handleCallWaiter = async () => {
              
             
         
-
           
         {/* Popup for messages */}
         {showPopup && (

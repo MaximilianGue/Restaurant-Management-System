@@ -119,3 +119,25 @@ button:hover {
     color: green;
     font-weight: bold;
 }
+
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columns */
+    gap: 10px;
+    padding: 10px;
+}
+
+.category-cell {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #f1f5f9;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.category-cell:hover {
+    background-color: #e0f2fe;
+}

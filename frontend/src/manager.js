@@ -8,7 +8,7 @@ function Manager() {
         name: "",
         calories: "",
         allergies: "",
-        category: [],  
+        category: [],
         cooking_time: "",
         availability: "",
         price: "",
@@ -18,7 +18,10 @@ function Manager() {
     const [dragging, setDragging] = useState(false);
 
     // List of available categories
-    const availableCategories = ["Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian", "Gluten-Free", "Breakfast", "Dessert", "Drinks"];
+    const availableCategories = [
+        "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian",
+        "Gluten-Free", "Breakfast", "Dessert", "Drinks"
+    ];
 
     useEffect(() => {
         const loadMenu = async () => {
@@ -110,18 +113,21 @@ function Manager() {
                 <h3>Add a New Menu Item</h3>
                 <input type="text" name="name" value={newItem.name} onChange={handleInputChange} placeholder="Item Name" />
                 <input type="number" name="calories" value={newItem.calories} onChange={handleInputChange} placeholder="Calories" />
+
+                {/* Allergies Input */}
                 <input type="text" name="allergies" value={newItem.allergies} onChange={handleInputChange} placeholder="Allergies (comma-separated)" />
-                
-                {/* Multi-Select Category with Checkboxes */}
-                <label>Category</label>
-                <div className="category-container">
-                    {availableCategories.map((category) => (
-                        <div key={category} className="category-item" onClick={() => handleCategoryChange(category)}>
-                            <input type="checkbox" checked={newItem.category.includes(category)} readOnly />
-                            <span>{category}</span>
-                            {newItem.category.includes(category) && <span className="checkmark">✔</span>}
-                        </div>
-                    ))}
+
+                {/* Category Section - Now Positioned Below Allergies */}
+                <div className="category-section">
+                    <label>Category</label>
+                    <div className="category-grid">
+                        {availableCategories.map((category) => (
+                            <div key={category} className="category-cell" onClick={() => handleCategoryChange(category)}>
+                                <input type="checkbox" checked={newItem.category.includes(category)} readOnly />
+                                <span>{category}</span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
 
                 <input type="number" name="cooking_time" value={newItem.cooking_time} onChange={handleInputChange} placeholder="Cooking Time (minutes)" />
