@@ -20,19 +20,25 @@ function Manager() {
     const [showEditPopup, setShowEditPopup] = useState(false);
     const [showAddPopup, setShowAddPopup] = useState(false);
     const [editPreviewImage, setEditPreviewImage] = useState("");
+    const [selectedTab, setSelectedTab] = useState("Menu"); // Track selected tab
 
     const availableCategories = [
         "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian",
         "Gluten-Free", "Breakfast", "Dessert", "Drinks"
     ];
 
+
+
     useEffect(() => {
         const loadMenu = async () => {
             const items = await fetchMenuItems();
             setMenuItems(items || []);
         };
-        loadMenu();
-    }, []);
+        if (selectedTab === "Menu") {
+            loadMenu();
+        }
+    }, [selectedTab]);
+
 
     const handleInputChange = (e, isEdit = false) => {
         const { name, value } = e.target;
@@ -67,15 +73,21 @@ function Manager() {
             reader.onload = () => {
                 if (isEdit) {
                     setEditPreviewImage(reader.result);
-                    setEditItem({ ...editItem, image: file });
+                    setEditItem((prev) => ({ ...prev, image: file })); // Set new image
                 } else {
                     setPreviewImage(reader.result);
-                    setNewItem({ ...newItem, image: file });
+                    setNewItem((prev) => ({ ...prev, image: file }));
                 }
             };
             reader.readAsDataURL(file);
+        } else {
+            if (isEdit) {
+                setEditItem((prev) => ({ ...prev, image: prev.image })); // Retain old image if no new one is provided
+            }
         }
     };
+    
+    
 
     const handleAddItem = async () => {
         if (!newItem.name || !newItem.calories || !newItem.price || newItem.category.length === 0 || !newItem.image) {
@@ -108,53 +120,129 @@ function Manager() {
     };
 
     const handleEditItem = (item) => {
-        setEditItem(item);
-        setEditPreviewImage(item.image);
+        setEditItem({
+            ...item,
+            category: Array.isArray(item.category) ? item.category : JSON.parse(item.category || "[]"),
+            allergies: item.allergies.length === 0 ? "none" : item.allergies, // ✅ Show "none" if empty
+            image: item.image, // Keep the current image
+        });
+    
+        setEditPreviewImage(item.image); // Show current image in preview
         setShowEditPopup(true);
     };
-
+    
+    
+   
     const handleUpdateItem = async () => {
         if (!editItem.name || !editItem.calories || !editItem.price || editItem.category.length === 0) {
-            alert("Please fill out all fields.");
+            alert("Please fill out all required fields.");
             return;
         }
-
+    
         const formData = new FormData();
-        Object.keys(editItem).forEach(key => formData.append(key, editItem[key]));
-        formData.append("category", JSON.stringify(editItem.category));
-
+    
+        formData.append("name", editItem.name);
+        formData.append("price", editItem.price);
+        formData.append("allergies", editItem.allergies === "None" ? [] : editItem.allergies); // ✅ Convert back to empty list
+        formData.append("calories", editItem.calories);
+        formData.append("cooking_time", editItem.cooking_time);
+        formData.append("availability", editItem.availability);
+        formData.append("category_input", JSON.stringify(editItem.category));
+    
         if (editItem.image instanceof File) {
             formData.append("image", editItem.image);
         }
-
-        const response = await updateMenuItem(editItem.id, formData);
-        if (response) {
-            setMenuItems(menuItems.map(item => item.id === editItem.id ? response : item));
-            setShowEditPopup(false);
-        } else {
-            alert("Failed to update item.");
+    
+        console.log("🚀 Sending PATCH FormData:");
+        for (let pair of formData.entries()) {
+            console.log(`${pair[0]}: ${pair[1]}`);
+        }
+    
+        try {
+            const response = await updateMenuItem(editItem.id, formData);
+            console.log("✅ Update response:", response);
+    
+            if (response) {
+                setMenuItems(menuItems.map((item) => (item.id === editItem.id ? response : item)));
+                setShowEditPopup(false);
+            } else {
+                alert("❌ Failed to update item.");
+            }
+        } catch (error) {
+            console.error("❌ Update failed:", error.response?.data || error.message);
+            alert(`❌ Failed to update item: ${error.response?.data?.error || error.message}`);
         }
     };
-
+    
+    
+    
+    
+    
     return (
         <div className="manager-container">
             <h2>Manager Dashboard</h2>
-            <button className="add-btn" onClick={() => setShowAddPopup(true)}>Add Item</button>
 
-            {/* Menu List */}
-            <div className="menu-container">
-                <h3 className="menu-title">Current Menu Items</h3> {/* Moves title outside grid */}
-                <div className="menu-list">
-                    {menuItems.map((item) => (
-                        <div key={item.id} className="menu-item">
-                            <img src={item.image} alt={item.name} className="menu-image" />
-                            <h4>{item.name}</h4>
-                            <button className="edit-btn" onClick={() => handleEditItem(item)}>Edit</button>
-                            <button className="delete-btn" onClick={() => handleDeleteItem(item.id)}>Remove</button>
-                        </div>
-                    ))}
-                </div>
+            {/* Navigation Bar */}
+            <div className="nav-bar">
+                {["Menu", "Human Resource", "Notifications", "Suggestions"].map((tab) => (
+                    <button
+                        key={tab}
+                        className={`nav-button ${selectedTab === tab ? "active" : ""}`}
+                        onClick={() => setSelectedTab(tab)}
+                    >
+                        {tab}
+                    </button>
+                ))}
             </div>
+
+            {/* Conditional Rendering Based on Selected Tab */}
+            <div className="tab-content">
+                {selectedTab === "Menu" && (
+                    <>
+                        <button className="add-btn" onClick={() => setShowAddPopup(true)}>Add Item</button>
+
+                        {/* Menu List */}
+                        <div className="menu-container">
+                            <h3 className="menu-title">Current Menu Items</h3> {/* Moves title outside grid */}
+                            <div className="menu-list">
+                                {menuItems.map((item) => (
+                                    <div key={item.id} className="menu-item">
+                                        <img src={item.image} alt={item.name} className="menu-image" />
+                                        <h4>{item.name}</h4>
+                                        <button className="edit-btn" onClick={() => handleEditItem(item)}>Edit</button>
+                                        <button className="delete-btn" onClick={() => handleDeleteItem(item.id)}>Remove</button>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {selectedTab === "Human Resource" && (
+                    <div className="tab-placeholder">
+                        <h3>Human Resource Management</h3>
+                        <p>Manage employee records, work shifts, and HR tasks.</p>
+                    </div>
+                )}
+
+                {selectedTab === "Notifications" && (
+                    <div className="tab-placeholder">
+                        <h3>Notifications</h3>
+                        <p>View and manage system notifications.</p>
+                    </div>
+                )}
+
+                {selectedTab === "Suggestions" && (
+                    <div className="tab-placeholder">
+                        <h3>Suggestions</h3>
+                        <p>View customer feedback and suggestions.</p>
+                    </div>
+                )}
+            </div>
+
+
+
+
 
 
             {/* Add Item Pop-Up */}

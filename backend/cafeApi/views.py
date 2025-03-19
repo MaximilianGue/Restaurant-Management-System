@@ -26,8 +26,9 @@ class MenuItemView(generics.ListCreateAPIView):
 
     def post(self, request, *args, **kwargs):
         data = request.data
-        image = request.FILES.get('image')
-        
+        image = request.FILES.get('image')  # New uploaded image
+        existing_image = data.get("existing_image")  # Old image URL if no new image
+
         # Convert category back into a string for storage
         category = json.loads(data.get("category", "[]"))
         category_str = ",".join(category)  
@@ -36,19 +37,102 @@ class MenuItemView(generics.ListCreateAPIView):
             name=data.get('name'),
             calories=data.get('calories'),
             allergies=data.get('allergies'),
-            category=category_str,  # Store as a string
+            category=category_str,
             cooking_time=data.get('cooking_time'),
             availability=data.get('availability'),
             price=data.get('price'),
-            image=image  # Save image
+            image=image if image else existing_image  # Use old image if no new one
         )
         serializer = MenuItemSerializer(menu_item)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+
+    serializer_class = MenuItemSerializer
+    queryset = MenuItem.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        print("🔍 Incoming PATCH Request Data:", request.data)  # Debugging
+        print("📂 Incoming PATCH Request Files:", request.FILES)  # Debugging file uploads
+
+        instance = self.get_object()
+        
+        # Convert QueryDict to mutable dictionary
+        mutable_data = request.data.copy()
+
+        # Ensure category is a list, not a string
+        if 'category_input' in mutable_data:
+            try:
+                mutable_data['category'] = json.loads(mutable_data.pop('category_input'))
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid category format"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Only update the image if a new one is provided
+        if 'image' in request.FILES:
+            mutable_data['image'] = request.FILES['image']
+        else:
+            mutable_data.pop('image', None)
+
+        serializer = self.get_serializer(instance, data=mutable_data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
 class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MenuItemSerializer
     queryset = MenuItem.objects.all()
+
+    def patch(self, request, *args, **kwargs):
+        print("🔍 Incoming PATCH Request Data:", request.data)  # Debugging
+        print("📂 Incoming PATCH Request Files:", request.FILES)  # Debugging file uploads
+
+        mutable_data = request.data.copy()  # Ensure it's mutable
+
+        # ✅ Fix `category_input` Handling (Ensure it's a string before JSON parsing)
+        if "category_input" in mutable_data:
+            try:
+                category_raw = mutable_data.pop("category_input")
+
+                if isinstance(category_raw, list):  # Handle list case
+                    category_raw = category_raw[0]  # Extract first value if it's a list
+
+                if isinstance(category_raw, str):  # Ensure it's a string before JSON parsing
+                    mutable_data["category"] = json.loads(category_raw)
+                else:
+                    return Response({"error": "Invalid category format"}, status=status.HTTP_400_BAD_REQUEST)
+
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid JSON format in category_input"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ Fix `allergies` Field Handling (Ensure list format)
+        if "allergies" in mutable_data:
+            allergies_raw = mutable_data["allergies"]
+
+            if isinstance(allergies_raw, str):  # Convert string to list
+                mutable_data["allergies"] = [allergies_raw] if allergies_raw.lower() != "none" else []
+            elif isinstance(allergies_raw, list):
+                mutable_data["allergies"] = allergies_raw
+            else:
+                return Response({"error": "Invalid format for allergies"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # ✅ Fix Image Handling (Preserve Old Image if Not Updated)
+        if "image" in request.FILES:
+            mutable_data["image"] = request.FILES["image"]
+        else:
+            mutable_data.pop("image", None)  # 🔥 Remove from update if no new image is provided
+
+        # ✅ Apply Update
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=mutable_data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class MenuItemAvailabilityView(APIView):
     def get(self,pk):
@@ -429,5 +513,7 @@ class UserListView(generics.ListAPIView):
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
+
+    
 
 

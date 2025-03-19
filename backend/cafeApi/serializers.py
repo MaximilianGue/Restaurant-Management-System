@@ -2,26 +2,40 @@
 from rest_framework import serializers
 from .models import MenuItem, Order, Table,Customer, Waiter,KitchenStaff, Notification,User
 from django.contrib.auth import get_user_model
+from rest_framework.exceptions import ValidationError
+
+import json
+from rest_framework.exceptions import ValidationError
+from rest_framework import serializers
+from .models import MenuItem
 
 class MenuItemSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
-    category_input = serializers.ListField(child=serializers.CharField(), write_only=True) 
+    category_input = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
 
     def get_category(self, obj):
-        """Convert stored comma-separated category string to a list."""
+        """ Ensure the category is returned as a list. """
         if isinstance(obj.category, str):
-            return obj.category.split(",")  
+            return obj.category.split(",")
         return obj.category or []
+    
+    def get_allergies(self, obj):
+        """ Ensure 'None' is returned when allergies are empty. """
+        return obj.allergies if obj.allergies else ["none"]  # ✅ Returns ["None"] instead of an empty list
 
-    def create(self, validated_data):
-        category_list = validated_data.pop('category_input', [])
-        validated_data['category'] = ",".join(category_list)
-        return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        if 'category_input' in validated_data:
-            category_list = validated_data.pop('category_input', [])
-            validated_data['category'] = ",".join(category_list)
+        print("🔍 Updating with validated data:", validated_data)  # Debugging
+
+        # ✅ Ensure category is stored as JSON in the DB
+        if "category_input" in validated_data:
+            raw_category = validated_data.pop('category_input', [])
+            validated_data["category"] = json.dumps(raw_category) if isinstance(raw_category, list) else raw_category
+
+        # ✅ Remove 'image' field from validated_data if no new image is provided
+        if 'image' in validated_data and validated_data['image'] is None:
+            validated_data.pop('image')
+
         return super().update(instance, validated_data)
 
     class Meta:
