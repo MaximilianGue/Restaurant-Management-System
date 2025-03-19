@@ -18,6 +18,11 @@ class MenuItemSerializer(serializers.ModelSerializer):
         if isinstance(obj.category, str):
             return obj.category.split(",")
         return obj.category or []
+    
+    def get_allergies(self, obj):
+        """ Ensure 'None' is returned when allergies are empty. """
+        return obj.allergies if obj.allergies else ["none"]  # ✅ Returns ["None"] instead of an empty list
+
 
     def update(self, instance, validated_data):
         print("🔍 Updating with validated data:", validated_data)  # Debugging

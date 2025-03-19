@@ -123,12 +123,15 @@ function Manager() {
         setEditItem({
             ...item,
             category: Array.isArray(item.category) ? item.category : JSON.parse(item.category || "[]"),
+            allergies: item.allergies.length === 0 ? "none" : item.allergies, // ✅ Show "none" if empty
             image: item.image, // Keep the current image
         });
     
         setEditPreviewImage(item.image); // Show current image in preview
         setShowEditPopup(true);
     };
+    
+    
    
     const handleUpdateItem = async () => {
         if (!editItem.name || !editItem.calories || !editItem.price || editItem.category.length === 0) {
@@ -138,18 +141,14 @@ function Manager() {
     
         const formData = new FormData();
     
-        // ✅ Append all fields properly
         formData.append("name", editItem.name);
         formData.append("price", editItem.price);
-        formData.append("allergies", editItem.allergies);
+        formData.append("allergies", editItem.allergies === "None" ? [] : editItem.allergies); // ✅ Convert back to empty list
         formData.append("calories", editItem.calories);
         formData.append("cooking_time", editItem.cooking_time);
         formData.append("availability", editItem.availability);
-    
-        // ✅ Convert category array into JSON string
         formData.append("category_input", JSON.stringify(editItem.category));
     
-        // ✅ Append image ONLY if a new file is selected
         if (editItem.image instanceof File) {
             formData.append("image", editItem.image);
         }
@@ -174,6 +173,7 @@ function Manager() {
             alert(`❌ Failed to update item: ${error.response?.data?.error || error.message}`);
         }
     };
+    
     
     
     
