@@ -351,7 +351,6 @@ export const deleteMenuItem = async (id) => {
           headers: {
               "Content-Type": "application/json",
           },
-
       });
 
       if (!response.ok) {
@@ -380,38 +379,23 @@ export const addMenuItem = async (menuItemData) => {
 
 export const updateMenuItem = async (menuItemId, menuItemData) => {
   try {
-    const formData = new FormData();
+      const response = await api.patch(`/menu-items/${menuItemId}/`, menuItemData, {
+          headers: {
+              "Content-Type": "multipart/form-data", // Ensure correct content type
+          },
+      });
 
-    for (const key in menuItemData) {
-        if (key === "category") {
-            const categoryArray = Array.isArray(menuItemData[key]) 
-                ? menuItemData[key] 
-                : JSON.parse(menuItemData[key]);
-            formData.append("category_input", JSON.stringify(categoryArray));
-        } else if (key === "image" && menuItemData.image instanceof File) {
-            formData.append("image", menuItemData.image);
-        } else if (menuItemData[key] !== undefined && menuItemData[key] !== null) {
-            formData.append(key, menuItemData[key]);
-        }
-    }
-
-    console.log("🚀 Sending FormData:");
-    for (let pair of formData.entries()) {
-        console.log(`${pair[0]}: ${pair[1]}`);
-    }
-
-    const response = await api.patch(`/menu-items/${menuItemId}/`, formData, {
-        headers: { 
-            "Content-Type": "multipart/form-data"  // ✅ Fix for FormData issues
-        }
-    });
-
-    return response.data;
+      return response.data;
   } catch (error) {
-    console.error("❌ Error updating menu item:", error.response?.data || error.message);
-    return null;
+      console.error("❌ Error updating menu item:", error.response?.data || error.message);
+      return null;
   }
 };
+
+
+
+
+
 
 
 

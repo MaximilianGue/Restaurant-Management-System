@@ -73,15 +73,21 @@ function Manager() {
             reader.onload = () => {
                 if (isEdit) {
                     setEditPreviewImage(reader.result);
-                    setEditItem({ ...editItem, image: file });
+                    setEditItem((prev) => ({ ...prev, image: file })); // Set new image
                 } else {
                     setPreviewImage(reader.result);
-                    setNewItem({ ...newItem, image: file });
+                    setNewItem((prev) => ({ ...prev, image: file }));
                 }
             };
             reader.readAsDataURL(file);
+        } else {
+            if (isEdit) {
+                setEditItem((prev) => ({ ...prev, image: prev.image })); // Retain old image if no new one is provided
+            }
         }
     };
+    
+    
 
     const handleAddItem = async () => {
         if (!newItem.name || !newItem.calories || !newItem.price || newItem.category.length === 0 || !newItem.image) {
@@ -114,31 +120,47 @@ function Manager() {
     };
 
     const handleEditItem = (item) => {
-        setEditItem(item);
-        setEditPreviewImage(item.image);
+        setEditItem({
+            ...item,
+            category: Array.isArray(item.category) ? item.category : JSON.parse(item.category || "[]"),
+            image: item.image, // Keep the current image
+        });
+    
+        setEditPreviewImage(item.image); // Show current image in preview
         setShowEditPopup(true);
     };
-    
+   
     const handleUpdateItem = async () => {
         if (!editItem.name || !editItem.calories || !editItem.price || editItem.category.length === 0) {
             alert("Please fill out all required fields.");
             return;
         }
     
-        const updatedData = new FormData();  // ✅ Use FormData
+        const formData = new FormData();
     
-        updatedData.append("category_input", JSON.stringify(editItem.category));
+        // ✅ Append all fields properly
+        formData.append("name", editItem.name);
+        formData.append("price", editItem.price);
+        formData.append("allergies", editItem.allergies);
+        formData.append("calories", editItem.calories);
+        formData.append("cooking_time", editItem.cooking_time);
+        formData.append("availability", editItem.availability);
     
-        for (const key in editItem) {
-            if (key === "image" && editItem.image instanceof File) {
-                updatedData.append("image", editItem.image);
-            } else if (editItem[key] !== undefined && editItem[key] !== null) {
-                updatedData.append(key, editItem[key]);
-            }
+        // ✅ Convert category array into JSON string
+        formData.append("category_input", JSON.stringify(editItem.category));
+    
+        // ✅ Append image ONLY if a new file is selected
+        if (editItem.image instanceof File) {
+            formData.append("image", editItem.image);
+        }
+    
+        console.log("🚀 Sending PATCH FormData:");
+        for (let pair of formData.entries()) {
+            console.log(`${pair[0]}: ${pair[1]}`);
         }
     
         try {
-            const response = await updateMenuItem(editItem.id, updatedData);
+            const response = await updateMenuItem(editItem.id, formData);
             console.log("✅ Update response:", response);
     
             if (response) {
@@ -153,8 +175,6 @@ function Manager() {
         }
     };
     
-    
-
     
     
     
