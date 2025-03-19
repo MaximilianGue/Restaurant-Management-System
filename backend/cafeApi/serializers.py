@@ -2,32 +2,201 @@
 from rest_framework import serializers
 from .models import MenuItem, Order, Table,Customer, Waiter,KitchenStaff, Notification,User
 from django.contrib.auth import get_user_model
+from rest_framework.exceptions import ValidationError
 
 class MenuItemSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
-    category_input = serializers.ListField(child=serializers.CharField(), write_only=True) 
+    category_input = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
 
     def get_category(self, obj):
-        """Convert stored comma-separated category string to a list."""
         if isinstance(obj.category, str):
-            return obj.category.split(",")  
+            return obj.category.split(",")  # Ensure it's returned as a list
         return obj.category or []
 
-    def create(self, validated_data):
-        category_list = validated_data.pop('category_input', [])
-        validated_data['category'] = ",".join(category_list)
-        return super().create(validated_data)
-
     def update(self, instance, validated_data):
-        if 'category_input' in validated_data:
-            category_list = validated_data.pop('category_input', [])
-            validated_data['category'] = ",".join(category_list)
-        return super().update(instance, validated_data)
+        print("🔍 Updating with validated data:", validated_data)  # Debugging
+
+        try:
+            # Handle category updates correctly
+            if 'category_input' in validated_data:
+                raw_category = validated_data.pop('category_input', [])
+                
+                # ✅ Ensure proper conversion
+                try:
+                    category_list = json.loads(raw_category) if isinstance(raw_category, str) else raw_category
+                except json.JSONDecodeError:
+                    category_list = []  # Fallback to empty list on error
+
+                validated_data['category'] = category_list  
+
+            # Handle image correctly
+            if "image" in validated_data and validated_data["image"] is None:
+                validated_data.pop("image")
+
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+
+            instance.save()
+            return instance  
+        except Exception as e:
+            print("❌ Update failed due to:", str(e))  # Debugging
+            raise ValidationError({"error": str(e)})  
 
     class Meta:
         model = MenuItem
         fields = ["id", "name", "price", "image", "allergies", "calories", "category", "category_input", "cooking_time", "availability"]
 
+    category = serializers.SerializerMethodField()
+    category_input = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
+
+    def get_category(self, obj):
+        if isinstance(obj.category, str):
+            return obj.category.split(",")  # Ensure it's returned as a list
+        return obj.category or []
+
+    def update(self, instance, validated_data):
+        print("🔍 Updating with validated data:", validated_data)  # Debugging
+
+        try:
+            # Handle category updates correctly
+            if 'category_input' in validated_data:
+                raw_category = validated_data.pop('category_input', [])
+                
+                # ✅ Ensure proper conversion
+                try:
+                    category_list = json.loads(raw_category) if isinstance(raw_category, str) else raw_category
+                except json.JSONDecodeError:
+                    category_list = []  # Fallback to empty list on error
+
+                validated_data['category'] = category_list  
+
+            # Handle image correctly
+            if "image" in validated_data and validated_data["image"] is None:
+                validated_data.pop("image")
+
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+
+            instance.save()
+            return instance  
+        except Exception as e:
+            print("❌ Update failed due to:", str(e))  # Debugging
+            raise ValidationError({"error": str(e)})  
+
+    class Meta:
+        model = MenuItem
+        fields = ["id", "name", "price", "image", "allergies", "calories", "category", "category_input", "cooking_time", "availability"]
+
+    category = serializers.SerializerMethodField()
+    category_input = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
+
+    def get_category(self, obj):
+        if isinstance(obj.category, str):
+            return obj.category.split(",")  # Ensure it's returned as a list
+        return obj.category or []
+
+    def update(self, instance, validated_data):
+        print("🔍 Updating with validated data:", validated_data)  # Debugging
+
+        try:
+            # Handle category updates correctly
+            if 'category_input' in validated_data:
+                raw_category = validated_data.pop('category_input', [])
+                if isinstance(raw_category, str):  
+                    category_list = json.loads(raw_category)  # Fix JSON decoding issue
+                else:
+                    category_list = raw_category
+                validated_data['category'] = category_list  # Ensure stored correctly
+
+            # Remove empty image field to prevent issues
+            if "image" in validated_data and validated_data["image"] is None:
+                validated_data.pop("image")
+
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+
+            instance.save()
+            return instance  
+        except Exception as e:
+            print("❌ Update failed due to:", str(e))  # Debugging
+            raise ValidationError({"error": str(e)})  # Return error message
+
+    class Meta:
+        model = MenuItem
+        fields = ["id", "name", "price", "image", "allergies", "calories", "category", "category_input", "cooking_time", "availability"]
+
+    category = serializers.SerializerMethodField()
+    category_input = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
+
+    def get_category(self, obj):
+        if isinstance(obj.category, str):
+            return obj.category.split(",")  # Ensure category is a list when retrieved
+        return obj.category or []
+
+    def update(self, instance, validated_data):
+        print("Updating with validated data:", validated_data)  # Debugging
+
+        try:
+            # Ensure category_input is stored as an array
+            if 'category_input' in validated_data:
+                raw_category = validated_data.pop('category_input', [])
+                if isinstance(raw_category, str):
+                    category_list = json.loads(raw_category)
+                else:
+                    category_list = raw_category
+                validated_data['category'] = category_list  # Store properly
+
+            # Handle image updates properly
+            if "image" in validated_data:
+                if validated_data["image"] is None:
+                    validated_data.pop("image")  # Prevent setting image to null accidentally
+
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+
+            instance.save()
+            return instance  
+        except Exception as e:
+            print("❌ Update failed due to:", str(e))  # Debugging
+            raise ValidationError({"error": str(e)})  # Return error message
+
+    class Meta:
+        model = MenuItem
+        fields = ["id", "name", "price", "image", "allergies", "calories", "category", "category_input", "cooking_time", "availability"]
+
+    category = serializers.SerializerMethodField()
+    category_input = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
+
+    def get_category(self, obj):
+        if isinstance(obj.category, str):
+            return obj.category.split(",")  
+        return obj.category or []
+
+    def update(self, instance, validated_data):
+        print("Updating with validated data:", validated_data)  # Debugging
+
+        try:
+            # 🔹 Fix `category_input` handling
+            if 'category_input' in validated_data:
+                raw_category = validated_data.pop('category_input', [])
+                if isinstance(raw_category, str):  # 🔥 It's coming as a string, so fix it!
+                    category_list = json.loads(raw_category)
+                else:
+                    category_list = raw_category
+                validated_data['category'] = category_list  # 🔹 Ensure stored correctly
+
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+
+            instance.save()
+            return instance  
+        except Exception as e:
+            print("❌ Update failed due to:", str(e))  # Debugging
+            raise ValidationError({"error": str(e)})  # Return error message
+
+    class Meta:
+        model = MenuItem
+        fields = ["id", "name", "price", "image", "allergies", "calories", "category", "category_input", "cooking_time", "availability"]
 
 class UpdateAvailabilitySerializer(serializers.ModelSerializer):
     class Meta:

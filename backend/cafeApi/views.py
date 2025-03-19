@@ -46,9 +46,53 @@ class MenuItemView(generics.ListCreateAPIView):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+
+    serializer_class = MenuItemSerializer
+    queryset = MenuItem.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        mutable_data = request.data.copy()
+
+        # Ensure category_input is a list, not a string
+        if 'category_input' in mutable_data:
+            try:
+                mutable_data['category_input'] = json.loads(mutable_data['category_input'])
+            except json.JSONDecodeError:
+                return Response({"error": "Invalid category_input format"}, status=status.HTTP_400_BAD_REQUEST)
+
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=mutable_data, partial=partial)
+
+        if not serializer.is_valid():
+            print("❌ Serializer Errors:", serializer.errors)  # Debugging
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+        return Response(serializer.data)
 class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MenuItemSerializer
     queryset = MenuItem.objects.all()
+
+    def update(self, request, *args, **kwargs):
+        print("🔍 Incoming PATCH Request Data:", request.data)  # Debugging
+        print("📂 Incoming PATCH Request Files:", request.FILES)  # Debugging
+
+        if not request.data:
+            return Response({"error": "Empty request data received"}, status=status.HTTP_400_BAD_REQUEST)
+
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        
+        if not serializer.is_valid():
+            print("❌ Serializer Errors:", serializer.errors)  # Debugging
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+        return Response(serializer.data)
+
 
 class MenuItemAvailabilityView(APIView):
     def get(self,pk):
@@ -429,5 +473,7 @@ class UserListView(generics.ListAPIView):
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
+
+    
 
 

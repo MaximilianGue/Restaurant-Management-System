@@ -378,15 +378,41 @@ export const addMenuItem = async (menuItemData) => {
   }
 };
 
-// **NEW FUNCTION**: Update an existing menu item
 export const updateMenuItem = async (menuItemId, menuItemData) => {
   try {
-    const response = await api.put(`/menu-items/${menuItemId}/`, menuItemData, {
-      headers: { "Content-Type": "multipart/form-data" }
+    const formData = new FormData();
+
+    for (const key in menuItemData) {
+        if (key === "category") {
+            const categoryArray = Array.isArray(menuItemData[key]) 
+                ? menuItemData[key] 
+                : JSON.parse(menuItemData[key]);
+            formData.append("category_input", JSON.stringify(categoryArray));
+        } else if (key === "image" && menuItemData.image instanceof File) {
+            formData.append("image", menuItemData.image);
+        } else if (menuItemData[key] !== undefined && menuItemData[key] !== null) {
+            formData.append(key, menuItemData[key]);
+        }
+    }
+
+    console.log("🚀 Sending FormData:");
+    for (let pair of formData.entries()) {
+        console.log(`${pair[0]}: ${pair[1]}`);
+    }
+
+    const response = await api.patch(`/menu-items/${menuItemId}/`, formData, {
+        headers: { 
+            "Content-Type": "multipart/form-data"  // ✅ Fix for FormData issues
+        }
     });
+
     return response.data;
   } catch (error) {
-    console.error("Error updating menu item:", error.response?.data || error.message);
+    console.error("❌ Error updating menu item:", error.response?.data || error.message);
     return null;
   }
 };
+
+
+
+

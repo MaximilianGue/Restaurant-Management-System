@@ -204,10 +204,6 @@ const handleCallWaiter = async () => {
         return item.category.toLowerCase() === filter.toLowerCase(); // If category is a string
       });
 
-
-
-
-
   return (
  
       <div className="container">

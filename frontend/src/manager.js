@@ -118,30 +118,46 @@ function Manager() {
         setEditPreviewImage(item.image);
         setShowEditPopup(true);
     };
-
+    
     const handleUpdateItem = async () => {
         if (!editItem.name || !editItem.calories || !editItem.price || editItem.category.length === 0) {
-            alert("Please fill out all fields.");
+            alert("Please fill out all required fields.");
             return;
         }
-
-        const formData = new FormData();
-        Object.keys(editItem).forEach(key => formData.append(key, editItem[key]));
-        formData.append("category", JSON.stringify(editItem.category));
-
-        if (editItem.image instanceof File) {
-            formData.append("image", editItem.image);
+    
+        const updatedData = new FormData();  // ✅ Use FormData
+    
+        updatedData.append("category_input", JSON.stringify(editItem.category));
+    
+        for (const key in editItem) {
+            if (key === "image" && editItem.image instanceof File) {
+                updatedData.append("image", editItem.image);
+            } else if (editItem[key] !== undefined && editItem[key] !== null) {
+                updatedData.append(key, editItem[key]);
+            }
         }
-
-        const response = await updateMenuItem(editItem.id, formData);
-        if (response) {
-            setMenuItems(menuItems.map(item => item.id === editItem.id ? response : item));
-            setShowEditPopup(false);
-        } else {
-            alert("Failed to update item.");
+    
+        try {
+            const response = await updateMenuItem(editItem.id, updatedData);
+            console.log("✅ Update response:", response);
+    
+            if (response) {
+                setMenuItems(menuItems.map((item) => (item.id === editItem.id ? response : item)));
+                setShowEditPopup(false);
+            } else {
+                alert("❌ Failed to update item.");
+            }
+        } catch (error) {
+            console.error("❌ Update failed:", error.response?.data || error.message);
+            alert(`❌ Failed to update item: ${error.response?.data?.error || error.message}`);
         }
     };
+    
+    
 
+    
+    
+    
     return (
         <div className="manager-container">
             <h2>Manager Dashboard</h2>
