@@ -28,16 +28,23 @@ function Manager() {
     ];
 
 
-
+    const getStockColor = (availability) => {
+        if (availability < 10) return "red"; // 🔴 Low stock
+        if (availability < 50) return "orange"; // 🟠 Medium stock
+        return "green"; // 🟢 Normal stock
+    };
+    
     useEffect(() => {
         const loadMenu = async () => {
             const items = await fetchMenuItems();
             setMenuItems(items || []);
         };
-        if (selectedTab === "Menu") {
+        if (selectedTab === "Menu" || selectedTab === "Stock") { // ✅ Fetch when Stock tab is selected
             loadMenu();
         }
     }, [selectedTab]);
+    
+
 
 
     const handleInputChange = (e, isEdit = false) => {
@@ -184,7 +191,7 @@ function Manager() {
 
             {/* Navigation Bar */}
             <div className="nav-bar">
-                {["Menu", "Human Resource", "Notifications", "Suggestions"].map((tab) => (
+                {["Menu", "stock", "employees", "notifications", "suggestions"].map((tab) => (
                     <button
                         key={tab}
                         className={`nav-button ${selectedTab === tab ? "active" : ""}`}
@@ -218,14 +225,37 @@ function Manager() {
                     </>
                 )}
 
-                {selectedTab === "Human Resource" && (
-                    <div className="tab-placeholder">
-                        <h3>Human Resource Management</h3>
-                        <p>Manage employee records, work shifts, and HR tasks.</p>
+                {selectedTab === "stock" && (
+                    <div className="stock-container">
+                        <h3>Stock Management</h3>
+                        <table className="stock-table">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Stock Level</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {menuItems.map((item) => (
+                                    <tr key={item.id}>
+                                        <td>{item.name}</td>
+                                        <td style={{ color: getStockColor(item.availability), fontWeight: "bold" }}>
+                                            {item.availability}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 )}
 
-                {selectedTab === "Notifications" && (
+                {selectedTab === "employees" && (
+                    <div className="tab-placeholder">
+                        <h3>Notifications</h3>
+                        <p>View and manage system notifications.</p>
+                    </div>
+                )}
+                {selectedTab === "notifications" && (
                     <div className="tab-placeholder">
                         <h3>Notifications</h3>
                         <p>View and manage system notifications.</p>
@@ -283,7 +313,6 @@ function Manager() {
                     </div>
                 </>
             )}
-
             {/* Edit Item Pop-Up */}
             {showEditPopup && (
                 <>
