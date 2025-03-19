@@ -522,8 +522,6 @@ def get_employees(request):
     waiters_serialized = WaiterSerializer(waiters, many=True).data
     kitchen_staff_serialized = KitchenStaffSerializer(kitchen_staff, many=True).data
 
-    print("📢 Waiters:", waiters_serialized)  
-    print("📢 Kitchen Staff:", kitchen_staff_serialized) 
 
     employees = waiters_serialized + kitchen_staff_serialized 
     return Response(employees)

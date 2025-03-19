@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchMenuItems, addMenuItem, deleteMenuItem, updateMenuItem, fetchEmployees } from "./api"; 
+import { fetchNotificationsForStaff } from "./api";
+import axios from "axios";
 
 
 import "./manager.css";
@@ -24,6 +26,9 @@ function Manager() {
     const [editPreviewImage, setEditPreviewImage] = useState("");
     const [selectedTab, setSelectedTab] = useState("Menu");
     const [employees, setEmployees] = useState([]); 
+    const [notifications, setNotifications] = useState([]);
+    const STAFF_ID = localStorage.getItem("STAFF_ID"); // Ensure this matches your storage key
+
 
 
     const availableCategories = [
@@ -58,12 +63,27 @@ function Manager() {
             loadEmployees();
         }
     }, [selectedTab]);
-    
-    
-    
 
-
-
+    useEffect(() => {
+        const loadNotifications = async () => {
+            const notificationsData = await fetchNotificationsForStaff(STAFF_ID); // Assuming STAFF_ID is defined
+            setNotifications(notificationsData || []);
+        };
+    
+        if (selectedTab === "notifications") {
+            loadNotifications();
+        }
+    }, [selectedTab]);
+    
+    const handleMarkNotificationRead = async (notificationId) => {
+        try {
+            await axios.post(`http://127.0.0.1:8000/cafeApi/notifications/${notificationId}/mark_as_read/`);
+            setNotifications(prevNotifications => prevNotifications.filter(n => n.id !== notificationId));
+        } catch (error) {
+            console.error("Error marking notification as read:", error);
+        }
+    };
+    
     const handleInputChange = (e, isEdit = false) => {
         const { name, value } = e.target;
         if (isEdit) {
@@ -322,14 +342,44 @@ function Manager() {
                     </div>
                 )}
 
-
-
                 {selectedTab === "notifications" && (
-                    <div className="tab-placeholder">
-                        <h3>Notifications</h3>
-                        <p>View and manage system notifications.</p>
+                    <div className="notifications-container">
+                        <h3>Latest Notifications</h3>
+                        <table className="notifications-table">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Table</th>
+                                    <th>Message</th>
+                                    <th>Time</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {notifications.length > 0 ? (
+                                    notifications.map((notification) => (
+                                        <tr key={notification.id}>
+                                            <td>{notification.notification_type}</td>
+                                            <td>{notification.table ? notification.table.number : "N/A"}</td>
+                                            <td>{notification.message}</td>
+                                            <td>{new Date(notification.created_at).toLocaleString()}</td>
+                                            <td>
+                                                <button onClick={() => handleMarkNotificationRead(notification.id)}>
+                                                    Mark as Read
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="5">No notifications.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
                     </div>
                 )}
+
 
                 {selectedTab === "Suggestions" && (
                     <div className="tab-placeholder">
