@@ -268,7 +268,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
           <table>
             <thead>
               <tr>
-                <th>Order #</th>
+                <th>Table/Order #</th>
                 <th>Total (£)</th>
                 <th>Action</th>
                 <th>Time (Min)</th>
@@ -277,8 +277,8 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
             <tbody>
               {pendingOrders.length > 0 ? (
                 pendingOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td>{order.id}</td>
+                  <tr key={order.table_id}>
+                    <td>{order.table_id} | {order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
                     <td>
                       <button className="cancel-button" onClick={() => handleCancelOrder(order.id)}>
