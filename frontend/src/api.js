@@ -351,7 +351,6 @@ export const deleteMenuItem = async (id) => {
           headers: {
               "Content-Type": "application/json",
           },
-
       });
 
       if (!response.ok) {
@@ -378,15 +377,26 @@ export const addMenuItem = async (menuItemData) => {
   }
 };
 
-// **NEW FUNCTION**: Update an existing menu item
 export const updateMenuItem = async (menuItemId, menuItemData) => {
   try {
-    const response = await api.put(`/menu-items/${menuItemId}/`, menuItemData, {
-      headers: { "Content-Type": "multipart/form-data" }
-    });
-    return response.data;
+      const response = await api.patch(`/menu-items/${menuItemId}/`, menuItemData, {
+          headers: {
+              "Content-Type": "multipart/form-data", // Ensure correct content type
+          },
+      });
+
+      return response.data;
   } catch (error) {
-    console.error("Error updating menu item:", error.response?.data || error.message);
-    return null;
+      console.error("❌ Error updating menu item:", error.response?.data || error.message);
+      return null;
   }
 };
+
+
+
+
+
+
+
+
+

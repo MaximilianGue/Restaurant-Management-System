@@ -137,16 +137,17 @@ function Kitchen({ setRole }) {
           <table>
             <thead>
               <tr>
-                <th>Order #</th>
+                <th>Table/Order #</th>
                 <th>Total (£)</th>
                 <th>Status</th>
+                <th>Time (Min)</th>
               </tr>
             </thead>
             <tbody>
               {activeOrders.length > 0 ? (
                 activeOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td>{order.id}</td>
+                  <tr key={order.table_id}>
+                    <td>{order.table_id} | {order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
                     <td>
                       <select
@@ -157,11 +158,12 @@ function Kitchen({ setRole }) {
                         <option value="canceled">canceled</option>
                       </select>
                     </td>
+                    <td>{Math.round((new Date().getTime() - new Date(order.order_date))/60000)}</td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3">No active orders</td>
+                  <td colSpan="4">No active orders</td>
                 </tr>
               )}
             </tbody>

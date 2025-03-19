@@ -5,301 +5,315 @@
 
 /* Home page container */
 .container {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-  
-  /* Title for the restaurant */
-  .restaurant-title {
-    font-family: 'Merriweather', serif;
-    font-size: 3rem;
-    color: #1f2937; /* Dark gray */
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-  
-  /* Filter container + buttons */
-  .filter-container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem;
-  }
-  
-  .filter-button {
-    background-color: #e5e7eb;
-    color: #1f2937;
-    font-size: 1rem;
-    padding: 0.75rem 1.5rem;
-    border-radius: 6px;
-    transition: background-color 0.3s, transform 0.1s;
-    border: none;
-  }
-  
-  .filter-button:hover {
-    background-color: #2563eb;
-    color: #ffffff;
-    transform: scale(1.03);
-  }
-  
-  .filter-button.active {
-    background-color: #2563eb;
-    color: #ffffff;
-  }
-  
-  /* Menu container + grid */
-  .menu-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 2rem;
-  }
-  
-  .menu-grid {
-    flex: 1;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 2rem;
-  }
-  
-  /* Menu item card */
-  .menu-item {
-    background-color: #ffffff;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-  }
-  
-  .menu-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  
-  .menu-item-image {
-    width: 180px;  /* Ensures full width inside card */
-    height: 180px; /* Fixed height for uniform images */
-    object-fit: cover; /* Ensures images cover the space without stretching */
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
+/* Title for the restaurant */
+.restaurant-title {
+  font-family: 'Merriweather', serif;
+  font-size: 3rem;
+  color: #1f2937; /* Dark gray */
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+/* Filter container + buttons */
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.filter-button {
+  background-color: #e5e7eb;
+  color: #1f2937;
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  transition: background-color 0.3s, transform 0.1s;
+  border: none;
+}
+
+.filter-button:hover {
+  background-color: #2563eb;
+  color: #ffffff;
+  transform: scale(1.03);
+}
+
+.filter-button.active {
+  background-color: #2563eb;
+  color: #ffffff;
+}
+
+/* Main Layout: Ensures menu and order summary are side by side */
+.main-container {
+  display: flex;
+  flex-direction: row; /* Keep side-by-side layout */
+  justify-content: space-between;
+  align-items: stretch; /* Ensure both sections have equal height */
+  gap: 2rem;
+  padding: 2rem;
+  width: 100%;
+  min-height: 600px; /* Optional: Ensures a decent minimum height */
+}
+
+/* Menu container: Holds menu grid */
+.menu-container {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Menu grid: Displays items in 2 columns */
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(100px, 1fr)); /* Always 2 columns */
+  gap: 2rem;
+}
+
+/* Order summary: Stays next to menu grid */
+.order-summary {
+  flex: 1;
+  max-width: 350px;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  justify-content: flex-start;
+  align-self: stretch; /* Makes order-summary equal in height */
+  height: 100%; /* Ensures it fully stretches */
+  margin-top: 1rem;
+}
+
+/* Order summary heading */
+.order-summary h4 {
+  font-size: 1.5rem;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+/* Order summary input */
+.table-input {
+  width: 100%;
+  max-width: 200px;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+}
+
+/* Menu item card */
+.menu-item {
+  background-color: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   
-  .menu-item-details {
-    padding: 1rem;
-    display: flex;
+  margin-top: 0 !important;
+  
+  
+}
+
+.menu-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Menu item image */
+.menu-item-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+/* Menu item details */
+.menu-item-details {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.menu-item-details h4 {
+  font-size: 1.25rem;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.menu-item-details p {
+  font-size: 0.95rem;
+  color: #4b5563;
+  margin: 0.125rem 0;
+}
+
+/* Price */
+.price {
+  color: #e11d48;
+  font-weight: 600;
+}
+
+/* Select & counter buttons */
+.select-button,
+.counter-btn {
+  background-color: #2563eb;
+  color: #ffffff;
+  margin-top: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.select-button:hover,
+.counter-btn:hover {
+  background-color: #1e3a8a;
+  transform: scale(1.02);
+}
+
+/* Counter for quantity selection */
+.counter {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.counter span {
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+/* Order summary items */
+.order-summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px dashed #d1d5db;
+  font-size: 1rem;
+}
+
+/* Total line */
+.order-summary-total {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #e11d48;
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 2px solid #f3f4f6;
+  
+}
+
+/* Place order button */
+.order-button {
+  background: #f97316;
+  color: white;
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  transition: background-color 0.3s, transform 0.1s;
+  font-weight: 600;
+}
+
+.order-button:hover {
+  background-color: #c2410c;
+  transform: scale(1.02);
+}
+
+/* Placed orders container */
+.placed-orders-container {
+  background-color: #f9fafb;
+  border-radius: 6px;
+  padding: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.placed-orders-container h4 {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.placed-order {
+  background-color: #ffffff;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  border-left: 4px solid #2563eb;
+  transition: box-shadow 0.2s ease;
+}
+
+.placed-order:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.placed-order p {
+  margin: 0.25rem 0;
+  font-size: 0.95rem;
+  color: #334155;
+}
+
+/* Popup modal */
+.custom-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #ffffff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  z-index: 9999;
+}
+
+.custom-popup p {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.custom-popup button {
+  background-color: #2563eb;
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.3s, transform 0.1s;
+}
+
+.custom-popup button:hover {
+  background-color: #1e3a8a;
+  transform: scale(1.02);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .main-container {
     flex-direction: column;
-    gap: 0.5rem;
   }
-  
-  .menu-item-details h4 {
-    font-size: 1.25rem;
-    color: #111827;
-    margin-bottom: 0.25rem;
+
+  .menu-grid {
+    grid-template-columns: repeat(1, minmax(260px, 1fr));
   }
-  
-  .menu-item-details p {
-    font-size: 0.95rem;
-    color: #4b5563;
-    margin: 0.125rem 0;
-  }
-  
-  /* Price */
-  .price {
-    color: #e11d48; /* Soft red/pink for prices */
-    font-weight: 600;
-  }
-  
-  /* Select & counter buttons */
-  .select-button,
-  .counter-btn {
-    background-color: #2563eb;
-    color: #ffffff;
-    margin-top: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    transition: background-color 0.3s ease, transform 0.1s ease;
-    border: none;
-    font-size: 1rem;
-    font-weight: 500;
-  }
-  
-  .select-button:hover,
-  .counter-btn:hover {
-    background-color: #1e3a8a;
-    transform: scale(1.02);
-  }
-  
-  /* Counter (quantity) */
-  .counter {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-top: 0.5rem;
-  }
-  
-  .counter span {
-    font-weight: 500;
-    font-size: 1.1rem;
-  }
-  
-  /* Order summary */
+
   .order-summary {
-    flex: 0 0 300px;
-    background: #ffffff;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    justify-content: flex-start;
+    max-width: 100%;
   }
-  
-  .order-summary h4 {
-    font-size: 1.5rem;
-    color: #111827;
-    margin-bottom: 1rem;
-  }
-  
-  .order-summary label {
-    font-size: 1rem;
-    font-weight: 500;
-    color: #111827;
-  }
-  
-  .table-input {
-    width: 100%;
-    max-width: 200px;
-    padding: 0.5rem;
-    font-size: 1rem;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-  }
-  
-  .call-waiter-btn {
-    background: #10b981; /* Greenish button */
-    color: #ffffff;
-    font-weight: 600;
-    transition: background-color 0.3s, transform 0.1s;
-  }
-  
-  .call-waiter-btn:hover {
-    background-color: #047857;
-    transform: scale(1.02);
-  }
-  
-  /* Order items */
-  .order-summary-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem 0;
-    border-bottom: 1px dashed #d1d5db;
-    font-size: 1rem;
-  }
-  
-  /* Total line */
-  .order-summary-total {
-    display: flex;
-    justify-content: space-between;
-    font-size: 1.25rem;
-    font-weight: 600;
-    color: #e11d48;
-    margin-top: 1rem;
-    padding-top: 0.5rem;
-    border-top: 2px solid #f3f4f6;
-  }
-  
-  /* Place order button */
-  .order-button {
-    background: #f97316; /* Orange accent */
-    color: white;
-    padding: 0.75rem 1.25rem;
-    font-size: 1rem;
-    border-radius: 6px;
-    transition: background-color 0.3s, transform 0.1s;
-    font-weight: 600;
-  }
-  
-  .order-button:hover {
-    background-color: #c2410c;
-    transform: scale(1.02);
-  }
-  
-  .order-button:disabled {
-    background: #9ca3af;
-    cursor: not-allowed;
-  }
-  
-  /* Placed orders container */
-  .placed-orders-container {
-    background-color: #f9fafb;
-    border-radius: 6px;
-    padding: 1rem;
-    max-height: 300px;
-    overflow-y: auto;
-  }
-  
-  .placed-orders-container h4 {
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
-  }
-  
-  .placed-order {
-    background-color: #ffffff;
-    padding: 1rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
-    border-left: 4px solid #2563eb;
-    transition: box-shadow 0.2s ease;
-  }
-  
-  .placed-order:hover {
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  }
-  
-  .placed-order p {
-    margin: 0.25rem 0;
-    font-size: 0.95rem;
-    color: #334155;
-  }
-  
-  /* Popup modal */
-  .custom-popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: #ffffff;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
-    text-align: center;
-    z-index: 9999;
-  }
-  
-  .custom-popup p {
-    margin-bottom: 1rem;
-    font-size: 1rem;
-    color: #1f2937;
-  }
-  
-  .custom-popup button {
-    background-color: #2563eb;
-    color: #ffffff;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: background-color 0.3s, transform 0.1s;
-  }
-  
-  .custom-popup button:hover {
-    background-color: #1e3a8a;
-    transform: scale(1.02);
-  }
-  
+}

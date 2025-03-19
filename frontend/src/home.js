@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { fetchMenuItems, fetchOrders, createOrder,fetchStaffIdForTable,callWaiter } from "./api";
 import { useNavigate } from "react-router-dom";
+
 import "./App.css";
 import "./home.css";
+
 
 function Home() {
   const [role, setRole] = useState(0);
@@ -202,10 +204,6 @@ const handleCallWaiter = async () => {
         return item.category.toLowerCase() === filter.toLowerCase(); // If category is a string
       });
 
-
-
-
-
   return (
  
       <div className="container">
@@ -221,50 +219,50 @@ const handleCallWaiter = async () => {
             </button>
           ))}
         </div>
+            {(
+              <div className="main-container">
+                <div className="menu-container">
+                  <div className="menu-grid">
+                        {filteredMenuItems.length > 0 ? (filteredMenuItems.map((item, index) => (
+                            <div className="menu-item" key={index}>
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="menu-item-image"
+                                onError={(e) => (e.target.src = "/fallback-image.jpg")}
+                              />
+                              <div className="menu-item-details">
+                                <h4>{item.name}</h4>
+                                <p className="price">£{item.price}</p>
+                                <p><strong>Allergies:</strong> {Array.isArray(item.allergies) ? item.allergies.join(", ") : item.allergies} </p>
 
+                                <p><strong>Calories</strong> {item.calories}</p>
 
-                {(
-                  <div className="menu-container">
-                    <div className="menu-grid">
-                      {filteredMenuItems.length > 0 ? (filteredMenuItems.map((item, index) => (
-                          <div className="menu-item" key={index}>
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="menu-item-image"
-                              onError={(e) => (e.target.src = "/fallback-image.jpg")}
-                            />
-                            <div className="menu-item-details">
-                              <h4>{item.name}</h4>
-                              <p className="price">£{item.price}</p>
-                              <p><strong>Allergies:</strong> {Array.isArray(item.allergies) ? item.allergies.join(", ") : item.allergies} </p>
-
-                              <p><strong>Calories</strong> {item.calories}</p>
-
-                              {cart[item.name] ? (
-                                <div className="counter">
-                                  <button onClick={() => handleQuantityChange(item.name, "decrease")} className="counter-btn">
-                                    -
+                                {cart[item.name] ? (
+                                  <div className="counter">
+                                    <button onClick={() => handleQuantityChange(item.name, "decrease")} className="counter-btn">
+                                      -
+                                    </button>
+                                    <span>{cart[item.name]}</span>
+                                    <button onClick={() => handleQuantityChange(item.name, "increase")} className="counter-btn">
+                                      +
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button onClick={() => handleSelect(item.name)} className="select-button">
+                                    Select
                                   </button>
-                                  <span>{cart[item.name]}</span>
-                                  <button onClick={() => handleQuantityChange(item.name, "increase")} className="counter-btn">
-                                    +
-                                  </button>
-                                </div>
-                              ) : (
-                                <button onClick={() => handleSelect(item.name)} className="select-button">
-                                  Select
-                                </button>
-                              )}
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))
-                      ) : (
-                        <p>Loading menu.../No items available in this category...</p>
-                      )}
-                    </div>
-
-                    <div className="order-summary">
+                          ))
+                        ) : (
+                          <p>Loading menu.../No items available in this category...</p>
+                        )}
+                  </div>  
+                </div>
+                  
+                <div className="order-summary">
                       <label>Enter Table Number:</label>
                       <input
                         type="text"
@@ -329,14 +327,11 @@ const handleCallWaiter = async () => {
                         )}
 
                       </div>
-                    </div>
-                    
-                  </div>
-                )}
-             
-            
-        
-          
+                </div>
+
+              </div>      
+            )}
+                       
         {/* Popup for messages */}
         {showPopup && (
           <div className="custom-popup">
