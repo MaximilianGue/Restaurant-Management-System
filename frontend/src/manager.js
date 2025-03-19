@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { fetchMenuItems, addMenuItem, deleteMenuItem, updateMenuItem } from "./api"; 
+import { fetchMenuItems, addMenuItem, deleteMenuItem, updateMenuItem, fetchEmployees } from "./api"; 
+
+
 import "./manager.css";
 
 function Manager() {
@@ -20,7 +22,9 @@ function Manager() {
     const [showEditPopup, setShowEditPopup] = useState(false);
     const [showAddPopup, setShowAddPopup] = useState(false);
     const [editPreviewImage, setEditPreviewImage] = useState("");
-    const [selectedTab, setSelectedTab] = useState("Menu"); // Track selected tab
+    const [selectedTab, setSelectedTab] = useState("Menu");
+    const [employees, setEmployees] = useState([]); 
+
 
     const availableCategories = [
         "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian",
@@ -29,9 +33,9 @@ function Manager() {
 
 
     const getStockColor = (availability) => {
-        if (availability < 10) return "red"; // 🔴 Low stock
-        if (availability < 50) return "orange"; // 🟠 Medium stock
-        return "green"; // 🟢 Normal stock
+        if (availability < 10) return "red"; 
+        if (availability < 50) return "orange";
+        return "green"; 
     };
     
     useEffect(() => {
@@ -39,10 +43,23 @@ function Manager() {
             const items = await fetchMenuItems();
             setMenuItems(items || []);
         };
-        if (selectedTab === "Menu" || selectedTab === "Stock") { // ✅ Fetch when Stock tab is selected
+        if (selectedTab === "Menu" || selectedTab === "Stock") { 
             loadMenu();
         }
     }, [selectedTab]);
+    
+    useEffect(() => {
+        const loadEmployees = async () => {
+            const staff = await fetchEmployees();
+            console.log("📢 Employees State Before Setting:", staff); 
+            setEmployees(staff || []);
+        };
+        if (selectedTab === "employees") {
+            loadEmployees();
+        }
+    }, [selectedTab]);
+    
+    
     
 
 
@@ -80,7 +97,7 @@ function Manager() {
             reader.onload = () => {
                 if (isEdit) {
                     setEditPreviewImage(reader.result);
-                    setEditItem((prev) => ({ ...prev, image: file })); // Set new image
+                    setEditItem((prev) => ({ ...prev, image: file }));
                 } else {
                     setPreviewImage(reader.result);
                     setNewItem((prev) => ({ ...prev, image: file }));
@@ -89,7 +106,7 @@ function Manager() {
             reader.readAsDataURL(file);
         } else {
             if (isEdit) {
-                setEditItem((prev) => ({ ...prev, image: prev.image })); // Retain old image if no new one is provided
+                setEditItem((prev) => ({ ...prev, image: prev.image })); 
             }
         }
     };
@@ -130,11 +147,11 @@ function Manager() {
         setEditItem({
             ...item,
             category: Array.isArray(item.category) ? item.category : JSON.parse(item.category || "[]"),
-            allergies: item.allergies.length === 0 ? "none" : item.allergies, // ✅ Show "none" if empty
-            image: item.image, // Keep the current image
+            allergies: item.allergies.length === 0 ? "none" : item.allergies, 
+            image: item.image, 
         });
     
-        setEditPreviewImage(item.image); // Show current image in preview
+        setEditPreviewImage(item.image); 
         setShowEditPopup(true);
     };
     
@@ -150,7 +167,7 @@ function Manager() {
     
         formData.append("name", editItem.name);
         formData.append("price", editItem.price);
-        formData.append("allergies", editItem.allergies === "None" ? [] : editItem.allergies); // ✅ Convert back to empty list
+        formData.append("allergies", editItem.allergies === "None" ? [] : editItem.allergies); 
         formData.append("calories", editItem.calories);
         formData.append("cooking_time", editItem.cooking_time);
         formData.append("availability", editItem.availability);
@@ -202,15 +219,15 @@ function Manager() {
                 ))}
             </div>
 
-            {/* Conditional Rendering Based on Selected Tab */}
+            
             <div className="tab-content">
                 {selectedTab === "Menu" && (
                     <>
                         <button className="add-btn" onClick={() => setShowAddPopup(true)}>Add Item</button>
 
-                        {/* Menu List */}
+                        
                         <div className="menu-container">
-                            <h3 className="menu-title">Current Menu Items</h3> {/* Moves title outside grid */}
+                            <h3 className="menu-title">Current Menu Items</h3>
                             <div className="menu-list">
                                 {menuItems.map((item) => (
                                     <div key={item.id} className="menu-item">
@@ -250,11 +267,63 @@ function Manager() {
                 )}
 
                 {selectedTab === "employees" && (
-                    <div className="tab-placeholder">
-                        <h3>Notifications</h3>
-                        <p>View and manage system notifications.</p>
+                    <div className="employees-container">
+                        <h3>Employee Management</h3>
+
+                       
+                        <div className="employee-section">
+                            <h4>🍽️ Waiters</h4>
+                            <table className="employee-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {employees
+                                        .filter(emp => emp.role?.toLowerCase().includes("waiter")) 
+                                        .map((waiter) => (
+                                        <tr key={waiter.id}>
+                                            <td>{waiter.first_name} {waiter.last_name}</td>
+                                            <td>{waiter.email}</td>
+                                            <td>{waiter.phone || "N/A"}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        
+                        <div className="employee-section">
+                            <h4>👨‍🍳 Kitchen Staff</h4>
+                            <table className="employee-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Phone</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {employees
+                                        .filter(emp => emp.role?.toLowerCase().includes("kitchen"))
+                                        .map((kitchen) => (
+                                        <tr key={kitchen.id}>
+                                            <td>{kitchen.first_name} {kitchen.last_name}</td>
+                                            <td>{kitchen.email}</td>
+                                            <td>{kitchen.phone || "N/A"}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
+
+
+
                 {selectedTab === "notifications" && (
                     <div className="tab-placeholder">
                         <h3>Notifications</h3>
@@ -270,12 +339,6 @@ function Manager() {
                 )}
             </div>
 
-
-
-
-
-
-            {/* Add Item Pop-Up */}
             {showAddPopup && (
                 <>
                     <div className="overlay" onClick={() => setShowAddPopup(false)}></div>
@@ -301,10 +364,10 @@ function Manager() {
                             <p>Drag & Drop an Image or Click to Upload</p>
                             <input type="file" accept="image/*" onChange={(e) => handleImageChange(e.target.files[0])} />
                         </div>
-                        {/* Image Preview */}
+                        
                         {previewImage && <img src={previewImage} alt="Preview" className="image-preview" />}
 
-                        {/* Buttons */}
+                      
                         <div className="popup-buttons">
                             <button onClick={handleAddItem}>Add Item</button>
                             <button onClick={() => setShowAddPopup(false)}>Cancel</button>
@@ -313,7 +376,7 @@ function Manager() {
                     </div>
                 </>
             )}
-            {/* Edit Item Pop-Up */}
+       
             {showEditPopup && (
                 <>
                     <div className="overlay" onClick={() => setShowEditPopup(false)}></div>
@@ -339,10 +402,10 @@ function Manager() {
                             <p>Update Item Image</p>
                             <input type="file" accept="image/*" onChange={(e) => handleImageChange(e.target.files[0], true)} />
                         </div>
-                        {/* Image Preview */}
+                        
                         {editPreviewImage && <img src={editPreviewImage} alt="Preview" className="image-preview" />}
 
-                        {/* Buttons */}
+                        
                         <div className="popup-buttons">
                             <button onClick={handleUpdateItem}>Update Item</button>
                             <button onClick={() => setShowEditPopup(false)}>Cancel</button>

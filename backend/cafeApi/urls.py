@@ -1,5 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
+from .views import get_employees
 from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, NotificationViewSet, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView,WaiterDetailView,TableStaffIDView
 notification_list = NotificationViewSet.as_view({'get': 'list', 'post': 'create'})
 notify_staff = NotificationViewSet.as_view({'post': 'notify_staff'})
@@ -41,4 +42,7 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('users/', UserListView.as_view(), name='user-list'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
+    
+    path('employees/', get_employees, name='get-employees')
 ]

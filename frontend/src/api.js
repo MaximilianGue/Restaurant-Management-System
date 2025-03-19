@@ -1,6 +1,6 @@
 import axios from "axios"; 
 
-const BASE_URL = "http://127.0.0.1:8000/cafeApi";  // Django API
+const BASE_URL = "http://127.0.0.1:8000/cafeApi";  
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -381,16 +381,30 @@ export const updateMenuItem = async (menuItemId, menuItemData) => {
   try {
       const response = await api.patch(`/menu-items/${menuItemId}/`, menuItemData, {
           headers: {
-              "Content-Type": "multipart/form-data", // Ensure correct content type
+              "Content-Type": "multipart/form-data", 
           },
       });
 
       return response.data;
   } catch (error) {
-      console.error("❌ Error updating menu item:", error.response?.data || error.message);
+      console.error("Error updating menu item:", error.response?.data || error.message);
       return null;
   }
 };
+
+export const fetchEmployees = async () => {
+  try {
+      const response = await fetch("http://127.0.0.1:8000/cafeApi/employees/");
+      const data = await response.json();
+      console.log("Employees Data:", data);  
+      return data;
+  } catch (error) {
+      console.error("Error fetching employees:", error);
+      return [];
+  }
+};
+
+
 
 
 

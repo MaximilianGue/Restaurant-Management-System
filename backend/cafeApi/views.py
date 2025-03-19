@@ -514,6 +514,16 @@ class UserListView(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
-    
+@api_view(['GET'])
+def get_employees(request):
+    waiters = Waiter.objects.all()
+    kitchen_staff = KitchenStaff.objects.all()
 
+    waiters_serialized = WaiterSerializer(waiters, many=True).data
+    kitchen_staff_serialized = KitchenStaffSerializer(kitchen_staff, many=True).data
 
+    print("📢 Waiters:", waiters_serialized)  
+    print("📢 Kitchen Staff:", kitchen_staff_serialized) 
+
+    employees = waiters_serialized + kitchen_staff_serialized 
+    return Response(employees)
