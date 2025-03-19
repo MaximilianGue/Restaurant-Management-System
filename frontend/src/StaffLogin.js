@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./StaffLogin.css";
 import { ACCESS_TOKEN, REFRESH_TOKEN ,STAFF_ID} from "./constants";
+
+
 function StaffLogin({ setRole }) {
     const navigate = useNavigate();
     const [username, setUsername] = useState("");
@@ -90,6 +92,11 @@ function StaffLogin({ setRole }) {
                 setRole(0);
                 navigate("/");
             }}>Return to Customer View</button>
+
+            <button className="manager-button" onClick={() => navigate("/manager")}>
+                Manager
+            </button>
+
 
             {showPopup && (
                 <div className="custom-popup">

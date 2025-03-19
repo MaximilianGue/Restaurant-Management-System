@@ -1,0 +1,238 @@
+/* --- Existing Styles --- */
+.manager-container {
+    max-width: 800px;
+    margin: auto;
+    text-align: center;
+}
+
+.add-item-form {
+    background: #f3f4f6;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.add-item-form input, .edit-popup input {
+    width: 100%;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+}
+
+button {
+    background-color: #2563eb;
+    color: white;
+    padding: 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 0.5rem;
+    transition: background 0.3s ease;
+}
+
+button:hover {
+    background-color: #1e40af;
+}
+
+.menu-list {
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.menu-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.menu-details {
+    flex-grow: 1;
+    text-align: left;
+}
+
+.edit-popup {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 2rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    width: 600px; /* Increased width */
+    max-height: 85vh;
+    overflow-y: auto;
+    text-align: center;
+}
+
+
+/* --- 3x2 Grid for Edit Fields --- */
+.edit-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 15px;
+    text-align: left;
+}
+
+.edit-grid label {
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+}
+
+.edit-grid input {
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+}
+
+/* --- Category Grid --- */
+.category-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 10px;
+}
+
+.category-button {
+    padding: 8px;
+    background-color: #0b72da;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    color: white;
+}
+
+.category-button.selected {
+    background-color: #eb9f25;
+    color: white;
+}
+
+.category-button:hover {
+    background-color: #e0f2fe;
+}
+
+/* --- Buttons at the Bottom --- */
+.edit-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* --- Delete & Edit Buttons --- */
+.delete-btn {
+    background-color: #e11d48;
+}
+
+.delete-btn:hover {
+    background-color: #b91c1c;
+}
+
+.edit-btn {
+    background-color: #f59e0b;
+}
+
+.edit-btn:hover {
+    background-color: #d97706;
+}
+
+.image-preview {
+    width: 150px; /* Adjust as needed */
+    height: 150px; /* Keep the aspect ratio consistent */
+    object-fit: cover; /* Ensures the image covers the entire area without distortion */
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+/* Container for buttons */
+.popup-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px; /* Space between buttons */
+    margin-top: 15px; /* Space from image */
+}
+
+/* Ensure buttons have consistent size */
+.popup-buttons button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 6px;
+}
+
+/* Add spacing below the Add Item button */
+.add-btn {
+    margin-bottom: 20px; /* Adds space below the button */
+}
+
+
+/* Center everything inside menu-container */
+.menu-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers the entire menu section */
+    justify-content: center;
+    width: 100%;
+    margin-top: 20px; /* Adds spacing from above */
+}
+
+/* Center the title */
+.menu-title {
+    font-size: 1.8rem;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 15px; /* Space between title and grid */
+}
+/* Menu List - 5-column grid with wider items */
+.menu-list {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(180px, 1fr)); /* Each column is almost double in width */
+    gap: 25px; /* Slightly increased spacing */
+    background: #ffffff;
+    padding: 1.5rem;
+    border-radius: 8px;
+    width: 95%; /* Make the table take up more space */
+    justify-content: center;
+}
+
+/* Menu Item - Make each item wider */
+.menu-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #f3f4f6;
+    padding: 1.5rem; /* More padding */
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Makes items expand */
+    max-width: 230px; /* Increase max width to make items wider */
+}
+
+/* Menu Images - Increase size slightly */
+.menu-image {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+/* Ensure buttons inside each menu item are properly spaced */
+.menu-item button {
+    width: 100%;
+    margin-top: 5px;
+}
+

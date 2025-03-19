@@ -340,3 +340,53 @@ export const fetchNotificationsForStaff = async (staffId) => {
     return [];
   }
 };
+
+
+
+
+export const deleteMenuItem = async (id) => {
+  try {
+      const response = await fetch(`http://127.0.0.1:8000/cafeApi/menu-items/${id}/`, {
+          method: "DELETE",
+          headers: {
+              "Content-Type": "application/json",
+          },
+
+      });
+
+      if (!response.ok) {
+          throw new Error(`Failed to delete item. Server responded with status: ${response.status}`);
+      }
+
+      return true; // Return true on successful deletion
+  } catch (error) {
+      console.error("Error deleting menu item:", error);
+      return false; // Return false if there's an error
+  }
+};
+
+
+export const addMenuItem = async (menuItemData) => {
+  try {
+      const response = await api.post("/menu-items/", menuItemData, {
+          headers: { "Content-Type": "multipart/form-data" }
+      });
+      return response.data;
+  } catch (error) {
+      console.error("Error adding menu item:", error.response?.data || error.message);
+      return null;
+  }
+};
+
+// **NEW FUNCTION**: Update an existing menu item
+export const updateMenuItem = async (menuItemId, menuItemData) => {
+  try {
+    const response = await api.put(`/menu-items/${menuItemId}/`, menuItemData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error updating menu item:", error.response?.data || error.message);
+    return null;
+  }
+};

@@ -24,10 +24,27 @@ class MenuItemView(generics.ListCreateAPIView):
     serializer_class = MenuItemSerializer
     queryset = MenuItem.objects.all()
 
-    def get_serializer_context(self):
-        context = super().get_serializer_context()
-        context.update({"request": self.request})
-        return context
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        image = request.FILES.get('image')
+        
+        # Convert category back into a string for storage
+        category = json.loads(data.get("category", "[]"))
+        category_str = ",".join(category)  
+
+        menu_item = MenuItem.objects.create(
+            name=data.get('name'),
+            calories=data.get('calories'),
+            allergies=data.get('allergies'),
+            category=category_str,  # Store as a string
+            cooking_time=data.get('cooking_time'),
+            availability=data.get('availability'),
+            price=data.get('price'),
+            image=image  # Save image
+        )
+        serializer = MenuItemSerializer(menu_item)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MenuItemSerializer
@@ -412,3 +429,5 @@ class UserListView(generics.ListAPIView):
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
+
+
