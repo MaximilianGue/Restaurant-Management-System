@@ -4,21 +4,29 @@ from .models import MenuItem, Order, Table,Customer, Waiter,KitchenStaff, Notifi
 from django.contrib.auth import get_user_model
 
 class MenuItemSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
+    category_input = serializers.ListField(child=serializers.CharField(), write_only=True) 
 
-    def get_image(self, obj):
-        request = self.context.get("request")
-        if obj.image:
-            url = obj.image.url
-            if not url.startswith("/"):
-                url = "/" + url
+    def get_category(self, obj):
+        """Convert stored comma-separated category string to a list."""
+        if isinstance(obj.category, str):
+            return obj.category.split(",")  
+        return obj.category or []
 
-            return request.build_absolute_uri(url) if request else url
+    def create(self, validated_data):
+        category_list = validated_data.pop('category_input', [])
+        validated_data['category'] = ",".join(category_list)
+        return super().create(validated_data)
 
-        return None
+    def update(self, instance, validated_data):
+        if 'category_input' in validated_data:
+            category_list = validated_data.pop('category_input', [])
+            validated_data['category'] = ",".join(category_list)
+        return super().update(instance, validated_data)
+
     class Meta:
         model = MenuItem
-        fields = ["id", "name", "price", "image", "allergies","calories","category","cooking_time","availability"]
+        fields = ["id", "name", "price", "image", "allergies", "calories", "category", "category_input", "cooking_time", "availability"]
 
 
 class UpdateAvailabilitySerializer(serializers.ModelSerializer):

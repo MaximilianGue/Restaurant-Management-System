@@ -195,9 +195,13 @@ const handleCallWaiter = async () => {
   const filteredMenuItems =
   filter === "All"
     ? menuItems
-    : menuItems.filter((item) =>
-        item.category.includes(filter) // Check if filter is in the item.category list
-      );
+    : menuItems.filter((item) => {
+        if (Array.isArray(item.category)) {
+          return item.category.includes(filter); // If category is an array
+        }
+        return item.category.toLowerCase() === filter.toLowerCase(); // If category is a string
+      });
+
 
 
 
@@ -206,13 +210,18 @@ const handleCallWaiter = async () => {
  
       <div className="container">
         <h1 className="restaurant-title">Oaxaca</h1>
-              <div className="filter-container">
-                {["All", "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian", "Gluten-Free", "Breakfast", "Dessert"].map((category) => (
-                  <button key={category} onClick={() => handleFilterChange(category)} className="filter-button">
-                    {category}
-                  </button>
-                ))}
-              </div>
+        <div className="filter-container">
+          {["All", "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian", "Gluten-Free", "Breakfast", "Dessert", "Drinks"].map((category) => (
+            <button 
+              key={category} 
+              onClick={() => handleFilterChange(category)} 
+              className={`filter-button ${filter === category ? "active" : ""}`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+
 
                 {(
                   <div className="menu-container">
@@ -228,7 +237,8 @@ const handleCallWaiter = async () => {
                             <div className="menu-item-details">
                               <h4>{item.name}</h4>
                               <p className="price">£{item.price}</p>
-                              <p><strong>Allergies:</strong> {item.allergies.join(", ")} </p>
+                              <p><strong>Allergies:</strong> {Array.isArray(item.allergies) ? item.allergies.join(", ") : item.allergies} </p>
+
                               <p><strong>Calories</strong> {item.calories}</p>
 
                               {cart[item.name] ? (
@@ -326,7 +336,6 @@ const handleCallWaiter = async () => {
              
             
         
-
           
         {/* Popup for messages */}
         {showPopup && (
