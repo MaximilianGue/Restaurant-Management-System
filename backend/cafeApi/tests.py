@@ -64,3 +64,35 @@ class NotificationAPITestCase(APITestCase):
         notification.refresh_from_db()
         self.assertTrue(notification.is_read)
 
+class RegisterAPITestCase(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.valid_user_data = {
+            "username": "newuser",
+            "password": "securepassword123",
+            "email": "newuser@example.com"
+        }
+        self.invalid_user_data = {
+            "username": "",
+            "password": "short",
+            "email": "invalidemail"
+        }
+
+    def test_register_user_success(self):
+        response = self.client.post("/cafeApi/register/", self.valid_user_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("username", response.data)
+        self.assertEqual(response.data["username"], "newuser")
+
+    def test_register_user_missing_fields(self):
+        response = self.client.post("/cafeApi/register/", {}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_register_user_invalid_data(self):
+        response = self.client.post("/cafeApi/register/", self.invalid_user_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_register_user_duplicate_username(self):
+        self.client.post("/cafeApi/register/", self.valid_user_data, format="json")  # First registration
+        response = self.client.post("/cafeApi/register/", self.valid_user_data, format="json")  # Duplicate
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
