@@ -55,9 +55,19 @@ class UpdateAvailabilitySerializer(serializers.ModelSerializer):
 
 
 class TableSerializer(serializers.ModelSerializer):
+    revenue = serializers.SerializerMethodField()
+
     class Meta:
         model = Table
-        fields = ["id", "number", "status", "waiter_name", "estimated_time", "capacity"]
+        fields = ['id', 'number', 'status', 'waiter_name', 'estimated_time', 'capacity', 'revenue']
+
+    def get_revenue(self, obj):
+        paid_orders = Order.objects.filter(table=obj, status='paid for')
+        total_revenue = sum(order.total_price for order in paid_orders)
+        print(f"Table {obj.number} revenue calculated: {total_revenue}")  # Debugging line
+        return total_revenue
+
+
 
 
 class OrderSerializer(serializers.ModelSerializer):

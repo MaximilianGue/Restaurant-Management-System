@@ -15,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt  # Import csrf_exempt
-from .models import Order, Table, MenuItem, Customer, Waiter,KitchenStaff, Notification,OrderItem
+from .models import Order, Table, MenuItem, Customer, Waiter,KitchenStaff, Notification, OrderItem
 import json
 from django.db.models import Q
 
@@ -153,9 +153,32 @@ class AvailabilityUpdateView(generics.UpdateAPIView):
 
         serializer.save()
 
-class TableView(generics.ListCreateAPIView):
-    serializer_class = TableSerializer
+class TableView(viewsets.ModelViewSet):
     queryset = Table.objects.all()
+    serializer_class = TableSerializer
+
+class TableViewSet(viewsets.ViewSet):
+    
+    def list(self, request):
+        # Query all tables and for each table calculate the revenue
+        tables = Table.objects.all()
+        
+        table_revenue = []
+        for table in tables:
+            # Query all orders for this table and filter by "paid for" status
+            orders = Order.objects.filter(table=table, status='paid for')
+            
+            # Calculate the total revenue for this table
+            total_revenue = sum(order.total_price for order in orders)
+            
+            # Add the table revenue data
+            table_revenue.append({
+                'table_number': table.number,
+                'status': table.status,
+                'revenue': total_revenue,
+            })
+
+        return Response(table_revenue)
 
 class TableDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TableSerializer

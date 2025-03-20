@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { fetchMenuItems, addMenuItem, deleteMenuItem, updateMenuItem, fetchEmployees } from "./api"; 
 import { fetchNotificationsForStaff } from "./api";
 import axios from "axios";
+import { fetchTables, fetchOrdersForTable } from "./api";
 
 
 import "./manager.css";
@@ -28,6 +29,11 @@ function Manager() {
     const [employees, setEmployees] = useState([]); 
     const [notifications, setNotifications] = useState([]);
     const STAFF_ID = localStorage.getItem("STAFF_ID"); // Ensure this matches your storage key
+    const [tables, setTables] = useState([]);
+    const [orders, setOrders] = useState({});
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [showOrderPopup, setShowOrderPopup] = useState(false);
+    const [visibleOrders, setVisibleOrders] = useState({});
 
 
 
@@ -35,7 +41,6 @@ function Manager() {
         "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian",
         "Gluten-Free", "Breakfast", "Dessert", "Drinks"
     ];
-
 
     const getStockColor = (availability) => {
         if (availability < 10) return "red"; 
@@ -63,6 +68,45 @@ function Manager() {
             loadEmployees();
         }
     }, [selectedTab]);
+
+    useEffect(() => {
+        const loadTables = async () => {
+            const tablesData = await fetchTables();
+            setTables(tablesData || []);
+        };
+        if (selectedTab === "tables") {
+            loadTables();
+        }
+    }, [selectedTab]);
+
+    const handleViewOrders = async (tableId) => {
+        try {
+            const tableOrders = await fetchOrdersForTable(tableId);
+            console.log("Fetched Orders for Table", tableId, tableOrders);
+            const paidOrders = tableOrders.filter(order => order.status === "paid for");
+            console.log("Paid Orders for Table", tableId, paidOrders);
+            const totalRevenue = paidOrders.reduce((sum, order) => sum + parseFloat(order.total_price || 0), 0);
+            console.log("Total Revenue for Table", tableId, totalRevenue);
+    
+            setOrders((prevOrders) => ({
+                ...prevOrders,
+                [tableId]: {
+                    orders: tableOrders,
+                    revenue: totalRevenue,
+                },
+            }));
+        } catch (error) {
+            console.error("Error fetching orders:", error);
+        }
+    };
+    
+    
+
+    const handleViewOrderDetails = (order) => {
+        setSelectedOrder(order);
+        setShowOrderPopup(true);
+    };
+    
 
     useEffect(() => {
         const loadNotifications = async () => {
@@ -131,8 +175,6 @@ function Manager() {
         }
     };
     
-    
-
     const handleAddItem = async () => {
         if (!newItem.name || !newItem.calories || !newItem.price || newItem.category.length === 0 || !newItem.image) {
             alert("Please fill out all fields and upload an image.");
@@ -175,8 +217,6 @@ function Manager() {
         setShowEditPopup(true);
     };
     
-    
-   
     const handleUpdateItem = async () => {
         if (!editItem.name || !editItem.calories || !editItem.price || editItem.category.length === 0) {
             alert("Please fill out all required fields.");
@@ -197,30 +237,26 @@ function Manager() {
             formData.append("image", editItem.image);
         }
     
-        console.log("🚀 Sending PATCH FormData:");
+        console.log("Sending PATCH FormData:");
         for (let pair of formData.entries()) {
             console.log(`${pair[0]}: ${pair[1]}`);
         }
     
         try {
             const response = await updateMenuItem(editItem.id, formData);
-            console.log("✅ Update response:", response);
+            console.log("Update response:", response);
     
             if (response) {
                 setMenuItems(menuItems.map((item) => (item.id === editItem.id ? response : item)));
                 setShowEditPopup(false);
             } else {
-                alert("❌ Failed to update item.");
+                alert(" Failed to update item.");
             }
         } catch (error) {
-            console.error("❌ Update failed:", error.response?.data || error.message);
-            alert(`❌ Failed to update item: ${error.response?.data?.error || error.message}`);
+            console.error(" Update failed:", error.response?.data || error.message);
+            alert(` Failed to update item: ${error.response?.data?.error || error.message}`);
         }
     };
-    
-    
-    
-    
     
     return (
         <div className="manager-container">
@@ -228,7 +264,7 @@ function Manager() {
 
             {/* Navigation Bar */}
             <div className="nav-bar">
-                {["Menu", "stock", "employees", "notifications", "suggestions"].map((tab) => (
+                {["Menu", "stock", "employees", "notifications", "tables", "suggestions"].map((tab) => (
                     <button
                         key={tab}
                         className={`nav-button ${selectedTab === tab ? "active" : ""}`}
@@ -379,15 +415,76 @@ function Manager() {
                         </table>
                     </div>
                 )}
+                {selectedTab === "tables" && (
+                    <div className="tables-container">
+                        <h3>Tables and Orders</h3>
+                        <table className="tables-table">
+                            <thead>
+                                <tr>
+                                <th>Table #</th>
+                                <th>Status</th>
+                                <th>Revenue (£)</th>
+                                <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tables.length > 0 ? (
+                                    tables.map((table) => (
+                                        <tr key={table.id}>
+                                            <td>{table.number}</td>
+                                            <td>{table.status}</td>
+                                            <td>£{(table.revenue !== undefined ? table.revenue : 0).toFixed(2)}</td>  {/* Ensure revenue is correctly displayed */}
+                                            <td>
+                                                <button 
+                                                    className="view-orders-button"
+                                                    onClick={() => handleViewOrders(table.id)}
+                                                >
+                                                    {visibleOrders[table.id] ? "Hide Orders" : "View Orders"}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan="4">No tables available.</td>
+                                    </tr>
+                                )}
+                            </tbody>
 
+                        </table>
 
-                {selectedTab === "Suggestions" && (
+                    </div>
+                )}
+
+                {selectedTab === "suggestions" && (
                     <div className="tab-placeholder">
                         <h3>Suggestions</h3>
                         <p>View customer feedback and suggestions.</p>
                     </div>
                 )}
             </div>
+
+            {showOrderPopup && selectedOrder && (
+                <div className="order-popup">
+                    <div className="order-popup-content">
+                        <h3>Order Details</h3>
+                        <p><strong>Order ID:</strong> {selectedOrder.id}</p>
+                        <p><strong>Total Price:</strong> £{selectedOrder.total_price}</p>
+                        <p><strong>Status:</strong> {selectedOrder.status}</p>
+
+                        <h4>Items</h4>
+                        <ul>
+                            {selectedOrder.items.map((item, index) => (
+                                <li key={index}>
+                                    {item.name} - £{item.price} x {item.quantity}
+                                </li>
+                            ))}
+                        </ul>
+
+                        <button className="close-popup" onClick={() => setShowOrderPopup(false)}>Close</button>
+                    </div>
+                </div>
+            )}
 
             {showAddPopup && (
                 <>
