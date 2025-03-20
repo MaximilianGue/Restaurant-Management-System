@@ -133,6 +133,7 @@ class User(AbstractUser):
     ROLE_CHOICES = [
         ('waiter', 'Waiter'),
         ('kitchen_staff', 'Kitchen Staff'),
+        ('manager', 'Manager'),
     ]
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES) 
@@ -141,10 +142,12 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.username} ({self.role}) - Staff ID: {self.staff_id}"
     
-    
-class Payment(models.Model):
-    waiter = models.ForeignKey(Waiter, on_delete=models.CASCADE)  # Automatically delete related payments
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    
+class Manager(models.Model):
+    Staff_id = models.CharField(max_length=50, unique=True)
+    first_name = models.CharField(max_length=50)
+    last_name = models.CharField(max_length=50)
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=15, blank=True, null=True)
+
     def __str__(self):
-        return f"Payment by Waiter {self.waiter.first_name} {self.waiter.last_name} for ${self.amount}"
+        return f"{self.first_name} {self.last_name}"    
