@@ -55,9 +55,22 @@ class UpdateAvailabilitySerializer(serializers.ModelSerializer):
 
 
 class TableSerializer(serializers.ModelSerializer):
+    revenue = serializers.SerializerMethodField()
+
     class Meta:
         model = Table
-        fields = ["id", "number", "status", "waiter_name", "estimated_time", "capacity"]
+        fields = ['id', 'number', 'status', 'waiter_name', 'estimated_time', 'capacity', 'revenue']
+
+    def get_revenue(self, obj):
+        paid_orders = Order.objects.filter(table=obj, status='paid for')
+        total_revenue = sum(order.total_price for order in paid_orders)
+        print(f"Table {obj.number} revenue calculated: {total_revenue}")  # Debugging line
+        return total_revenue
+        
+    def get_waiter_name(self, obj):
+        return obj.waiter.first_name if obj.waiter else "None"
+
+
 
 
 class OrderSerializer(serializers.ModelSerializer):
@@ -81,11 +94,6 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = Customer
         fields = '__all__'
 
-
-class WaiterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Waiter
-        fields = '__all__'
         
 class UpdateStatusSerializer(serializers.ModelSerializer):
     Staff_id = serializers.CharField(source = "waiter.Staff_id", allow_blank=True, required=False)
@@ -100,10 +108,7 @@ class UpdateStatusSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
     
-class KitchenStaffSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = KitchenStaff
-        fields = '__all__'
+
         
 class ConfirmOrderSerializer(serializers.ModelSerializer):
     Staff_id = serializers.CharField(source="KitchenStaff.Staff_id", allow_blank=True, required=False)
@@ -135,3 +140,17 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = get_user_model().objects.create_user(**validated_data)
         return user
+
+class WaiterSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(default="Waiter")  # Add role info
+
+    class Meta:
+        model = Waiter
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'role']
+
+class KitchenStaffSerializer(serializers.ModelSerializer):
+    role = serializers.CharField(default="Kitchen Staff")  # Add role info
+
+    class Meta:
+        model = KitchenStaff
+        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'role']
