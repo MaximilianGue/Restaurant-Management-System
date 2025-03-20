@@ -42,6 +42,7 @@ class Table(models.Model):
         return f"Table {self.number} | Status: {self.status} | Capacity: {self.capacity}"
  
 
+
 class Customer(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -151,3 +152,20 @@ class Manager(models.Model):
 
     def __str__(self):
         return f"{self.first_name} {self.last_name}"    
+
+class Payment(models.Model):
+    PAYMENT_CHOICES = [
+        ('paid', 'Paid'),
+        ('unpaid', 'Unpaid'),
+    ]
+    
+    order = models.OneToOneField(Order, primary_key=True, on_delete=models.CASCADE) 
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_date = models.DateTimeField(auto_now_add=True)
+    table = models.ForeignKey(Table, on_delete=models.CASCADE, null=True, blank=True)
+    waiter = models.ForeignKey(Waiter, on_delete=models.CASCADE, null=True, blank=True)
+    status = models.CharField(max_length=20, choices=PAYMENT_CHOICES, default='unpaid')
+    stripe_session_id = models.CharField(max_length=255, null=True, blank=True)  
+
+    def __str__(self): 
+        return f"Order {self.order.id} | Amount: £{self.amount} | Status: {self.status} | Waiter: {self.waiter.first_name if self.waiter else 'None'}"

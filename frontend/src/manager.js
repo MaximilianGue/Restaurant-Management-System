@@ -5,7 +5,7 @@ import axios from "axios";
 import { fetchTables, fetchOrdersForTable } from "./api";
 import "./manager.css";
 
-function Manager() {
+function Manager({ setRole }) {
     const [menuItems, setMenuItems] = useState([]);
     const [newItem, setNewItem] = useState({
         name: "",

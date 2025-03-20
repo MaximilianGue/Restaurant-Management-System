@@ -68,6 +68,7 @@ function Register() {
             >
                 <option value="waiter">Waiter</option>
                 <option value="kitchen_staff">Kitchen Staff</option>
+                <option value="manager">Manager</option>
             </select>
             <button className="staff-button register-button" onClick={handleRegister}>
                 Register

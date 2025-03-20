@@ -1,6 +1,6 @@
 # the way to display the models(class) in the database
 from rest_framework import serializers
-from .models import MenuItem, Order, Table,Customer, Waiter,KitchenStaff, Notification,User
+from .models import MenuItem, Order, Table,Customer, Waiter,KitchenStaff, Notification,User,Payment,Manager
 from django.contrib.auth import get_user_model
 from rest_framework.exceptions import ValidationError
 
@@ -154,3 +154,13 @@ class KitchenStaffSerializer(serializers.ModelSerializer):
     class Meta:
         model = KitchenStaff
         fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'role']
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ["id","order" ,"table", "waiter", "amount",]
+
+class ManagerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Manager
+        fields = '__all__'
