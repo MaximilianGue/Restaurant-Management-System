@@ -307,38 +307,19 @@ class WaiterView(generics.ListCreateAPIView):
     serializer_class = WaiterSerializer
     queryset = Waiter.objects.all()  # It gets all waiters as a JSON list object
 
-class WaiterDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = WaiterSerializer
-    queryset = Waiter.objects.all()  # It gets a single waiter by ID, allowing update or delete
-
-
 class WaiterDetailView(generics.RetrieveAPIView):
     queryset = Waiter.objects.all()
     serializer_class = WaiterSerializer
-    lookup_field = 'Staff_id'
-
     
-class StatusUpdateView(generics.UpdateAPIView):
-    queryset = Order.objects.all()
-    serializer_class = UpdateStatusSerializer
-
-    def perform_update(self, serializer):
-        Staff_id = self.request.data.get("Staff_id", None)
-
-        if not Staff_id:
-            raise ValidationError({"Staff_id": "This field is required."})
-
-        waiter = get_object_or_404(Waiter, Staff_id=Staff_id)
-        serializer.instance.waiter = waiter  
-        serializer.save()
 class KitchenStaffView(generics.ListCreateAPIView):
     serializer_class = KitchenStaffSerializer
     queryset = KitchenStaff.objects.all()  # It gets all kitchen staff as a JSON list object
 
-class KitchenStaffDetailView(generics.RetrieveUpdateDestroyAPIView):
+class KitchenStaffDetailView(generics.RetrieveAPIView):
+    queryset = KitchenStaff.objects.all()
     serializer_class = KitchenStaffSerializer
-    queryset = KitchenStaff.objects.all()  # It gets a single kitchen staff by ID, allowing update or delete
-    
+
+
 class ConfirmOrderUpdateView(generics.UpdateAPIView):
     queryset = Order.objects.all()
     serializer_class = ConfirmOrderSerializer
@@ -353,6 +334,20 @@ class ConfirmOrderUpdateView(generics.UpdateAPIView):
         serializer.instance.KitchenStaff = kitchenStaff  
         serializer.save()
         
+class StatusUpdateView(generics.UpdateAPIView):
+    
+    queryset = Order.objects.all()
+    serializer_class = UpdateStatusSerializer
+
+    def perform_update(self, serializer):
+        Staff_id = self.request.data.get("Staff_id", None)
+
+        if not Staff_id:
+            raise ValidationError({"Staff_id": "This field is required."})
+
+        waiter = get_object_or_404(Waiter, Staff_id=Staff_id)
+        serializer.instance.waiter = waiter  
+        serializer.save()
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
@@ -545,16 +540,21 @@ class KitchenStaffViewSet(viewsets.ModelViewSet):
     queryset = KitchenStaff.objects.all()
     serializer_class = KitchenStaffSerializer
 
+
 @api_view(['GET'])
 def get_employees(request):
+    # Fetch all waiters and kitchen staff
     waiters = Waiter.objects.all()
     kitchen_staff = KitchenStaff.objects.all()
 
+    # Serialize both datasets
     waiters_serialized = WaiterSerializer(waiters, many=True).data
     kitchen_staff_serialized = KitchenStaffSerializer(kitchen_staff, many=True).data
 
-
-    employees = waiters_serialized + kitchen_staff_serialized 
+    # Combine the serialized results
+    # Using extend to combine lists in place
+    employees = waiters_serialized.copy()  # Make a copy to avoid modifying the original list
+    employees.extend(kitchen_staff_serialized)
     return Response(employees)
 
 @api_view(['PUT'])
@@ -576,19 +576,60 @@ def assign_waiter_to_table(request, table_id):
 
 @api_view(['PUT'])
 def update_employee(request, employee_id):
-    try:
-        employee = Employee.objects.get(id=employee_id)
-    except Employee.DoesNotExist:
-        return Response({"detail": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
+    # Fetch the employee (Waiter or KitchenStaff) by ID
+    waiter = Waiter.objects.filter(id=employee_id).first()
+    kitchen_staff = KitchenStaff.objects.filter(id=employee_id).first()
 
-    # Assuming the request body contains the fields you want to update
-    serializer = EmployeeSerializer(employee, data=request.data, partial=True)
-    
-    if serializer.is_valid():
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # Check if employee exists and handle based on type (Waiter or Kitchen Staff)
+    if waiter:
+        employee = waiter
+        is_waiter = True
+    elif kitchen_staff:
+        employee = kitchen_staff
+        is_waiter = False
+    else:
+        return Response({"detail": "Employee not found."}, status=404)
+
+    # Update employee details
+    employee.first_name = request.data.get("first_name", employee.first_name)
+    employee.last_name = request.data.get("last_name", employee.last_name)
+    employee.email = request.data.get("email", employee.email)
+    employee.phone = request.data.get("phone", employee.phone)
+
+    # Handle role change
+    role = request.data.get("role")
+    if role:
+        # If role is changing to 'waiter' from kitchen staff
+        if role.lower() == "waiter" and not is_waiter:
+            # Moving from KitchenStaff to Waiter
+            waiter_data = {
+                "first_name": employee.first_name,
+                "last_name": employee.last_name,
+                "email": employee.email,
+                "phone": employee.phone,
+            }
+            new_waiter = Waiter.objects.create(**waiter_data)
+            kitchen_staff.delete()  # Remove old kitchen staff
+            employee = new_waiter  # Point to the new waiter
+            is_waiter = True
+        # If role is changing to 'kitchen staff' from waiter
+        elif role.lower() == "kitchen staff" and is_waiter:
+            # Moving from Waiter to KitchenStaff
+            kitchen_staff_data = {
+                "first_name": employee.first_name,
+                "last_name": employee.last_name,
+                "email": employee.email,
+                "phone": employee.phone,
+            }
+            new_kitchen_staff = KitchenStaff.objects.create(**kitchen_staff_data)
+            waiter.delete()  # Remove old waiter
+            employee = new_kitchen_staff  # Point to the new kitchen staff
+            is_waiter = False
+
+    # Save the updated employee details
+    employee.save()
+
+    return Response({"detail": "Employee updated successfully."}, status=200)
 
 @api_view(['DELETE'])
 def fire_employee(request, employee_id):

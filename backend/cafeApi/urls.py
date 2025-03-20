@@ -24,12 +24,14 @@ urlpatterns = [
     # Other endpoints...
     path("customers/", CustomerView.as_view(), name="customers"),
     path("customers/<int:pk>/", CustomerDetailView.as_view(), name="customer-detail"),
+
     path("waiters/", WaiterView.as_view(), name="waiters"),
     path("waiters/<int:pk>/", WaiterDetailView.as_view(), name="waiters-detail"),
     path('waiters/<str:Staff_id>/', WaiterDetailView.as_view(), name='waiter-detail'),
 
     path("kitchen_staff/", KitchenStaffView.as_view(), name="kitchen_staff"),
-    path("KitchenStaff/<int:pk>/", KitchenStaffDetailView.as_view(), name="Kitchen-detail"),
+    path("kitchen_staff/<int:pk>/", KitchenStaffDetailView.as_view(), name="kitchen-detail"),
+    path('kitchen_staff/<str:Staff_id>/', KitchenStaffDetailView.as_view(), name='kitchen-detail'),
 
     path("orders/", OrderView.as_view(), name="orders"),
     path("orders/<int:pk>/", OrderDetailView.as_view(), name="order-detail"),

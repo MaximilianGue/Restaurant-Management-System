@@ -37,27 +37,80 @@ function Manager() {
     const [employeeToEdit, setEmployeeToEdit] = useState(null);
     const [waiters, setWaiters] = useState([]);
     const [kitchenStaff, setKitchenStaff] = useState([]);
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
+
+    const [isWaiter, setIsWaiter] = useState(true); 
+    const [updatedEmployee, setUpdatedEmployee] = useState({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        role: ''
+    });
+
+    const handleEditEmployee = (employee) => {
+        console.log("Editing employee:", employee);  // Log the selected employee
+        setSelectedEmployee(employee);
+        setUpdatedEmployee({
+            first_name: employee.first_name,
+            last_name: employee.last_name,
+            email: employee.email,
+            phone: employee.phone,
+            role: employee.role || 'waiter',  // Make sure the role is passed correctly
+        });
+        setShowEditModal(true); // Open the modal
+    };
     
-
-
+    
+    
+    
+    
+    
+    
+    const handleChangeRole = (e) => {
+        const { value } = e.target;
+        setUpdatedEmployee(prevState => ({
+            ...prevState,
+            role: value,
+        }));
+    };
+    
+    const handleSubmitEdit = async () => {
+        console.log("Submitting employee update", updatedEmployee);  // Log the updated data
+        try {
+            const response = await axios.put(`/cafeApi/employee/${selectedEmployee.id}/`, updatedEmployee);
+            console.log('Employee updated:', response.data);
+            setShowEditModal(false);
+            // Optionally, refresh employee list or update state accordingly
+        } catch (error) {
+            console.error("Error updating employee:", error);
+        }
+    };
+    
+    
+    
+    
     useEffect(() => {
         const loadWaiters = async () => {
             try {
                 const response = await axios.get("http://127.0.0.1:8000/cafeApi/waiters/");
+                console.log("Fetched Waiters:", response.data); // Log to check
                 setWaiters(response.data);
             } catch (error) {
                 console.error("Error fetching waiters:", error);
             }
         };
-
+        
         const loadKitchenStaff = async () => {
             try {
                 const response = await axios.get("http://127.0.0.1:8000/cafeApi/kitchen_staff/");
+                console.log("Fetched Kitchen Staff:", response.data); // Log to check
                 setKitchenStaff(response.data);
             } catch (error) {
                 console.error("Error fetching kitchen staff:", error);
             }
         };
+        
 
         if (selectedTab === "employees") {
             loadWaiters();
@@ -97,11 +150,6 @@ function Manager() {
     }, []);
 
     
-    const handleEditEmployee = (employeeId) => {
-        // Open a modal or navigate to the employee edit page
-        console.log(`Editing employee with ID: ${employeeId}`);
-        // Implement logic to edit employee
-    };
 
     const handleFireEmployee = async (employeeId) => {
         if (window.confirm("Are you sure you want to fire this employee?")) {
@@ -128,8 +176,6 @@ function Manager() {
             }
         }
     };
-    
-    
     
     
     useEffect(() => {
@@ -183,17 +229,7 @@ function Manager() {
         setShowOrderPopup(true);
     };
     
-    const handleEditSubmit = async (employeeData) => {
-        try {
-            const response = await axios.put(`http://127.0.0.1:8000/api/employee/${employeeToEdit.id}/update/`, employeeData);
-            setEmployees(employees.map(emp => (emp.id === employeeToEdit.id ? response.data : emp)));
-            setShowEditModal(false);
-            alert("Employee details updated successfully!");
-        } catch (error) {
-            console.error("Error updating employee:", error);
-            alert("Failed to update employee details.");
-        }
-    };
+   
 
 
     useEffect(() => {
@@ -434,7 +470,7 @@ function Manager() {
                                                 <td>{waiter.email}</td>
                                                 <td>{waiter.phone || 'N/A'}</td>
                                                 <td>
-                                                    <button onClick={() => handleEditEmployee(waiter.id)}>Edit</button>
+                                                    <button onClick={() => handleEditEmployee(waiter)}>Edit</button>
                                                     <button onClick={() => handleFireEmployee(waiter.id)}>Fire</button>
                                                 </td>
                                             </tr>
@@ -703,6 +739,86 @@ function Manager() {
                     </div>
                 </>
             )}
+            {showEditModal && (
+    <>
+                    {/* Overlay to dim the background */}
+                    <div className="overlay" onClick={() => setShowEditModal(false)}></div>
+
+                    {/* Edit Employee Modal */}
+                    <div className="edit-employee-popup">
+                        <h2>Edit Employee</h2>
+                        <form onSubmit={handleSubmitEdit}>
+                            <div className="edit-grid">
+                                {/* First Name */}
+                                <label>
+                                    First Name
+                                    <input
+                                        type="text"
+                                        name="first_name"
+                                        value={updatedEmployee.first_name}
+                                        onChange={(e) => setUpdatedEmployee({ ...updatedEmployee, first_name: e.target.value })}
+                                    />
+                                </label>
+
+                                {/* Last Name */}
+                                <label>
+                                    Last Name
+                                    <input
+                                        type="text"
+                                        name="last_name"
+                                        value={updatedEmployee.last_name}
+                                        onChange={(e) => setUpdatedEmployee({ ...updatedEmployee, last_name: e.target.value })}
+                                    />
+                                </label>
+
+                                {/* Email */}
+                                <label>
+                                    Email
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        value={updatedEmployee.email}
+                                        onChange={(e) => setUpdatedEmployee({ ...updatedEmployee, email: e.target.value })}
+                                    />
+                                </label>
+
+                                {/* Phone */}
+                                <label>
+                                    Phone
+                                    <input
+                                        type="text"
+                                        name="phone"
+                                        value={updatedEmployee.phone}
+                                        onChange={(e) => setUpdatedEmployee({ ...updatedEmployee, phone: e.target.value })}
+                                    />
+                                </label>
+
+                                {/* Role Selector */}
+                                <label>
+                                    Role
+                                    <select
+                                        value={updatedEmployee.role}  // This binds the role value from updatedEmployee state
+                                        onChange={handleChangeRole}
+                                        className="select-role"
+                                    >
+                                        <option value="waiter">Waiter</option>
+                                        <option value="kitchen staff">Kitchen Staff</option>
+                                    </select>
+                                </label>
+
+                            </div>
+
+                            {/* Bottom Buttons */}
+                            <div className="popup-buttons">
+                                <button type="submit">Save Changes</button>
+                                <button type="button" onClick={() => setShowEditModal(false)} className="close-popup">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </>
+            )}
+
+
         
 
         </div>
