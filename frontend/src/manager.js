@@ -3,8 +3,6 @@ import { fetchMenuItems, addMenuItem, deleteMenuItem, updateMenuItem, fetchEmplo
 import { fetchNotificationsForStaff } from "./api";
 import axios from "axios";
 import { fetchTables, fetchOrdersForTable } from "./api";
-
-
 import "./manager.css";
 
 function Manager() {
@@ -35,7 +33,37 @@ function Manager() {
     const [showOrderPopup, setShowOrderPopup] = useState(false);
     const [visibleOrders, setVisibleOrders] = useState({});
 
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [employeeToEdit, setEmployeeToEdit] = useState(null);
+    const [waiters, setWaiters] = useState([]);
+    const [kitchenStaff, setKitchenStaff] = useState([]);
+    
 
+
+    useEffect(() => {
+        const loadWaiters = async () => {
+            try {
+                const response = await axios.get("http://127.0.0.1:8000/cafeApi/waiters/");
+                setWaiters(response.data);
+            } catch (error) {
+                console.error("Error fetching waiters:", error);
+            }
+        };
+
+        const loadKitchenStaff = async () => {
+            try {
+                const response = await axios.get("http://127.0.0.1:8000/cafeApi/kitchen_staff/");
+                setKitchenStaff(response.data);
+            } catch (error) {
+                console.error("Error fetching kitchen staff:", error);
+            }
+        };
+
+        if (selectedTab === "employees") {
+            loadWaiters();
+            loadKitchenStaff();
+        }
+    }, [selectedTab]);
 
     const availableCategories = [
         "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian",
@@ -59,16 +87,51 @@ function Manager() {
     }, [selectedTab]);
     
     useEffect(() => {
+        // Fetch employees initially when the component is mounted
         const loadEmployees = async () => {
             const staff = await fetchEmployees();
-            console.log("📢 Employees State Before Setting:", staff); 
             setEmployees(staff || []);
         };
-        if (selectedTab === "employees") {
-            loadEmployees();
-        }
-    }, [selectedTab]);
+    
+        loadEmployees();  // Call the function to load employees on component mount
+    }, []);
 
+    
+    const handleEditEmployee = (employeeId) => {
+        // Open a modal or navigate to the employee edit page
+        console.log(`Editing employee with ID: ${employeeId}`);
+        // Implement logic to edit employee
+    };
+
+    const handleFireEmployee = async (employeeId) => {
+        if (window.confirm("Are you sure you want to fire this employee?")) {
+            try {
+                // Send the DELETE request to fire the employee
+                const response = await axios.delete(`http://127.0.0.1:8000/cafeApi/employee/${employeeId}/fire/`);
+                
+                if (response.status === 200) {
+                    // Optimistic UI update: remove the fired employee from the waiters and kitchen staff state
+    
+                    // Remove the fired employee from the waiters and kitchen staff lists
+                    const updatedWaiters = waiters.filter(waiter => waiter.id !== employeeId);
+                    const updatedKitchenStaff = kitchenStaff.filter(staff => staff.id !== employeeId);
+    
+                    // Update the state directly
+                    setWaiters(updatedWaiters);
+                    setKitchenStaff(updatedKitchenStaff);
+    
+                    alert("Employee fired successfully.");
+                }
+            } catch (error) {
+                console.error("Error firing employee:", error);
+                alert("Failed to fire the employee.");
+            }
+        }
+    };
+    
+    
+    
+    
     useEffect(() => {
         const loadTables = async () => {
             const tablesData = await fetchTables();
@@ -81,32 +144,57 @@ function Manager() {
 
     const handleViewOrders = async (tableId) => {
         try {
+            // Toggle visibility of orders for the current table
+            if (visibleOrders[tableId]) {
+                // Hide orders by deleting the table ID from visibleOrders state
+                setVisibleOrders((prevOrders) => {
+                    const newOrders = { ...prevOrders };
+                    delete newOrders[tableId]; // Remove the table from visible orders to hide it
+                    return newOrders;
+                });
+                return; // Exit here if we're hiding the orders
+            }
+    
+            // Fetch orders if not visible
             const tableOrders = await fetchOrdersForTable(tableId);
             console.log("Fetched Orders for Table", tableId, tableOrders);
-            const paidOrders = tableOrders.filter(order => order.status === "paid for");
-            console.log("Paid Orders for Table", tableId, paidOrders);
-            const totalRevenue = paidOrders.reduce((sum, order) => sum + parseFloat(order.total_price || 0), 0);
-            console.log("Total Revenue for Table", tableId, totalRevenue);
     
+            // Save the orders in the state
             setOrders((prevOrders) => ({
                 ...prevOrders,
                 [tableId]: {
                     orders: tableOrders,
-                    revenue: totalRevenue,
+                    revenue: tableOrders.reduce((sum, order) => sum + parseFloat(order.total_price || 0), 0),
                 },
+            }));
+    
+            // Set the orders as visible for this table
+            setVisibleOrders((prevOrders) => ({
+                ...prevOrders,
+                [tableId]: true,
             }));
         } catch (error) {
             console.error("Error fetching orders:", error);
         }
     };
     
-    
-
     const handleViewOrderDetails = (order) => {
         setSelectedOrder(order);
         setShowOrderPopup(true);
     };
     
+    const handleEditSubmit = async (employeeData) => {
+        try {
+            const response = await axios.put(`http://127.0.0.1:8000/api/employee/${employeeToEdit.id}/update/`, employeeData);
+            setEmployees(employees.map(emp => (emp.id === employeeToEdit.id ? response.data : emp)));
+            setShowEditModal(false);
+            alert("Employee details updated successfully!");
+        } catch (error) {
+            console.error("Error updating employee:", error);
+            alert("Failed to update employee details.");
+        }
+    };
+
 
     useEffect(() => {
         const loadNotifications = async () => {
@@ -326,7 +414,7 @@ function Manager() {
                     <div className="employees-container">
                         <h3>Employee Management</h3>
 
-                       
+                        {/* Waiters Table */}
                         <div className="employee-section">
                             <h4>🍽️ Waiters</h4>
                             <table className="employee-table">
@@ -335,23 +423,32 @@ function Manager() {
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Phone</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {employees
-                                        .filter(emp => emp.role?.toLowerCase().includes("waiter")) 
-                                        .map((waiter) => (
-                                        <tr key={waiter.id}>
-                                            <td>{waiter.first_name} {waiter.last_name}</td>
-                                            <td>{waiter.email}</td>
-                                            <td>{waiter.phone || "N/A"}</td>
+                                    {waiters.length > 0 ? (
+                                        waiters.map((waiter) => (
+                                            <tr key={waiter.id}>
+                                                <td>{waiter.first_name} {waiter.last_name}</td>
+                                                <td>{waiter.email}</td>
+                                                <td>{waiter.phone || 'N/A'}</td>
+                                                <td>
+                                                    <button onClick={() => handleEditEmployee(waiter.id)}>Edit</button>
+                                                    <button onClick={() => handleFireEmployee(waiter.id)}>Fire</button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="4">No waiters available.</td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
 
-                        
+                        {/* Kitchen Staff Table */}
                         <div className="employee-section">
                             <h4>👨‍🍳 Kitchen Staff</h4>
                             <table className="employee-table">
@@ -360,21 +457,31 @@ function Manager() {
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Phone</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {employees
-                                        .filter(emp => emp.role?.toLowerCase().includes("kitchen"))
-                                        .map((kitchen) => (
-                                        <tr key={kitchen.id}>
-                                            <td>{kitchen.first_name} {kitchen.last_name}</td>
-                                            <td>{kitchen.email}</td>
-                                            <td>{kitchen.phone || "N/A"}</td>
+                                    {kitchenStaff.length > 0 ? (
+                                        kitchenStaff.map((staff) => (
+                                            <tr key={staff.id}>
+                                                <td>{staff.first_name} {staff.last_name}</td>
+                                                <td>{staff.email}</td>
+                                                <td>{staff.phone || 'N/A'}</td>
+                                                <td>
+                                                    <button onClick={() => handleEditEmployee(staff.id)}>Edit</button>
+                                                    <button onClick={() => handleFireEmployee(staff.id)}>Fire</button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="4">No kitchen staff available.</td>
                                         </tr>
-                                    ))}
+                                    )}
                                 </tbody>
                             </table>
                         </div>
+
                     </div>
                 )}
 
@@ -421,10 +528,10 @@ function Manager() {
                         <table className="tables-table">
                             <thead>
                                 <tr>
-                                <th>Table #</th>
-                                <th>Status</th>
-                                <th>Revenue (£)</th>
-                                <th>Actions</th>
+                                    <th>Table #</th>
+                                    <th>Status</th>
+                                    <th>Revenue (£)</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -433,7 +540,7 @@ function Manager() {
                                         <tr key={table.id}>
                                             <td>{table.number}</td>
                                             <td>{table.status}</td>
-                                            <td>£{(table.revenue !== undefined ? table.revenue : 0).toFixed(2)}</td>  {/* Ensure revenue is correctly displayed */}
+                                            <td>£{(table.revenue !== undefined ? table.revenue : 0).toFixed(2)}</td> 
                                             <td>
                                                 <button 
                                                     className="view-orders-button"
@@ -450,11 +557,45 @@ function Manager() {
                                     </tr>
                                 )}
                             </tbody>
-
                         </table>
 
+                        {/* Ensure Orders are rendered when visibleOrders[table.id] is true */}
+                        {tables.map((table) => (
+                            visibleOrders[table.id] && orders[table.id]?.orders && (
+                                <div key={table.id} className="orders-container">
+                                    <h4>Orders for Table #{table.number}</h4>
+                                    <table className="orders-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Order ID</th>
+                                                <th>Total Price (£)</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {orders[table.id]?.orders.map((order) => (
+                                                <tr key={order.id}>
+                                                    <td>{order.id}</td>
+                                                    <td>£{parseFloat(order.total_price).toFixed(2)}</td>
+                                                    <td>{order.status}</td>
+                                                    <td>
+                                                        <button onClick={() => handleViewOrderDetails(order)}>
+                                                            View Details
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    <p>Total Revenue: £{orders[table.id]?.revenue.toFixed(2)}</p>
+                                </div>
+                            )
+                        ))}
                     </div>
                 )}
+
+
 
                 {selectedTab === "suggestions" && (
                     <div className="tab-placeholder">

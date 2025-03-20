@@ -1,6 +1,7 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import get_employees
+from . import views
 from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, NotificationViewSet, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView,WaiterDetailView,TableStaffIDView
 notification_list = NotificationViewSet.as_view({'get': 'list', 'post': 'create'})
 notify_staff = NotificationViewSet.as_view({'post': 'notify_staff'})
@@ -9,6 +10,7 @@ notify_waiter = NotificationViewSet.as_view({'post': 'notify_waiter'})
 table_list = TableView.as_view({'get': 'list'})  # 'get' -> 'list' action for tables
 
 urlpatterns = [
+    
     path("menu-items/", MenuItemView.as_view(), name="menu-items"),
     path("menu-items/<int:pk>/", MenuItemDetailView.as_view(), name="menu-item-detail"),
     path('menu-item/<int:pk>/availability/', MenuItemAvailabilityView.as_view(), name='menu-item-availability'),
@@ -26,7 +28,7 @@ urlpatterns = [
     path("waiters/<int:pk>/", WaiterDetailView.as_view(), name="waiters-detail"),
     path('waiters/<str:Staff_id>/', WaiterDetailView.as_view(), name='waiter-detail'),
 
-    path("KitchenStaff/", KitchenStaffView.as_view(), name="KitchenStaff"),
+    path("kitchen_staff/", KitchenStaffView.as_view(), name="kitchen_staff"),
     path("KitchenStaff/<int:pk>/", KitchenStaffDetailView.as_view(), name="Kitchen-detail"),
 
     path("orders/", OrderView.as_view(), name="orders"),
@@ -43,5 +45,10 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('users/', UserListView.as_view(), name='user-list'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('employees/', get_employees, name='get-employees')
+
+
+    path('employees/', get_employees, name='get-employees'),
+    path('employee/<int:employee_id>/update/', views.update_employee, name='update_employee'),
+    path('employee/<int:employee_id>/fire/', views.fire_employee, name='fire_employee')
+
 ]

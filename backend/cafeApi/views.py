@@ -537,6 +537,14 @@ class UserListView(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
+class WaiterViewSet(viewsets.ModelViewSet):
+    queryset = Waiter.objects.all()
+    serializer_class = WaiterSerializer
+
+class KitchenStaffViewSet(viewsets.ModelViewSet):
+    queryset = KitchenStaff.objects.all()
+    serializer_class = KitchenStaffSerializer
+
 @api_view(['GET'])
 def get_employees(request):
     waiters = Waiter.objects.all()
@@ -548,3 +556,57 @@ def get_employees(request):
 
     employees = waiters_serialized + kitchen_staff_serialized 
     return Response(employees)
+
+@api_view(['PUT'])
+def assign_waiter_to_table(request, table_id):
+    try:
+        table = Table.objects.get(id=table_id)
+    except Table.DoesNotExist:
+        return Response({"error": "Table not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    waiter_id = request.data.get("waiter_id")
+    try:
+        waiter = Waiter.objects.get(Staff_id=waiter_id)
+    except Waiter.DoesNotExist:
+        return Response({"error": "Waiter not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    table.waiter = waiter
+    table.save()
+    return Response({"message": f"Waiter {waiter.first_name} {waiter.last_name} assigned to Table {table.number}"}, status=status.HTTP_200_OK)
+
+@api_view(['PUT'])
+def update_employee(request, employee_id):
+    try:
+        employee = Employee.objects.get(id=employee_id)
+    except Employee.DoesNotExist:
+        return Response({"detail": "Employee not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Assuming the request body contains the fields you want to update
+    serializer = EmployeeSerializer(employee, data=request.data, partial=True)
+    
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+def fire_employee(request, employee_id):
+    try:
+        # Check if it's a waiter or kitchen staff and delete accordingly
+        waiter = Waiter.objects.filter(id=employee_id).first()
+        kitchen_staff = KitchenStaff.objects.filter(id=employee_id).first()
+
+        if waiter:
+            waiter.delete()  # The related payments will be automatically deleted due to cascade delete
+            return JsonResponse({"message": "Waiter has been fired."}, status=200)
+        elif kitchen_staff:
+            kitchen_staff.delete()
+            return JsonResponse({"message": "Kitchen staff has been fired."}, status=200)
+        else:
+            return JsonResponse({"message": "Employee not found."}, status=404)
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Log the error to the console
+        return JsonResponse({"error": str(e)}, status=500)
+

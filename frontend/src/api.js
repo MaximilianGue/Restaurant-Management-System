@@ -394,15 +394,14 @@ export const updateMenuItem = async (menuItemId, menuItemData) => {
 
 export const fetchEmployees = async () => {
   try {
-      const response = await fetch("http://127.0.0.1:8000/cafeApi/employees/");
-      const data = await response.json();
-      console.log("Employees Data:", data);  
-      return data;
+      const response = await axios.get("http://127.0.0.1:8000/cafeApi/employees/");
+      return response.data;  // This will return the updated list of employees
   } catch (error) {
       console.error("Error fetching employees:", error);
-      return [];
+      return [];  // In case of an error, return an empty array
   }
 };
+
 
 export const fetchOrdersForTable = async (tableId) => {
   try {

@@ -42,7 +42,6 @@ class Table(models.Model):
         return f"Table {self.number} | Status: {self.status} | Capacity: {self.capacity}"
  
 
-
 class Customer(models.Model):
     first_name = models.CharField(max_length=50)
     last_name = models.CharField(max_length=50)
@@ -99,8 +98,6 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"{self.quantity} x {self.menu_item.name} (Order ID: {self.order.id})"
 
-
-
 class Notification(models.Model):
     NOTIFICATION_TYPES = [
         ('waiter_call', 'Waiter Call'),
@@ -145,3 +142,9 @@ class User(AbstractUser):
         return f"{self.username} ({self.role}) - Staff ID: {self.staff_id}"
     
     
+class Payment(models.Model):
+    waiter = models.ForeignKey(Waiter, on_delete=models.CASCADE)  # Automatically delete related payments
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def __str__(self):
+        return f"Payment by Waiter {self.waiter.first_name} {self.waiter.last_name} for ${self.amount}"

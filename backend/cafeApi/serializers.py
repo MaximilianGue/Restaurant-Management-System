@@ -66,6 +66,9 @@ class TableSerializer(serializers.ModelSerializer):
         total_revenue = sum(order.total_price for order in paid_orders)
         print(f"Table {obj.number} revenue calculated: {total_revenue}")  # Debugging line
         return total_revenue
+        
+    def get_waiter_name(self, obj):
+        return obj.waiter.first_name if obj.waiter else "None"
 
 
 
