@@ -82,14 +82,22 @@ class Order(models.Model):
     items = models.ManyToManyField(MenuItem, through='OrderItem')
     waiter = models.ForeignKey(Waiter, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')
 
+    def save(self, *args, **kwargs):
+        if not self.total_price:
+            self.total_price = sum(item.menu_item.price * item.quantity for item in self.orderitem_set.all())
+        super(Order, self).save(*args, **kwargs)
+
+
     def __str__(self):
         return f"Order {self.id} | Customer: {self.customer.first_name if self.customer else 'No Customer'} {self.customer.last_name if self.customer else ''} | Status: {self.status} | Total: £{self.total_price}"
 
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE)
-    quantity = models.IntegerField(default=1) 
+    quantity = models.IntegerField(default=1)
 
+    def __str__(self):
+        return f"{self.quantity} x {self.menu_item.name} (Order ID: {self.order.id})"
 
 class Notification(models.Model):
     NOTIFICATION_TYPES = [

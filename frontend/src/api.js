@@ -1,6 +1,6 @@
 import axios from "axios"; 
 
-const BASE_URL = "http://127.0.0.1:8000/cafeApi";  // Django API
+const BASE_URL = "http://127.0.0.1:8000/cafeApi";  
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -381,13 +381,13 @@ export const updateMenuItem = async (menuItemId, menuItemData) => {
   try {
       const response = await api.patch(`/menu-items/${menuItemId}/`, menuItemData, {
           headers: {
-              "Content-Type": "multipart/form-data", // Ensure correct content type
+              "Content-Type": "multipart/form-data", 
           },
       });
 
       return response.data;
   } catch (error) {
-      console.error(" Error updating menu item:", error.response?.data || error.message);
+      console.error("Error updating menu item:", error.response?.data || error.message);
       return null;
   }
 };
@@ -441,8 +441,27 @@ export const getSalesPerWaiter = async (staffId) => {
 };
 
 
+export const fetchEmployees = async () => {
+  try {
+      const response = await axios.get("http://127.0.0.1:8000/cafeApi/employees/");
+      return response.data;  // This will return the updated list of employees
+  } catch (error) {
+      console.error("Error fetching employees:", error);
+      return [];  // In case of an error, return an empty array
+  }
+};
 
 
-
-
+export const fetchOrdersForTable = async (tableId) => {
+  try {
+      const response = await fetch(`http://127.0.0.1:8000/cafeApi/orders/?table=${tableId}`);
+      if (!response.ok) {
+          throw new Error("Failed to fetch orders for table");
+      }
+      return await response.json();
+  } catch (error) {
+      console.error("Error fetching orders for table:", error);
+      return [];
+  }
+}
 

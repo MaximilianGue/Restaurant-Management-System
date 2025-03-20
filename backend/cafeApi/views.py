@@ -157,9 +157,32 @@ class AvailabilityUpdateView(generics.UpdateAPIView):
 
         serializer.save()
 
-class TableView(generics.ListCreateAPIView):
-    serializer_class = TableSerializer
+class TableView(viewsets.ModelViewSet):
     queryset = Table.objects.all()
+    serializer_class = TableSerializer
+
+class TableViewSet(viewsets.ViewSet):
+    
+    def list(self, request):
+        # Query all tables and for each table calculate the revenue
+        tables = Table.objects.all()
+        
+        table_revenue = []
+        for table in tables:
+            # Query all orders for this table and filter by "paid for" status
+            orders = Order.objects.filter(table=table, status='paid for')
+            
+            # Calculate the total revenue for this table
+            total_revenue = sum(order.total_price for order in orders)
+            
+            # Add the table revenue data
+            table_revenue.append({
+                'table_number': table.number,
+                'status': table.status,
+                'revenue': total_revenue,
+            })
+
+        return Response(table_revenue)
 
 class TableDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TableSerializer
@@ -324,10 +347,11 @@ class KitchenStaffView(generics.ListCreateAPIView):
     serializer_class = KitchenStaffSerializer
     queryset = KitchenStaff.objects.all()  # It gets all kitchen staff as a JSON list object
 
-class KitchenStaffDetailView(generics.RetrieveUpdateDestroyAPIView):
+class KitchenStaffDetailView(generics.RetrieveAPIView):
+    queryset = KitchenStaff.objects.all()
     serializer_class = KitchenStaffSerializer
-    queryset = KitchenStaff.objects.all()  # It gets a single kitchen staff by ID, allowing update or delete
-    
+
+
 class ConfirmOrderUpdateView(generics.UpdateAPIView):
     queryset = Order.objects.all()
     serializer_class = ConfirmOrderSerializer
@@ -342,6 +366,20 @@ class ConfirmOrderUpdateView(generics.UpdateAPIView):
         serializer.instance.KitchenStaff = kitchenStaff  
         serializer.save()
         
+class StatusUpdateView(generics.UpdateAPIView):
+    
+    queryset = Order.objects.all()
+    serializer_class = UpdateStatusSerializer
+
+    def perform_update(self, serializer):
+        Staff_id = self.request.data.get("Staff_id", None)
+
+        if not Staff_id:
+            raise ValidationError({"Staff_id": "This field is required."})
+
+        waiter = get_object_or_404(Waiter, Staff_id=Staff_id)
+        serializer.instance.waiter = waiter  
+        serializer.save()
 
 
 class NotificationViewSet(viewsets.ModelViewSet):
@@ -656,3 +694,114 @@ class ManagerListView(generics.ListAPIView):
 
     queryset = Manager.objects.all()
     serializer_class = ManagerSerializer
+    
+
+@api_view(['GET'])
+def get_employees(request):
+    # Fetch all waiters and kitchen staff
+    waiters = Waiter.objects.all()
+    kitchen_staff = KitchenStaff.objects.all()
+
+    # Serialize both datasets
+    waiters_serialized = WaiterSerializer(waiters, many=True).data
+    kitchen_staff_serialized = KitchenStaffSerializer(kitchen_staff, many=True).data
+
+    # Combine the serialized results
+    # Using extend to combine lists in place
+    employees = waiters_serialized.copy()  # Make a copy to avoid modifying the original list
+    employees.extend(kitchen_staff_serialized)
+    return Response(employees)
+
+@api_view(['PUT'])
+def assign_waiter_to_table(request, table_id):
+    try:
+        table = Table.objects.get(id=table_id)
+    except Table.DoesNotExist:
+        return Response({"error": "Table not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    waiter_id = request.data.get("waiter_id")
+    try:
+        waiter = Waiter.objects.get(Staff_id=waiter_id)
+    except Waiter.DoesNotExist:
+        return Response({"error": "Waiter not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    table.waiter = waiter
+    table.save()
+    return Response({"message": f"Waiter {waiter.first_name} {waiter.last_name} assigned to Table {table.number}"}, status=status.HTTP_200_OK)
+
+@api_view(['PUT'])
+def update_employee(request, employee_id):
+    # Fetch the employee (Waiter or KitchenStaff) by ID
+    waiter = Waiter.objects.filter(id=employee_id).first()
+    kitchen_staff = KitchenStaff.objects.filter(id=employee_id).first()
+
+    # Check if employee exists and handle based on type (Waiter or Kitchen Staff)
+    if waiter:
+        employee = waiter
+        is_waiter = True
+    elif kitchen_staff:
+        employee = kitchen_staff
+        is_waiter = False
+    else:
+        return Response({"detail": "Employee not found."}, status=404)
+
+    # Update employee details
+    employee.first_name = request.data.get("first_name", employee.first_name)
+    employee.last_name = request.data.get("last_name", employee.last_name)
+    employee.email = request.data.get("email", employee.email)
+    employee.phone = request.data.get("phone", employee.phone)
+
+    # Handle role change
+    role = request.data.get("role")
+    if role:
+        # If role is changing to 'waiter' from kitchen staff
+        if role.lower() == "waiter" and not is_waiter:
+            # Moving from KitchenStaff to Waiter
+            waiter_data = {
+                "first_name": employee.first_name,
+                "last_name": employee.last_name,
+                "email": employee.email,
+                "phone": employee.phone,
+            }
+            new_waiter = Waiter.objects.create(**waiter_data)
+            kitchen_staff.delete()  # Remove old kitchen staff
+            employee = new_waiter  # Point to the new waiter
+            is_waiter = True
+        # If role is changing to 'kitchen staff' from waiter
+        elif role.lower() == "kitchen staff" and is_waiter:
+            # Moving from Waiter to KitchenStaff
+            kitchen_staff_data = {
+                "first_name": employee.first_name,
+                "last_name": employee.last_name,
+                "email": employee.email,
+                "phone": employee.phone,
+            }
+            new_kitchen_staff = KitchenStaff.objects.create(**kitchen_staff_data)
+            waiter.delete()  # Remove old waiter
+            employee = new_kitchen_staff  # Point to the new kitchen staff
+            is_waiter = False
+
+    # Save the updated employee details
+    employee.save()
+
+    return Response({"detail": "Employee updated successfully."}, status=200)
+
+@api_view(['DELETE'])
+def fire_employee(request, employee_id):
+    try:
+        # Check if it's a waiter or kitchen staff and delete accordingly
+        waiter = Waiter.objects.filter(id=employee_id).first()
+        kitchen_staff = KitchenStaff.objects.filter(id=employee_id).first()
+
+        if waiter:
+            waiter.delete()  # The related payments will be automatically deleted due to cascade delete
+            return JsonResponse({"message": "Waiter has been fired."}, status=200)
+        elif kitchen_staff:
+            kitchen_staff.delete()
+            return JsonResponse({"message": "Kitchen staff has been fired."}, status=200)
+        else:
+            return JsonResponse({"message": "Employee not found."}, status=404)
+
+    except Exception as e:
+        print(f"Error: {str(e)}")  # Log the error to the console
+        return JsonResponse({"error": str(e)}, status=500)
