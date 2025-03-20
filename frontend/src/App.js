@@ -56,8 +56,15 @@ function App() {
                         </ProtectedRoute>
                     } 
                 />
+                <Route 
+                    path="/manager" 
+                    element={
+                        <ProtectedRoute>
+                            <Manager setRole={setRole} />
+                        </ProtectedRoute>
+                    } 
+                />
 
-                <Route path="/manager" element={<Manager />} />
                 
                 {/* Public Routes */}
                 <Route path="/login" element={<StaffLogin setRole={setRole} />} />

@@ -387,12 +387,58 @@ export const updateMenuItem = async (menuItemId, menuItemData) => {
 
       return response.data;
   } catch (error) {
-      console.error("❌ Error updating menu item:", error.response?.data || error.message);
+      console.error(" Error updating menu item:", error.response?.data || error.message);
       return null;
   }
 };
 
+// Create Stripe Checkout Session
+export const createCheckoutSession = async (paymentId) => {
+  try {
+    const response = await api.post(`/payments/${paymentId}/checkout/`);
+    console.log("Checkout Session URL:", response.data.checkout_url);
+    return response.data.checkout_url;
+  } catch (error) {
+    console.error("Error creating checkout session:", error.response?.data || error.message);
+    return null;
+  }
+};
 
+// Verify Payment Status
+export const verifyPayment = async (paymentId) => {
+  try {
+    const response = await api.get(`/payments/${paymentId}/verify/`);
+    console.log("Payment Verification Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error verifying payment:", error.response?.data || error.message);
+    return null;
+  }
+};
+
+// Cancel Payment
+export const cancelPayment = async (paymentId) => {
+  try {
+    const response = await api.get(`/payments/${paymentId}/cancel/`);
+    console.log("Payment Cancel Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error canceling payment:", error.response?.data || error.message);
+    return null;
+  }
+};
+
+// Get Sales Per Waiter (successful payments and total sales)
+export const getSalesPerWaiter = async (staffId) => {
+  try {
+    const response = await api.get(`/sales/${staffId}/`);
+    console.log("Sales Per Waiter Response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching sales per waiter:", error.response?.data || error.message);
+    return null;
+  }
+};
 
 
 

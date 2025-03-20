@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions
 from rest_framework.exceptions import ValidationError
-from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer, NotificationSerializer,UpdateAvailabilitySerializer, get_user_model, UserSerializer
+from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer, NotificationSerializer,UpdateAvailabilitySerializer, get_user_model, UserSerializer,PaymentSerializer,ManagerSerializer
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -12,12 +12,16 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken  
 from rest_framework.permissions import AllowAny
 from rest_framework.permissions import IsAuthenticated 
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404,redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt  # Import csrf_exempt
-from .models import Order, Table, MenuItem, Customer, Waiter,KitchenStaff, Notification,OrderItem
+from .models import Order, Table, MenuItem, Customer, Waiter,KitchenStaff, Notification,OrderItem,Payment,Manager
 import json
 from django.db.models import Q
+import stripe
+from django.conf import settings
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # Views for CRUD operations on MenuItems, Tables, and Customers
 class MenuItemView(generics.ListCreateAPIView):
@@ -52,8 +56,8 @@ class MenuItemView(generics.ListCreateAPIView):
     queryset = MenuItem.objects.all()
 
     def update(self, request, *args, **kwargs):
-        print("🔍 Incoming PATCH Request Data:", request.data)  # Debugging
-        print("📂 Incoming PATCH Request Files:", request.FILES)  # Debugging file uploads
+        print("Incoming PATCH Request Data:", request.data)  # Debugging
+        print(" Incoming PATCH Request Files:", request.FILES)  # Debugging file uploads
 
         instance = self.get_object()
         
@@ -86,12 +90,12 @@ class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MenuItem.objects.all()
 
     def patch(self, request, *args, **kwargs):
-        print("🔍 Incoming PATCH Request Data:", request.data)  # Debugging
-        print("📂 Incoming PATCH Request Files:", request.FILES)  # Debugging file uploads
+        print(" Incoming PATCH Request Data:", request.data)  # Debugging
+        print(" Incoming PATCH Request Files:", request.FILES)  # Debugging file uploads
 
         mutable_data = request.data.copy()  # Ensure it's mutable
 
-        # ✅ Fix `category_input` Handling (Ensure it's a string before JSON parsing)
+        #  Fix `category_input` Handling (Ensure it's a string before JSON parsing)
         if "category_input" in mutable_data:
             try:
                 category_raw = mutable_data.pop("category_input")
@@ -107,7 +111,7 @@ class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
             except json.JSONDecodeError:
                 return Response({"error": "Invalid JSON format in category_input"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Fix `allergies` Field Handling (Ensure list format)
+        # Fix `allergies` Field Handling (Ensure list format)
         if "allergies" in mutable_data:
             allergies_raw = mutable_data["allergies"]
 
@@ -118,13 +122,13 @@ class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
             else:
                 return Response({"error": "Invalid format for allergies"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # ✅ Fix Image Handling (Preserve Old Image if Not Updated)
+        #  Fix Image Handling (Preserve Old Image if Not Updated)
         if "image" in request.FILES:
             mutable_data["image"] = request.FILES["image"]
         else:
             mutable_data.pop("image", None)  # 🔥 Remove from update if no new image is provided
 
-        # ✅ Apply Update
+        #  Apply Update
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=mutable_data, partial=True)
 
@@ -268,9 +272,17 @@ class OrderView(APIView):
                 message=f"New order received for Table {table.number}",
                 table=table
             )
+            payment = Payment.objects.create(
+                    order=order,
+                    table=table,
+                    amount=data["total_price"],
+                    waiter=waiter,
+                    status="unpaid"
+                )
+
             return JsonResponse({
                 "message": "Order created successfully",
-                "order_id": order.id
+                "order_id": order.id,
             })
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
@@ -514,6 +526,133 @@ class UserListView(generics.ListAPIView):
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
 
-    
+class CreateStripeCheckoutSessionView(APIView):
+    """
+    API to create a Stripe Checkout session and store session ID.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request, pk, **kwargs):
+        payment = get_object_or_404(Payment, pk=pk)
+
+        if payment.status == "paid":
+            return Response({"message": "Payment already completed."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            checkout_session = stripe.checkout.Session.create(
+                payment_method_types=['card'],
+                line_items=[{
+                    'price_data': {
+                        'currency': 'usd',
+                        'unit_amount': int(payment.amount * 100),  
+                        'product_data': {'name': f"Payment for Order {payment.order.id}"},
+                    },
+                    'quantity': 1,
+                }],
+                mode='payment',
+                success_url=f"http://127.0.0.1:8000/cafeApi/payments/{payment.pk}/verify/",
+                cancel_url=f"http://127.0.0.1:8000/cafeApi/payments/{payment.pk}/cancel/",
+            )
+
+            payment.stripe_session_id = checkout_session.id
+            payment.save()
+
+            return Response({"checkout_url": checkout_session.url}, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
+class StripePaymentSuccessView(APIView):
+    """
+    API to verify payment status using Stripe Checkout Session ID.
+    After a successful payment, redirect the user to http://localhost:3000/home.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk, **kwargs):
+        payment = get_object_or_404(Payment, pk=pk)
+        order = payment.order
+
+        if payment.status == "paid":
+            return redirect("http://localhost:3000/home")  # Already paid, redirect immediately
+
+        if not payment.stripe_session_id:
+            return Response({"error": "No Stripe session ID found for this payment."},
+                            status=400)
+
+        try:
+            stripe_session = stripe.checkout.Session.retrieve(payment.stripe_session_id)
+
+            if stripe_session.payment_status == "paid":
+                payment.status = "paid"
+                payment.save()
+                order.status = "paid for"
+                order.save()
+                return redirect("http://localhost:3000/home")  # Redirect on success
+
+        except stripe.error.StripeError as e:
+            return Response({"error": str(e)}, status=400)
+
+        return Response({"message": "Payment not completed yet."}, status=400)
+
+
+
+
+
+
+
+
+
+class StripePaymentCancelView(APIView):
+
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk, **kwargs):
+        payment = get_object_or_404(Payment, pk=pk)
+        order = payment.order  # Directly reference the related Order
+
+        if payment.status == "paid":
+            return Response({"message": "Cannot cancel a paid payment."}, status=status.HTTP_400_BAD_REQUEST)
+
+        payment.status = "canceled"
+        payment.save()
+        order.status = "canceled"
+        order.save()
+        return Response({"message": "Payment canceled!", "status": "canceled"}, status=status.HTTP_200_OK)
+
+class SalesPerWaiterView(APIView):
+  
+    permission_classes =[AllowAny]
+
+    def get(self, request, staff_id):
+        waiter = get_object_or_404(Waiter, Staff_id=staff_id)
+        successful_payments = Payment.objects.filter(waiter=waiter, status="paid")
+
+        return Response({
+            "waiter_name": f"{waiter.first_name} {waiter.last_name}",
+            "sales_count": successful_payments.count(),
+            "total_sales": sum(payment.amount for payment in successful_payments) 
+        }, status=status.HTTP_200_OK)
+class PaymentListView(APIView):
+  
+    permission_classes = [AllowAny] 
+    def get(self, request):
+        payments = Payment.objects.all()
+        data = []
+        for payment in payments:
+            data.append({
+                "order_id": payment.order.id if payment.order else None,
+                "amount": str(payment.amount),
+                "payment_date": payment.payment_date,
+                "status": payment.status,
+                "table_number": payment.table.number if payment.table else None,
+                "waiter_name": f"{payment.waiter.first_name} {payment.waiter.last_name}" if payment.waiter else None,
+            })
+        return Response(data, status=status.HTTP_200_OK)
+
+
+class ManagerListView(generics.ListAPIView):
+
+    queryset = Manager.objects.all()
+    serializer_class = ManagerSerializer

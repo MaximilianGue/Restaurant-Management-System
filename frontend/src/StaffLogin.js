@@ -51,6 +51,10 @@ function StaffLogin({ setRole }) {
                 } else if (loggedInUser.role === "kitchen_staff") {
                     setRole(2);
                     navigate("/kitchen");
+                }
+                 else if (loggedInUser.role === "manager") {
+                    setRole(3);
+                    navigate("/manager")
                 } else {
                     setRole(0);
                     navigate("/");
@@ -92,12 +96,6 @@ function StaffLogin({ setRole }) {
                 setRole(0);
                 navigate("/");
             }}>Return to Customer View</button>
-
-            <button className="manager-button" onClick={() => navigate("/manager")}>
-                Manager
-            </button>
-
-
             {showPopup && (
                 <div className="custom-popup">
                     <div className="popup-content">
