@@ -16,7 +16,9 @@ function Manager() {
         availability: "",
         price: "",
         image: null,
-    });
+        production_cost: "", 
+      });
+      
 
     const [previewImage, setPreviewImage] = useState("");
     const [editItem, setEditItem] = useState(null);
@@ -345,6 +347,11 @@ function Manager() {
         });
     
         setEditPreviewImage(item.image); 
+        setProductionCosts((prev) => ({
+            ...prev,
+            [item.id]: item.production_cost || ""
+        }));
+        
         setShowEditPopup(true);
     };
     
@@ -363,6 +370,9 @@ function Manager() {
         formData.append("cooking_time", editItem.cooking_time);
         formData.append("availability", editItem.availability);
         formData.append("category_input", JSON.stringify(editItem.category));
+        formData.append("production_cost", productionCosts[editItem.id] || 0);
+
+
     
         if (editItem.image instanceof File) {
             formData.append("image", editItem.image);
@@ -776,6 +786,15 @@ function Manager() {
                             <label>Cooking Time<input type="number" name="cooking_time" value={newItem.cooking_time} onChange={handleInputChange} /></label>
                             <label>Availability<input type="number" name="availability" value={newItem.availability} onChange={handleInputChange} /></label>
                             <label>Price<input type="number" name="price" value={newItem.price} onChange={handleInputChange} /></label>
+                            <label>Production Cost
+                                <input
+                                    type="number"
+                                    name="production_cost"
+                                    value={newItem.production_cost || ""}
+                                    onChange={handleInputChange}
+                                />
+                            </label>
+
                         </div>
                         <h4>Category</h4>
                         <div className="category-grid">
@@ -814,6 +833,17 @@ function Manager() {
                             <label>Cooking Time<input type="number" name="cooking_time" value={editItem.cooking_time} onChange={(e) => handleInputChange(e, true)} /></label>
                             <label>Availability<input type="number" name="availability" value={editItem.availability} onChange={(e) => handleInputChange(e, true)} /></label>
                             <label>Price<input type="number" name="price" value={editItem.price} onChange={(e) => handleInputChange(e, true)} /></label>
+                            <label>
+                                Production Cost
+                                <input
+                                    type="number"
+                                    name="production_cost"
+                                    value={productionCosts[editItem?.id] ?? ""}
+                                    onChange={(e) => handleCostChange(editItem.id, e.target.value)}
+                                />
+
+                            </label>
+
                         </div>
                         <h4>Category</h4>
                         <div className="category-grid">

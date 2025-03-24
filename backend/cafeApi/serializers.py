@@ -26,6 +26,11 @@ class MenuItemSerializer(serializers.ModelSerializer):
 
         if 'image' in validated_data and validated_data['image'] is None:
             validated_data.pop('image')
+        
+        if 'production_cost' in validated_data:
+            instance.production_cost = validated_data.pop('production_cost')
+
+
 
         return super().update(instance, validated_data)
 
