@@ -14,25 +14,16 @@ class MenuItemSerializer(serializers.ModelSerializer):
     category_input = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
 
     def get_category(self, obj):
-        """ Ensure the category is returned as a list. """
-        if isinstance(obj.category, str):
-            return obj.category.split(",")
-        return obj.category or []
-    
-    def get_allergies(self, obj):
-        """ Ensure 'None' is returned when allergies are empty. """
-        return obj.allergies if obj.allergies else ["none"]  # ✅ Returns ["None"] instead of an empty list
+        return obj.category if isinstance(obj.category, list) else []
 
+    def get_allergies(self, obj):
+        return obj.allergies if obj.allergies else ["none"]
 
     def update(self, instance, validated_data):
-        print("🔍 Updating with validated data:", validated_data)  # Debugging
-
-        # ✅ Ensure category is stored as JSON in the DB
         if "category_input" in validated_data:
-            raw_category = validated_data.pop('category_input', [])
-            validated_data["category"] = json.dumps(raw_category) if isinstance(raw_category, list) else raw_category
+            raw_category = validated_data.pop("category_input", [])
+            validated_data["category"] = raw_category
 
-        # ✅ Remove 'image' field from validated_data if no new image is provided
         if 'image' in validated_data and validated_data['image'] is None:
             validated_data.pop('image')
 
@@ -40,7 +31,10 @@ class MenuItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MenuItem
-        fields = ["id", "name", "price", "image", "allergies", "calories", "category", "category_input", "cooking_time", "availability"]
+        fields = [
+            "id", "name", "price", "production_cost", "image", "allergies", "calories",
+            "category", "category_input", "cooking_time", "availability"
+        ]
 
 
 class UpdateAvailabilitySerializer(serializers.ModelSerializer):

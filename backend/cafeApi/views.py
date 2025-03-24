@@ -45,8 +45,10 @@ class MenuItemView(generics.ListCreateAPIView):
             cooking_time=data.get('cooking_time'),
             availability=data.get('availability'),
             price=data.get('price'),
-            image=image if image else existing_image  # Use old image if no new one
+            production_cost=data.get('production_cost', 0.00),  # ✅ new
+            image=image if image else existing_image
         )
+
         serializer = MenuItemSerializer(menu_item)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -189,9 +191,6 @@ class TableDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Table.objects.all()
 
 class TableStaffIDView(APIView):
-    """
-    Fetches the staff_id for a given table number.
-    """
     def get(self, request, table_number):
         try:
             table = Table.objects.get(number=table_number)
@@ -200,19 +199,12 @@ class TableStaffIDView(APIView):
             if not waiter_name:
                 return Response({"detail": "No waiter assigned to this table."}, status=status.HTTP_404_NOT_FOUND)
 
-            # Split "John Doe" into first and last name
-            try:
-                first_name, last_name = waiter_name.split(" ", 1)
-            except ValueError:
-                return Response({"detail": "Invalid waiter name format in table data."}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Find the waiter in the system
-            waiter = Waiter.objects.filter(first_name=first_name, last_name=last_name).first()
+            # Try to match using just first name
+            waiter = Waiter.objects.filter(first_name=waiter_name).first()
 
             if not waiter:
                 return Response({"detail": "No matching waiter found for this table."}, status=status.HTTP_404_NOT_FOUND)
 
-            # Return the staff_id
             return Response({"staff_id": waiter.Staff_id}, status=status.HTTP_200_OK)
 
         except Table.DoesNotExist:

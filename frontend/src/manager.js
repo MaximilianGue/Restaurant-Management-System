@@ -5,7 +5,7 @@ import axios from "axios";
 import { fetchTables, fetchOrdersForTable } from "./api";
 import "./manager.css";
 
-function Manager({ setRole }) {
+function Manager() {
     const [menuItems, setMenuItems] = useState([]);
     const [newItem, setNewItem] = useState({
         name: "",
@@ -48,6 +48,16 @@ function Manager({ setRole }) {
         role: ''
     });
 
+    const [productionCosts, setProductionCosts] = useState({});
+
+    const handleCostChange = (itemId, cost) => {
+        setProductionCosts((prev) => ({
+            ...prev,
+            [itemId]: cost
+        }));
+    };
+    
+
     const handleEditEmployee = (employee) => {
         console.log("Editing employee:", employee);  // Log the selected employee
         setSelectedEmployee(employee);
@@ -60,9 +70,6 @@ function Manager({ setRole }) {
         });
         setShowEditModal(true); // Open the modal
     };
-    
-    
-    
     
     
     
@@ -382,6 +389,40 @@ function Manager({ setRole }) {
         }
     };
     
+    const getProfitSummary = () => {
+        const validItems = menuItems.filter(item => {
+            const cost = parseFloat(productionCosts[item.id]);
+            return !isNaN(cost) && parseFloat(item.price) > 0;
+        });
+    
+        if (validItems.length === 0) return null;
+    
+        let below60 = 0;
+        let equal60 = 0;
+        let above60 = 0;
+    
+        validItems.forEach(item => {
+            const price = parseFloat(item.price);
+            const cost = parseFloat(productionCosts[item.id]);
+            const margin = ((price - cost) / price) * 100;
+    
+            if (margin > 60) above60++;
+            else if (margin === 60) equal60++;
+            else below60++;
+        });
+    
+        if (below60 > 0) {
+            return { color: 'red', message: 'Overall profit margin under 60%' };
+        } else if (equal60 > 0 && above60 === 0) {
+            return { color: 'yellow', message: 'Profit margin at 60%' };
+        } else if (equal60 > 0 && above60 > 0) {
+            return { color: 'yellow', message: 'Some items have a profit margin of 60%' };
+        } else {
+            return { color: 'green', message: 'All items profit margin above 60%' };
+        }
+    };
+    
+
     return (
         <div className="manager-container">
             <h2>Manager Dashboard</h2>
@@ -634,11 +675,71 @@ function Manager({ setRole }) {
 
 
                 {selectedTab === "suggestions" && (
-                    <div className="tab-placeholder">
-                        <h3>Suggestions</h3>
-                        <p>View customer feedback and suggestions.</p>
+                    <div className="suggestions-container">
+                        <h3>Profit Suggestions</h3>
+
+                        {/* Summary Box */}
+                        {(() => {
+                            const summary = getProfitSummary();
+                            if (!summary) return null;
+                            return (
+                                <div style={{
+                                    backgroundColor: summary.color,
+                                    color: 'white',
+                                    padding: '10px',
+                                    borderRadius: '5px',
+                                    marginBottom: '20px'
+                                }}>
+                                    {summary.message}
+                                </div>
+                            );
+                        })()}
+
+                        {/* Suggestions Table */}
+                        <table className="suggestions-table">
+                            <thead>
+                                <tr>
+                                    <th>Menu Item</th>
+                                    <th>Price (£)</th>
+                                    <th>Production Cost (£)</th>
+                                    <th>Profit on Item (£)</th> {/* ✅ Add this column */}
+                                    <th>Profit Margin (%)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {menuItems.map(item => {
+                                const price = parseFloat(item.price);
+                                const cost = parseFloat(productionCosts[item.id]) || parseFloat(item.production_cost) || 0;
+                                const profit = price - cost;
+                                const margin = price > 0 ? ((profit / price) * 100) : null;
+
+                                // ✅ Make sure it's a number before checking
+                                const isValidMargin = typeof margin === "number" && !isNaN(margin);
+                                const rowClass = isValidMargin
+                                    ? margin > 60
+                                        ? "profit-high"
+                                        : "profit-low"
+                                    : "";
+
+                                return (
+                                    <tr key={item.id} className={rowClass}>
+                                        <td>{item.name}</td>
+                                        <td>£{price.toFixed(2)}</td>
+                                        <td>£{cost.toFixed(2)}</td>
+                                        <td>£{profit.toFixed(2)}</td>
+                                        <td>{isValidMargin ? `${margin.toFixed(2)}%` : "N/A"}</td>
+                                    </tr>
+                                );
+                            })}
+
+
+
+                            </tbody>
+                        </table>
+
                     </div>
                 )}
+
             </div>
 
             {showOrderPopup && selectedOrder && (

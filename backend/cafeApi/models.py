@@ -27,6 +27,13 @@ class MenuItem(models.Model):
     category = models.JSONField(default=list, blank=True)
     cooking_time = models.IntegerField(blank=True, null=True) 
     availability= models.IntegerField(blank=True, null=True) 
+    production_cost = models.DecimalField(
+        max_digits=6, 
+        decimal_places=2, 
+        null=True, 
+        blank=True, 
+        default=2.00
+    )
 
     def __str__(self):
         return f"Name: {self.name} | Price: £{self.price} | Cooking Time: {self.cooking_time} min  | availability: {self.availability} | Allergies: {', '.join(self.allergies) if self.allergies else 'None'}"
