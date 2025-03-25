@@ -332,3 +332,59 @@ button:hover {
     background: #c81e3f;
 }
 
+.suggestions-container {
+    padding: 20px;
+}
+
+.suggestions-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.suggestions-table th, .suggestions-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+.suggestions-table th {
+    background-color: #f4f4f4;
+}
+
+.suggestions-table input {
+    width: 100px;
+    padding: 5px;
+    text-align: center;
+}
+.profit-high {
+    background-color: #d4edda; /* ✅ Light green */
+}
+
+.profit-low {
+    background-color: #ffe5b4; /* ✅ Light orange */
+}
+.suggestions-table tr.profit-high td {
+    background-color: #d4edda !important;
+}
+
+.suggestions-table tr.profit-low td {
+    background-color: #ffe5b4 !important;
+}
+
+.suggestions-table thead th {
+    background-color: #91aae5; /* Navy/Dark Blue */
+    color: white;
+    font-weight: 600;
+    font-size: 16px;
+    padding: 12px;
+    border-bottom: 2px solid #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.suggestions-table th, .suggestions-table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+
