@@ -151,12 +151,17 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
   const assignedTables = tables.filter(table => table.waiter_name === waiterName);
 
   const toggleHiddenItem = (itemName) => {
-    setHiddenItems((prevHiddenItems) =>
-      prevHiddenItems.includes(itemName)
-        ? prevHiddenItems.filter((item) => item !== itemName)
-        : [...prevHiddenItems, itemName]
-    );
+    setHiddenItems((prevHiddenItems) => {
+      const updated =
+        prevHiddenItems.includes(itemName)
+          ? prevHiddenItems.filter((item) => item !== itemName)
+          : [...prevHiddenItems, itemName];
+  
+      localStorage.setItem("hiddenItems", JSON.stringify(updated));
+      return updated;
+    });
   };
+  
 
   // Send alert using the notifyStaff API
   const handleSendAlert = async () => {
@@ -185,6 +190,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     }
   };
 
+  
   return (
     <div className="waiter-container">
       <button className="return-button" onClick={() => {
@@ -262,65 +268,28 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
           </table>
         </div>
 
-        {/* Pending Orders */}
-        <div className="order-table">
-          <h4>Pending Orders</h4>
-          <table>
-            <thead>
-              <tr>
-                <th>Table/Order #</th>
-                <th>Total (£)</th>
-                <th>Action</th>
-                <th>Time (Min)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pendingOrders.length > 0 ? (
-                pendingOrders.map((order) => (
-                  <tr key={order.table_id}>
-                    <td>{order.table_id} | {order.id}</td>
-                    <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
-                    <td>
-                      <button className="cancel-button" onClick={() => handleCancelOrder(order.id)}>
-                        Cancel Order
-                      </button>
-                      <button className="confirm-button" onClick={() => handleConfirmOrder(order.id)}>
-                        Confirm Order
-                      </button>
-                    </td>
-                    <td>{Math.round((new Date().getTime() - new Date(order.order_date))/60000)}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr><td colSpan="4">No pending orders.</td></tr>
-              )}
-            </tbody>
-          </table>
-          <button className="cancel-all-button" onClick={cancelAllOrders}>
-            Cancel All Orders
-          </button>
-        </div>
+    {/* Hide/Unhide Menu Items */}
+      <div className="menu-select">
+        <h4>Hide/Unhide Menu Items</h4>
+        {menuItems.length > 0 ? (
+          menuItems.map((item) => (
+            <div key={item.id} className="menu-item">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={!hiddenItems.includes(item.name)}
+                  onChange={() => toggleHiddenItem(item.name)}
+                />
+                {item.name}
+              </label>
+            </div>
+          ))
+        ) : (
+          <p>No menu items available.</p>
+        )}
+      </div>
 
-        {/* Hide/Unhide Menu Items */}
-        <div className="menu-select">
-          <h4>Hide/Unhide Menu Items</h4>
-          {menuItems.length > 0 ? (
-            menuItems.map((item) => (
-              <div key={item.id} className="menu-item">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={!hiddenItems?.includes?.(item.name)}
-                    onChange={() => toggleHiddenItem(item.name)}
-                  />
-                  {item.name}
-                </label>
-              </div>
-            ))
-          ) : (
-            <p>No menu items available.</p>
-          )}
-        </div>
+
       </div>
 
       {/* Table Alert System */}

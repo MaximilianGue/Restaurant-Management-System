@@ -627,13 +627,6 @@ class StripePaymentSuccessView(APIView):
         return Response({"message": "Payment not completed yet."}, status=400)
 
 
-
-
-
-
-
-
-
 class StripePaymentCancelView(APIView):
 
     permission_classes = [AllowAny]
