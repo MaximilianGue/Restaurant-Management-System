@@ -85,6 +85,12 @@ function Home() {
     }, 0)
     .toFixed(2);
 
+  const totalTime = Object.keys(cart)
+    .reduce((sum, itemName) => {
+      const item =  menuItems.find((menuItem) => menuItem.name === itemName);
+      return sum + (parseFloat(item?.cooking_time || 0) * cart[itemName]);
+    }, 0);
+
   const handleTableNumberChange = (e) => {
     const value = e.target.value.replace(/\D/g, "");
     setTableNumber(value ? parseInt(value, 10) : "");
@@ -343,12 +349,16 @@ function Home() {
                       £
                       {(parseFloat(item.price) * cart[itemName]).toFixed(2)}
                     </span>
+                    <span> 
+                      Est: {(parseFloat(item.cooking_time))} Minutes
+                    </span>
                   </div>
                 );
               })}
               <div className="order-summary-total">
                 <span>Total</span>
                 <span>£{totalAmount}</span>
+                <span>Est: {totalTime} Minutes</span>
               </div>
               <button onClick={handlePlaceOrder} className="order-button">
                 Place Order
