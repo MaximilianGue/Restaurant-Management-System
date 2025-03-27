@@ -59,6 +59,10 @@ function Manager() {
             [itemId]: cost
         }));
     };
+    const [showOrdersPopup, setShowOrdersPopup] = useState(false);
+    const [selectedTableOrders, setSelectedTableOrders] = useState([]);
+    const [selectedTableNumber, setSelectedTableNumber] = useState(null);
+
     
 
     const handleEditEmployee = (employee) => {
@@ -97,7 +101,22 @@ function Manager() {
         }
     };
     
-    
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+          if (e.key === "Escape") setShowOrdersPopup(false);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
+    useEffect(() => {
+        if (showOrdersPopup) {
+          document.body.style.overflow = "hidden";
+        } else {
+          document.body.style.overflow = "unset";
+        }
+    }, [showOrdersPopup]);
+            
     
     
     useEffect(() => {
@@ -198,41 +217,18 @@ function Manager() {
         }
     }, [selectedTab]);
 
-    const handleViewOrders = async (tableId) => {
+    const handleViewOrders = async (tableId, tableNumber) => {
         try {
-            // Toggle visibility of orders for the current table
-            if (visibleOrders[tableId]) {
-                // Hide orders by deleting the table ID from visibleOrders state
-                setVisibleOrders((prevOrders) => {
-                    const newOrders = { ...prevOrders };
-                    delete newOrders[tableId]; // Remove the table from visible orders to hide it
-                    return newOrders;
-                });
-                return; // Exit here if we're hiding the orders
-            }
-    
-            // Fetch orders if not visible
-            const tableOrders = await fetchOrdersForTable(tableId);
-            console.log("Fetched Orders for Table", tableId, tableOrders);
-    
-            // Save the orders in the state
-            setOrders((prevOrders) => ({
-                ...prevOrders,
-                [tableId]: {
-                    orders: tableOrders,
-                    revenue: tableOrders.reduce((sum, order) => sum + parseFloat(order.total_price || 0), 0),
-                },
-            }));
-    
-            // Set the orders as visible for this table
-            setVisibleOrders((prevOrders) => ({
-                ...prevOrders,
-                [tableId]: true,
-            }));
+          const tableOrders = await fetchOrdersForTable(tableId);
+      
+          setSelectedTableOrders(tableOrders || []);
+          setSelectedTableNumber(tableNumber);
+          setShowOrdersPopup(true);
         } catch (error) {
-            console.error("Error fetching orders:", error);
+          console.error("Error fetching orders for table:", error);
         }
-    };
+      };
+      
     
     const handleViewOrderDetails = (order) => {
         setSelectedOrder(order);
@@ -950,8 +946,53 @@ function Manager() {
                 </>
             )}
 
+            {showOrdersPopup && (
+            <>
+                <div className="overlay" onClick={() => setShowOrdersPopup(false)}></div>
+                <div className="order-popup">
+                <div className="order-popup-content">
+                    <h3>Orders for Table #{selectedTableNumber}</h3>
 
-        
+                    {selectedTableOrders.length > 0 ? (
+                    <table className="orders-table">
+                        <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Total Price (£)</th>
+                            <th>Status</th>
+                            <th>Items</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {selectedTableOrders.map((order) => (
+                            <tr key={order.id}>
+                            <td>{order.id}</td>
+                            <td>£{parseFloat(order.total_price).toFixed(2)}</td>
+                            <td>{order.status}</td>
+                            <td>
+                                <ul>
+                                {order.items.map((item, index) => (
+                                    <li key={index}>
+                                    {item.name} x {item.quantity}
+                                    </li>
+                                ))}
+                                </ul>
+                            </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                    ) : (
+                    <p>No orders for this table.</p>
+                    )}
+
+                    <button className="close-popup" onClick={() => setShowOrdersPopup(false)}>
+                    Close
+                    </button>
+                </div>
+                </div>
+            </>
+            )}
 
         </div>
     );
