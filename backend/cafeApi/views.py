@@ -220,7 +220,12 @@ class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class OrderView(APIView):
     def get(self, request):
-        orders = Order.objects.all()
+        table_id = request.query_params.get("table")
+        if table_id:
+            orders = Order.objects.filter(table__id=table_id)
+        else:
+            orders = Order.objects.all()
+
         orders_data = []
         for order in orders:
             order_data = {
@@ -230,7 +235,6 @@ class OrderView(APIView):
                 "status": order.status,
                 "total_price": order.total_price,
                 "items": [],
-                # Include waiter details if available
                 "waiter": {
                     "Staff_id": order.waiter.Staff_id,
                     "first_name": order.waiter.first_name,
@@ -251,12 +255,13 @@ class OrderView(APIView):
                     "category": menu_item.category,
                     "cooking_time": menu_item.cooking_time,
                     "availability": menu_item.availability,
-                    "quantity": order_item.quantity  # <- Directly from the database, always correct
+                    "quantity": order_item.quantity
                 })
 
             orders_data.append(order_data)
 
         return Response(orders_data, status=200)
+
 
     def post(self, request):
         try:

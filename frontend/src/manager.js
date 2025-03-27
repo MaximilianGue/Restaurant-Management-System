@@ -5,6 +5,7 @@ import axios from "axios";
 import { fetchTables, fetchOrdersForTable } from "./api";
 import "./manager.css";
 
+
 function Manager() {
     const [menuItems, setMenuItems] = useState([]);
     const [newItem, setNewItem] = useState({

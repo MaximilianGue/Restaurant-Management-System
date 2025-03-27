@@ -8,6 +8,8 @@ import json
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from .models import MenuItem
+from .models import OrderItem
+
 
 class MenuItemSerializer(serializers.ModelSerializer):
     category = serializers.SerializerMethodField()
@@ -70,23 +72,29 @@ class TableSerializer(serializers.ModelSerializer):
         return obj.waiter.first_name if obj.waiter else "None"
 
 
+class OrderItemSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source="menu_item.name", read_only=True)
+    price = serializers.DecimalField(source="menu_item.price", max_digits=6, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = ["name", "price", "quantity"]
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    table_id = serializers.PrimaryKeyRelatedField(
-        queryset=Table.objects.all(), source="table"
-    )  # Only show table ID, not full table details
+    table_id = serializers.PrimaryKeyRelatedField(queryset=Table.objects.all(), source="table")
+    items = OrderItemSerializer(source="orderitem_set", many=True, read_only=True)  # ✅ FIXED
 
-    items = MenuItemSerializer(many=True, read_only=True)  # Nested items in response
     item_ids = serializers.PrimaryKeyRelatedField(
         queryset=MenuItem.objects.all(), source="items", many=True, write_only=True
-    )  # Accept `item_ids` list when creating/updating an order
+    )
 
     class Meta:
         model = Order
         fields = [
             "id", "table_id", "order_date", "status", "total_price", "items", "item_ids"
         ]
+
 
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:

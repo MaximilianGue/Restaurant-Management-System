@@ -35,6 +35,19 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
   const [alertAlertMessage, setAlertAlertMessage] = useState("");
 
   useEffect(() => {
+    fetchWaiterDetails(staffId).then(data => {
+      console.log("Fetched waiter details:", data); // Add this line
+      setWaiterDetails(data);
+    });
+  }, []);
+  useEffect(() => {
+    loadTables().then(() => {
+      console.log("All tables:", tables); // See how waiter_name is structured
+    });
+  }, []);
+    
+
+  useEffect(() => {
     loadOrders();
     loadMenuItems();
     loadTables();
@@ -147,8 +160,8 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
   const deliveredOrders = orders.filter((order) => order.status === "delivered");
 
   // Filter tables assigned to this waiter
-  const waiterName = waiterDetails ? `${waiterDetails.first_name} ${waiterDetails.last_name}` : "";
-  const assignedTables = tables.filter(table => table.waiter_name === waiterName);
+  const waiterName = waiterDetails?.first_name || "";
+  const assignedTables = tables.filter(table => table.waiter_name === waiterName);  
 
   const toggleHiddenItem = (itemName) => {
     setHiddenItems((prevHiddenItems) => {
@@ -162,6 +175,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     });
   };
   
+
 
   // Send alert using the notifyStaff API
   const handleSendAlert = async () => {
