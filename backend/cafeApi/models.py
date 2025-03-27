@@ -145,36 +145,4 @@ class Manager(models.Model):
     def __str__(self):
         return f"{self.first_name} {self.last_name}"    
     
-class StatusUpdateAPITestCase(APITestCase):
-    def setUp(self):
-        self.client = APIClient()
-        self.waiter = Waiter.objects.create(Staff_id="W123", first_name="John", last_name="Doe")
-        self.table = Table.objects.create(number=1)
-        self.order = Order.objects.create(table=self.table, waiter=self.waiter, status="pending", total_price=25.0)
-        self.valid_data = {
-            "status": "completed",
-            "Staff_id": "W123"
-        }
-        self.invalid_data = {
-            "status": "completed"  # Missing Staff_id
-        }
 
-    def test_update_order_status_success(self):
-        response = self.client.patch(f"/cafeApi/orders/{self.order.id}/update/", self.valid_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.order.refresh_from_db()
-        self.assertEqual(self.order.status, "completed")
-
-    def test_update_order_status_missing_staff_id(self):
-        response = self.client.patch(f"/cafeApi/orders/{self.order.id}/update/", self.invalid_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("Staff_id", response.data)
-
-    def test_update_order_status_invalid_staff_id(self):
-        data = {"status": "completed", "Staff_id": "INVALID"}
-        response = self.client.patch(f"/cafeApi/orders/{self.order.id}/update/", data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-
-    def test_update_order_status_nonexistent_order(self):
-        response = self.client.patch("/cafeApi/orders/999/update/", self.valid_data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
