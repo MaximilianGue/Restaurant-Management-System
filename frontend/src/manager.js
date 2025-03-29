@@ -78,7 +78,26 @@ function Manager() {
         setShowEditModal(true); // Open the modal
     };
     
+    const getWaiterRevenue = (waiter) => {
+        const waiterTables = tables.filter(table => table.waiter_name === waiter.first_name); // Match by first name
+        return waiterTables.reduce((sum, table) => sum + (table.revenue || 0), 0);
+    };
     
+    const getWaiterRevenues = () => {
+        return waiters.map(waiter => {
+          const revenue = tables
+            .filter(table => table.waiter_name === `${waiter.first_name} ${waiter.last_name}`)
+            .reduce((sum, table) => sum + (table.revenue || 0), 0);
+      
+          return { ...waiter, revenue };
+        });
+      };
+      
+      const topWaiter = (() => {
+        const revenues = getWaiterRevenues();
+        return revenues.reduce((top, curr) => (curr.revenue > (top?.revenue || 0) ? curr : top), null);
+      })();
+      
     
     
     const handleChangeRole = (e) => {
@@ -538,10 +557,11 @@ function Manager() {
                             <table className="employee-table">
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Phone</th>
-                                        <th>Actions</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Table Revenue (£)</th>
+                                    <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -551,9 +571,10 @@ function Manager() {
                                                 <td>{waiter.first_name} {waiter.last_name}</td>
                                                 <td>{waiter.email}</td>
                                                 <td>{waiter.phone || 'N/A'}</td>
+                                                <td>£{getWaiterRevenue(waiter).toFixed(2)}</td> {/* ✅ Display revenue */}
                                                 <td>
-                                                    <button onClick={() => handleEditEmployee(waiter)}>Edit</button>
-                                                    <button onClick={() => handleFireEmployee(waiter.id)}>Fire</button>
+                                                <button onClick={() => handleEditEmployee(waiter)}>Edit</button>
+                                                <button onClick={() => handleFireEmployee(waiter.id)}>Fire</button>
                                                 </td>
                                             </tr>
                                         ))
