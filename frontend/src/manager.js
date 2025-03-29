@@ -260,12 +260,28 @@ function Manager() {
     
     const handleInputChange = (e, isEdit = false) => {
         const { name, value } = e.target;
-        if (isEdit) {
-            setEditItem({ ...editItem, [name]: value });
-        } else {
-            setNewItem({ ...newItem, [name]: value });
+      
+        if (name === "allergies") {
+          const parsed = value
+            .split(',')
+            .map(item => item.trim())
+            .filter(Boolean);
+      
+          if (isEdit) {
+            setEditItem(prev => ({ ...prev, allergies: parsed }));
+          } else {
+            setNewItem(prev => ({ ...prev, allergies: parsed }));
+          }
+          return;
         }
-    };
+      
+        if (isEdit) {
+          setEditItem({ ...editItem, [name]: value });
+        } else {
+          setNewItem({ ...newItem, [name]: value });
+        }
+      };
+      
 
     const handleCategoryChange = (category, isEdit = false) => {
         if (isEdit) {
@@ -339,7 +355,7 @@ function Manager() {
         setEditItem({
             ...item,
             category: Array.isArray(item.category) ? item.category : JSON.parse(item.category || "[]"),
-            allergies: item.allergies.length === 0 ? "none" : item.allergies, 
+            allergies: item.allergies.join(", "), 
             image: item.image, 
         });
     
@@ -362,7 +378,25 @@ function Manager() {
     
         formData.append("name", editItem.name);
         formData.append("price", editItem.price);
-        formData.append("allergies", editItem.allergies === "None" ? [] : editItem.allergies); 
+        let rawAllergies = editItem.allergies;
+        let finalAllergies;
+        try {
+        // Try parsing JSON if it's a stringified array
+        if (typeof rawAllergies === "string" && rawAllergies.trim().startsWith("[")) {
+            finalAllergies = JSON.parse(rawAllergies);
+        } else if (Array.isArray(rawAllergies)) {
+            finalAllergies = rawAllergies;
+        } else {
+            finalAllergies = rawAllergies.split(",").map(a => a.trim()).filter(Boolean);
+        }
+        } catch (e) {
+        console.warn("Failed to parse allergies, defaulting to array split:", e);
+        finalAllergies = rawAllergies.split(",").map(a => a.trim()).filter(Boolean);
+        }
+
+        formData.append("allergies", JSON.stringify(finalAllergies));
+
+
         formData.append("calories", editItem.calories);
         formData.append("cooking_time", editItem.cooking_time);
         formData.append("availability", editItem.availability);
@@ -610,13 +644,14 @@ function Manager() {
                     <div className="tables-container">
                         <h3>Tables and Orders</h3>
                         <table className="tables-table">
-                            <thead>
-                                <tr>
-                                    <th>Table #</th>
-                                    <th>Status</th>
-                                    <th>Revenue (£)</th>
-                                    <th>Actions</th>
-                                </tr>
+                        <thead>
+                            <tr>
+                                <th>Table #</th>
+                                <th>Status</th>
+                                <th>Waiter</th> {/* ✅ Add this */}
+                                <th>Revenue (£)</th>
+                                <th>Actions</th>
+                            </tr>
                             </thead>
                             <tbody>
                                 {tables.length > 0 ? (
@@ -624,13 +659,11 @@ function Manager() {
                                         <tr key={table.id}>
                                             <td>{table.number}</td>
                                             <td>{table.status}</td>
+                                            <td>{table.waiter_name || "—"}</td> {/* ✅ Show assigned waiter */}
                                             <td>£{(table.revenue !== undefined ? table.revenue : 0).toFixed(2)}</td> 
                                             <td>
-                                                <button 
-                                                    className="view-orders-button"
-                                                    onClick={() => handleViewOrders(table.id)}
-                                                >
-                                                    {visibleOrders[table.id] ? "Hide Orders" : "View Orders"}
+                                                <button className="view-orders-button" onClick={() => handleViewOrders(table.id)}>
+                                                {visibleOrders[table.id] ? "Hide Orders" : "View Orders"}
                                                 </button>
                                             </td>
                                         </tr>
@@ -826,7 +859,9 @@ function Manager() {
                         <div className="edit-grid">
                             <label>Name<input type="text" name="name" value={editItem.name} onChange={(e) => handleInputChange(e, true)} /></label>
                             <label>Calories<input type="number" name="calories" value={editItem.calories} onChange={(e) => handleInputChange(e, true)} /></label>
-                            <label>Allergies<input type="text" name="allergies" value={editItem.allergies} onChange={(e) => handleInputChange(e, true)} /></label>
+                            <label>Allergies
+                                <input type="text" name="allergies" value={editItem.allergies} onChange={(e) => handleInputChange(e, true)} />
+                            </label>
                             <label>Cooking Time<input type="number" name="cooking_time" value={editItem.cooking_time} onChange={(e) => handleInputChange(e, true)} /></label>
                             <label>Availability<input type="number" name="availability" value={editItem.availability} onChange={(e) => handleInputChange(e, true)} /></label>
                             <label>Price<input type="number" name="price" value={editItem.price} onChange={(e) => handleInputChange(e, true)} /></label>

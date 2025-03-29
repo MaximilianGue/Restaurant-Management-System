@@ -12,6 +12,9 @@ from .models import OrderItem
 
 
 class MenuItemSerializer(serializers.ModelSerializer):
+    allergies = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
     category = serializers.SerializerMethodField()
     category_input = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
 
@@ -32,8 +35,6 @@ class MenuItemSerializer(serializers.ModelSerializer):
         if 'production_cost' in validated_data:
             instance.production_cost = validated_data.pop('production_cost')
 
-
-
         return super().update(instance, validated_data)
 
     class Meta:
@@ -42,6 +43,7 @@ class MenuItemSerializer(serializers.ModelSerializer):
             "id", "name", "price", "production_cost", "image", "allergies", "calories",
             "category", "category_input", "cooking_time", "availability"
         ]
+
 
 
 class UpdateAvailabilitySerializer(serializers.ModelSerializer):
