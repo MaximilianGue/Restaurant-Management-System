@@ -100,51 +100,31 @@ class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MenuItem.objects.all()
 
     def patch(self, request, *args, **kwargs):
-        print(" Incoming PATCH Request Data:", request.data)
-        print(" Incoming PATCH Request Files:", request.FILES)
+        print("Incoming PATCH Request Data:", request.data)
+        print("Incoming PATCH Request Files:", request.FILES)
 
+        instance = self.get_object()
         mutable_data = request.data.copy()
 
-        # --- Fix category_input (JSON string to list) ---
+        # --- Fix category_input (stringified list to real list) ---
         if "category_input" in mutable_data:
+            raw = mutable_data.get("category_input")
             try:
-                category_raw = mutable_data.pop("category_input")
-                if isinstance(category_raw, list):
-                    category_raw = category_raw[0]
-                mutable_data["category"] = json.loads(category_raw)
+                # If raw is a list (from QueryDict), get the first string
+                if isinstance(raw, list):
+                    raw = raw[0]
+                parsed_category = json.loads(raw)
+                if isinstance(parsed_category, list):
+                    mutable_data.setlist("category_input", parsed_category)
+                else:
+                    return Response({"error": "category_input must be a list"}, status=400)
             except Exception as e:
                 return Response({"error": f"Invalid category_input format: {str(e)}"}, status=400)
 
-        # --- Fix allergies ---
-        if "allergies" in mutable_data:
-            raw = mutable_data.get("allergies")
-
-            try:
-                # Case 1: list with one stringified list -> ['["Dairy","Gluten"]']
-                if isinstance(raw, list) and len(raw) == 1:
-                    try:
-                        parsed = json.loads(raw[0])
-                        if isinstance(parsed, list):
-                            mutable_data["allergies"] = parsed
-                        else:
-                            mutable_data["allergies"] = [str(parsed)]
-                    except Exception as e:
-                        return Response({"error": "Invalid allergies format"}, status=400)
-
-                # Case 2: single JSON string or comma-separated
-                parsed = json.loads(raw)
-
-                if not isinstance(parsed, list):
-                    parsed = [str(parsed)]
-                else:
-                    parsed = [str(a).strip() for a in parsed if a]
-
-                mutable_data["allergies"] = parsed
-
-            except Exception as e:
-                print("Allergy parsing failed:", e)
-                return Response({"error": "Invalid allergies format"}, status=400)
-
+        # --- Fix allergies (no json.loads, just pass list) ---
+        allergies = request.data.getlist("allergies")
+        if allergies:
+            mutable_data.setlist("allergies", allergies)
 
         # --- Handle image ---
         if "image" in request.FILES:
@@ -153,9 +133,7 @@ class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
             mutable_data.pop("image", None)
 
         # --- Perform update ---
-        instance = self.get_object()
         serializer = self.get_serializer(instance, data=mutable_data, partial=True)
-
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=200)

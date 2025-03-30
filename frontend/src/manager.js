@@ -413,7 +413,12 @@ function Manager() {
         finalAllergies = rawAllergies.split(",").map(a => a.trim()).filter(Boolean);
         }
 
-        formData.append("allergies", JSON.stringify(finalAllergies));
+        // ✅ Correct allergy handling
+        const allergies = Array.isArray(finalAllergies) ? finalAllergies : [];
+        allergies.forEach(allergy => {
+            formData.append("allergies", allergy); // Don't JSON.stringify
+        });
+
 
 
         formData.append("calories", editItem.calories);
