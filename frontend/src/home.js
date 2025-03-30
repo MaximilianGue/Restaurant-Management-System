@@ -195,21 +195,24 @@ function Home() {
   };
 
   const handleVerifyPayment = async (orderId) => {
-    const response = await verifyPayment(orderId);
-    if (response && response.status === "paid") {
-      setErrorMessage("Payment verified successfully!");
-    } else {
-      setErrorMessage("Payment not completed yet.");
+    try {
+      const response = await verifyPayment(orderId);
+      if (response === 200) {
+        setErrorMessage("Payment verified successfully!");
+      } else {
+        setErrorMessage("Payment not completed yet.");
+      }
+    } catch (error) {
+      console.error("Error verifying payment:", error.response ? error.response.status : error);
     }
     setShowPopup(true);
-    // Optionally, refresh orders
     const ordersData = await fetchOrders();
     setOrders(ordersData || []);
   };
 
   const handleCancelPayment = async (orderId) => {
     const response = await cancelPayment(orderId);
-    if (response && response.status === "canceled") {
+    if (response === 200) {
       setErrorMessage("Payment has been canceled.");
     } else {
       setErrorMessage("Error canceling payment.");
@@ -384,7 +387,7 @@ function Home() {
                     <p>Status: {order.status}</p>
                     <p>Total: £{order.total_price}</p>
                     {/* Payment Buttons for orders that are not paid */}
-                    {order.status !== "paid" && (
+                    {order.status !== "paid for" && (
                       <div className="payment-actions">
                         <button
                           onClick={() => handlePayNow(order.id)}
