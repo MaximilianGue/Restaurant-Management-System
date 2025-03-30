@@ -26,6 +26,8 @@ function Home() {
   const [loadingTables, setLoadingTables] = useState(true);
   const [filter, setFilter] = useState("All");
   const navigate = useNavigate();
+  const [hiddenItems, setHiddenItems] = useState([]);
+
 
   useEffect(() => {
     setRole(0); // Set role to customer when the "/" route is loaded
@@ -38,6 +40,11 @@ function Home() {
     loadData();
   }, []);
 
+  useEffect(() => {
+    const storedHiddenItems = JSON.parse(localStorage.getItem("hiddenItems")) || [];
+    setHiddenItems(storedHiddenItems);
+  }, []);
+  
   useEffect(() => {
     document.body.classList.remove("waiter", "kitchen", "customer");
     if (role === 0) document.body.classList.add("customer");
@@ -229,13 +236,14 @@ function Home() {
 
   const filteredMenuItems =
     filter === "All"
-      ? menuItems
+      ? menuItems.filter((item) => !hiddenItems.includes(item.name))
       : menuItems.filter((item) => {
           if (Array.isArray(item.category)) {
             return item.category.includes(filter);
           }
           return item.category.toLowerCase() === filter.toLowerCase();
-        });
+        }).filter((item) => !hiddenItems.includes(item.name));
+
 
   return (
     <div className="container">

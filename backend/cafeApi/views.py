@@ -20,6 +20,7 @@ import json
 from django.db.models import Q
 import stripe
 from django.conf import settings
+from .models import Table
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -33,26 +34,34 @@ class MenuItemView(generics.ListCreateAPIView):
         image = request.FILES.get('image')  # New uploaded image
         existing_image = data.get("existing_image")  # Old image URL if no new image
 
-        # Convert category back into a string for storage
-        category = json.loads(data.get("category", "[]"))
-        category_str = ",".join(category)  
+        try:
+            category = json.loads(data.get("category", "[]"))  # ✅ Properly parse list
+        except json.JSONDecodeError:
+            return Response({"error": "Invalid category format"}, status=400)
+
+        try:
+            allergies_raw = data.get("allergies", "")
+            if allergies_raw.strip().lower() == "none":
+                allergies = []
+            else:
+                allergies = [a.strip() for a in allergies_raw.split(",") if a.strip()]
+        except Exception as e:
+            allergies = []
 
         menu_item = MenuItem.objects.create(
             name=data.get('name'),
             calories=data.get('calories'),
-            allergies=data.get('allergies'),
-            category=category_str,
+            allergies=allergies,
+            category=category,
             cooking_time=data.get('cooking_time'),
             availability=data.get('availability'),
             price=data.get('price'),
-            production_cost=data.get('production_cost', 0.00),  # ✅ new
+            production_cost=data.get('production_cost', 0.00),
             image=image if image else existing_image
         )
 
         serializer = MenuItemSerializer(menu_item)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
 
     serializer_class = MenuItemSerializer
     queryset = MenuItem.objects.all()
@@ -92,53 +101,47 @@ class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = MenuItem.objects.all()
 
     def patch(self, request, *args, **kwargs):
-        print(" Incoming PATCH Request Data:", request.data)  # Debugging
-        print(" Incoming PATCH Request Files:", request.FILES)  # Debugging file uploads
+        print("Incoming PATCH Request Data:", request.data)
+        print("Incoming PATCH Request Files:", request.FILES)
 
-        mutable_data = request.data.copy()  # Ensure it's mutable
+        instance = self.get_object()
+        mutable_data = request.data.copy()
 
-        #  Fix `category_input` Handling (Ensure it's a string before JSON parsing)
+        # --- Fix category_input (stringified list to real list) ---
         if "category_input" in mutable_data:
+            raw = mutable_data.get("category_input")
             try:
-                category_raw = mutable_data.pop("category_input")
-
-                if isinstance(category_raw, list):  # Handle list case
-                    category_raw = category_raw[0]  # Extract first value if it's a list
-
-                if isinstance(category_raw, str):  # Ensure it's a string before JSON parsing
-                    mutable_data["category"] = json.loads(category_raw)
+                # If raw is a list (from QueryDict), get the first string
+                if isinstance(raw, list):
+                    raw = raw[0]
+                parsed_category = json.loads(raw)
+                if isinstance(parsed_category, list):
+                    mutable_data.setlist("category_input", parsed_category)
                 else:
-                    return Response({"error": "Invalid category format"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"error": "category_input must be a list"}, status=400)
+            except Exception as e:
+                return Response({"error": f"Invalid category_input format: {str(e)}"}, status=400)
 
-            except json.JSONDecodeError:
-                return Response({"error": "Invalid JSON format in category_input"}, status=status.HTTP_400_BAD_REQUEST)
+        # --- Fix allergies (no json.loads, just pass list) ---
+        allergies = request.data.getlist("allergies")
+        if allergies:
+            mutable_data.setlist("allergies", allergies)
 
-        # Fix `allergies` Field Handling (Ensure list format)
-        if "allergies" in mutable_data:
-            allergies_raw = mutable_data["allergies"]
-
-            if isinstance(allergies_raw, str):  # Convert string to list
-                mutable_data["allergies"] = [allergies_raw] if allergies_raw.lower() != "none" else []
-            elif isinstance(allergies_raw, list):
-                mutable_data["allergies"] = allergies_raw
-            else:
-                return Response({"error": "Invalid format for allergies"}, status=status.HTTP_400_BAD_REQUEST)
-
-        #  Fix Image Handling (Preserve Old Image if Not Updated)
+        # --- Handle image ---
         if "image" in request.FILES:
             mutable_data["image"] = request.FILES["image"]
         else:
-            mutable_data.pop("image", None)  # 🔥 Remove from update if no new image is provided
+            mutable_data.pop("image", None)
 
-        #  Apply Update
-        instance = self.get_object()
+        # --- Perform update ---
         serializer = self.get_serializer(instance, data=mutable_data, partial=True)
-
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=200)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        print("Serializer Errors:", serializer.errors)
+        return Response(serializer.errors, status=400)
+
 
 class MenuItemAvailabilityView(APIView):
     def get(self,pk):
@@ -186,6 +189,27 @@ class TableViewSet(viewsets.ViewSet):
 
         return Response(table_revenue)
 
+    def create(self, request):
+        number = request.data.get("number")
+        waiter_id = request.data.get("waiter")
+
+        if not number or not waiter_id:
+            return Response({"error": "Table number and waiter ID are required."}, status=400)
+
+        waiter = Waiter.objects.filter(id=waiter_id).first()
+        if not waiter:
+            return Response({"error": "Waiter not found."}, status=404)
+
+        # ✅ Save waiter as FK
+        table = Table.objects.create(
+            number=number,
+            waiter=waiter,
+        )
+
+        serializer = TableSerializer(table)
+        return Response(serializer.data, status=201)
+
+
 class TableDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TableSerializer
     queryset = Table.objects.all()
@@ -220,7 +244,12 @@ class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class OrderView(APIView):
     def get(self, request):
-        orders = Order.objects.all()
+        table_id = request.query_params.get("table")
+        if table_id:
+            orders = Order.objects.filter(table__id=table_id)
+        else:
+            orders = Order.objects.all()
+
         orders_data = []
         for order in orders:
             order_data = {
@@ -230,7 +259,6 @@ class OrderView(APIView):
                 "status": order.status,
                 "total_price": order.total_price,
                 "items": [],
-                # Include waiter details if available
                 "waiter": {
                     "Staff_id": order.waiter.Staff_id,
                     "first_name": order.waiter.first_name,
@@ -251,12 +279,13 @@ class OrderView(APIView):
                     "category": menu_item.category,
                     "cooking_time": menu_item.cooking_time,
                     "availability": menu_item.availability,
-                    "quantity": order_item.quantity  # <- Directly from the database, always correct
+                    "quantity": order_item.quantity
                 })
 
             orders_data.append(order_data)
 
         return Response(orders_data, status=200)
+
 
     def post(self, request):
         try:
@@ -342,6 +371,7 @@ class KitchenStaffView(generics.ListCreateAPIView):
 class KitchenStaffDetailView(generics.RetrieveAPIView):
     queryset = KitchenStaff.objects.all()
     serializer_class = KitchenStaffSerializer
+
 
 
 class ConfirmOrderUpdateView(generics.UpdateAPIView):
@@ -627,13 +657,6 @@ class StripePaymentSuccessView(APIView):
         return Response({"message": "Payment not completed yet."}, status=400)
 
 
-
-
-
-
-
-
-
 class StripePaymentCancelView(APIView):
 
     permission_classes = [AllowAny]
@@ -721,23 +744,26 @@ def assign_waiter_to_table(request, table_id):
     table.save()
     return Response({"message": f"Waiter {waiter.first_name} {waiter.last_name} assigned to Table {table.number}"}, status=status.HTTP_200_OK)
 
+
 @api_view(['PUT'])
 def update_employee(request, employee_id):
-    # Fetch the employee (Waiter or KitchenStaff) by ID
+    print("Data received in PUT:", request.data)
+
+    # Try to fetch both a waiter and kitchen staff with this ID
     waiter = Waiter.objects.filter(id=employee_id).first()
     kitchen_staff = KitchenStaff.objects.filter(id=employee_id).first()
 
-    # Check if employee exists and handle based on type (Waiter or Kitchen Staff)
-    if waiter:
-        employee = waiter
-        is_waiter = True
-    elif kitchen_staff:
+    # ✅ Prioritize kitchen staff if both exist with same ID
+    if kitchen_staff:
         employee = kitchen_staff
         is_waiter = False
+    elif waiter:
+        employee = waiter
+        is_waiter = True
     else:
         return Response({"detail": "Employee not found."}, status=404)
 
-    # Update employee details
+    # Update basic fields
     employee.first_name = request.data.get("first_name", employee.first_name)
     employee.last_name = request.data.get("last_name", employee.last_name)
     employee.email = request.data.get("email", employee.email)
@@ -746,34 +772,41 @@ def update_employee(request, employee_id):
     # Handle role change
     role = request.data.get("role")
     if role:
-        # If role is changing to 'waiter' from kitchen staff
-        if role.lower() == "waiter" and not is_waiter:
-            # Moving from KitchenStaff to Waiter
-            waiter_data = {
-                "first_name": employee.first_name,
-                "last_name": employee.last_name,
-                "email": employee.email,
-                "phone": employee.phone,
-            }
-            new_waiter = Waiter.objects.create(**waiter_data)
-            kitchen_staff.delete()  # Remove old kitchen staff
-            employee = new_waiter  # Point to the new waiter
-            is_waiter = True
-        # If role is changing to 'kitchen staff' from waiter
-        elif role.lower() == "kitchen staff" and is_waiter:
-            # Moving from Waiter to KitchenStaff
-            kitchen_staff_data = {
-                "first_name": employee.first_name,
-                "last_name": employee.last_name,
-                "email": employee.email,
-                "phone": employee.phone,
-            }
-            new_kitchen_staff = KitchenStaff.objects.create(**kitchen_staff_data)
-            waiter.delete()  # Remove old waiter
-            employee = new_kitchen_staff  # Point to the new kitchen staff
-            is_waiter = False
+        current_role = "waiter" if is_waiter else "kitchen staff"
+        new_role = role.lower()
 
-    # Save the updated employee details
+        if new_role != current_role:
+            if new_role == "waiter" and not is_waiter:
+                # Ensure no duplicate email for waiter
+                if Waiter.objects.filter(email=employee.email).exists():
+                    return Response({"detail": "A waiter with this email already exists."}, status=400)
+
+                new_waiter = Waiter.objects.create(
+                    first_name=employee.first_name,
+                    last_name=employee.last_name,
+                    email=employee.email,
+                    phone=employee.phone,
+                )
+                kitchen_staff.delete()
+                employee = new_waiter
+                is_waiter = True
+
+            elif new_role == "kitchen staff" and is_waiter:
+                # Ensure no duplicate email for kitchen staff
+                if KitchenStaff.objects.filter(email=employee.email).exclude(pk=employee.pk).exists():
+                    return Response({"detail": "A kitchen staff member with this email already exists."}, status=400)
+
+                new_kitchen_staff = KitchenStaff.objects.create(
+                    first_name=employee.first_name,
+                    last_name=employee.last_name,
+                    email=employee.email,
+                    phone=employee.phone,
+                )
+                waiter.delete()
+                employee = new_kitchen_staff
+                is_waiter = False
+
+    # Save updates (if no role switch happened, or after switching)
     employee.save()
 
     return Response({"detail": "Employee updated successfully."}, status=200)
@@ -797,3 +830,30 @@ def fire_employee(request, employee_id):
     except Exception as e:
         print(f"Error: {str(e)}")  # Log the error to the console
         return JsonResponse({"error": str(e)}, status=500)
+
+@api_view(['PUT'])
+def update_table(request, table_id):
+    try:
+        table = Table.objects.get(id=table_id)
+    except Table.DoesNotExist:
+        return Response({"error": "Table not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    number = request.data.get("number")
+    status_value = request.data.get("status")
+    waiter_id = request.data.get("waiter_id")  # or 'waiter' depending on your frontend
+
+    if number is not None:
+        table.number = number
+
+    if status_value is not None:
+        table.status = status_value
+
+    if waiter_id:
+        try:
+            waiter = Waiter.objects.get(id=waiter_id)
+            table.waiter = waiter  # ✅ This is the fix
+        except Waiter.DoesNotExist:
+            return Response({"error": "Waiter not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    table.save()
+    return Response({"message": "Table updated successfully."}, status=status.HTTP_200_OK)

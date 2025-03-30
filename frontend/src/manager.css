@@ -387,4 +387,297 @@ button:hover {
     vertical-align: middle;
 }
 
+.order-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* dark overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+  }
+  
+  .order-popup-content {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    width: 80%; /* Increased width */
+    max-width: 1000px; /* Limit max width for large screens */
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .waiter-note {
+    font-size: 0.85rem;         /* Smaller text */
+    font-weight: bold;          /* Bold text */
+    font-family: 'Poppins', sans-serif; /* Modern, clean font */
+    color: #444;                /* Slightly muted black for elegance */
+    margin-bottom: 10px;
+    padding: 6px 10px;
+    border-left: 4px solid #ffd700; /* Golden left border for crown context */
+    background-color: #fdf9e7; /* Subtle background to make it stand out */
+    border-radius: 4px;
+  }
 
+  .add-btn {
+    background-color: #4CAF50; /* A nice green */
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    margin: 16px 0;
+    transition: background-color 0.3s ease;
+  }
+  
+  .add-btn:hover {
+    background-color: #388e3c; /* Darker green on hover */
+  }
+
+  .nav-bar {
+    display: flex;
+    justify-content: center; /* ✅ Center the buttons */
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  
+  
+  .nav-button {
+    padding: 10px 16px;
+    border: none;
+    background-color: #f0f0f0;  /* Softer light gray */
+    color: #333;                /* Darker text for better visibility */
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* subtle shadow for depth */
+  }
+  
+  .nav-button:hover {
+    background-color: #e0e0e0;
+    color: #000;
+  }
+  
+  .nav-button.active {
+    background-color: #007bff;
+    color: white;
+    font-weight: 600;
+  }
+  
+  .add-table-form {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-radius: 10px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  
+  .add-table-form input,
+  .add-table-form select {
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+  }
+  
+  .add-table-form button {
+    background-color: #4caf50;
+    color: white;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .add-table-form button:hover {
+    background-color: #3e9142;
+  }
+
+  /* --- Improved Add Table Section --- */
+.add-table-form {
+    margin-bottom: 1.5rem;
+    padding: 1.5rem;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.add-table-form h4 {
+    width: 100%;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.add-table-form input,
+.add-table-form select {
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 14px;
+    min-width: 180px;
+    flex: 1;
+}
+
+.add-table-form button {
+    background-color: #22c55e;
+    color: white;
+    padding: 10px 16px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.add-table-form button:hover {
+    background-color: #16a34a;
+}
+/* --- Edit Table Popup --- */
+.edit-popup label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 600;
+    text-align: left;
+}
+
+.edit-popup input,
+.edit-popup select {
+    width: 100%;
+    padding: 6px 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    font-size: 13px;
+}
+
+.tables-table td {
+    vertical-align: middle;
+}
+
+.tables-table td button {
+    margin-right: 8px;
+    margin-bottom: 6px;
+    padding: 6px 10px;
+    font-size: 14px;
+}
+
+  
+.table-input-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    width: 100%;
+    max-width: 400px;
+}
+
+.table-input-row input,
+.table-input-row select {
+    flex: 1;
+    padding: 6px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    min-width: 160px;
+}
+
+.add-table-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+.table-input-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.table-input-row input,
+.table-input-row select {
+    padding: 8px 12px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    min-width: 160px;
+    max-width: 200px;
+}
+
+/* Center the Add Table button under inputs */
+.centered-add-btn {
+    background-color: #4caf50;
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.centered-add-btn:hover {
+    background-color: #388e3c;
+}
+.edit-table-popup {
+    width: 500px;
+    text-align: center;
+}
+
+.edit-table-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+.edit-table-grid label {
+    display: flex;
+    flex-direction: column;
+    font-weight: bold;
+    width: 45%;
+    min-width: 180px;
+}
+
+.edit-table-grid label.full-width {
+    width: 95%;
+}
+
+.edit-table-grid input,
+.edit-table-grid select {
+    padding: 6px 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-top: 5px;
+}
+
+/* Adjust popup button spacing */
+.popup-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+}

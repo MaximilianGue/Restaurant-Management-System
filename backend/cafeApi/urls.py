@@ -1,14 +1,16 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, NotificationViewSet, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView,WaiterDetailView,TableStaffIDView, CreateStripeCheckoutSessionView,StripePaymentSuccessView,StripePaymentCancelView,SalesPerWaiterView,PaymentListView,ManagerListView
 from .views import get_employees
 from . import views
 from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, NotificationViewSet, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView,WaiterDetailView,TableStaffIDView
+from .views import update_table
+
 notification_list = NotificationViewSet.as_view({'get': 'list', 'post': 'create'})
 notify_staff = NotificationViewSet.as_view({'post': 'notify_staff'})
 notify_waiter = NotificationViewSet.as_view({'post': 'notify_waiter'})
 # Define actions for TableView
-table_list = TableView.as_view({'get': 'list'})  # 'get' -> 'list' action for tables
+table_list = TableView.as_view({'get': 'list', 'post': 'create'})  # 'get' -> 'list' action for tables
+
 
 urlpatterns = [
     
@@ -21,6 +23,8 @@ urlpatterns = [
     path('tables/', table_list, name="tables"),
     path("tables/<int:pk>/", TableDetailView.as_view(), name="table-detail"),
     path('tables/<int:table_number>/staff_id/', TableStaffIDView.as_view(), name='table-staff-id'),
+    path('tables/<int:table_id>/update/', update_table, name='update_table'),
+
 
     # Other endpoints...
     path("customers/", CustomerView.as_view(), name="customers"),
@@ -52,14 +56,6 @@ urlpatterns = [
 
     path('employees/', get_employees, name='get-employees'),
     path('employee/<int:employee_id>/update/', views.update_employee, name='update_employee'),
-    path('employee/<int:employee_id>/fire/', views.fire_employee, name='fire_employee'),
-
-    
-    path("payments/<int:pk>/checkout/", CreateStripeCheckoutSessionView.as_view(), name="create_checkout_session"),
-    path("payments/<int:pk>/verify/", StripePaymentSuccessView.as_view(), name="verify_payment"),
-    path("payments/<int:pk>/cancel/", StripePaymentCancelView.as_view(), name="cancel_payment"),
-    path("sales/<int:pk>/", SalesPerWaiterView.as_view(), name="sales_per_waiter"),
-    path("payments/", PaymentListView.as_view(), name="payment-list"),
-    path("managers/", ManagerListView.as_view(), name="manager-list"),
+    path('employee/<int:employee_id>/fire/', views.fire_employee, name='fire_employee')
 
 ]

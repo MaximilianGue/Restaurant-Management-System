@@ -8,8 +8,13 @@ import json
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from .models import MenuItem
+from .models import OrderItem
+
 
 class MenuItemSerializer(serializers.ModelSerializer):
+    allergies = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
     category = serializers.SerializerMethodField()
     category_input = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
 
@@ -30,8 +35,6 @@ class MenuItemSerializer(serializers.ModelSerializer):
         if 'production_cost' in validated_data:
             instance.production_cost = validated_data.pop('production_cost')
 
-
-
         return super().update(instance, validated_data)
 
     class Meta:
@@ -40,6 +43,7 @@ class MenuItemSerializer(serializers.ModelSerializer):
             "id", "name", "price", "production_cost", "image", "allergies", "calories",
             "category", "category_input", "cooking_time", "availability"
         ]
+
 
 
 class UpdateAvailabilitySerializer(serializers.ModelSerializer):
@@ -52,41 +56,45 @@ class UpdateAvailabilitySerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
 class TableSerializer(serializers.ModelSerializer):
+    waiter_name = serializers.SerializerMethodField()
     revenue = serializers.SerializerMethodField()
 
     class Meta:
         model = Table
-        fields = ['id', 'number', 'status', 'waiter_name', 'estimated_time', 'capacity', 'revenue']
+        fields = ['id', 'number', 'status', 'waiter', 'waiter_name', 'estimated_time', 'capacity', 'revenue']
+
+    def get_waiter_name(self, obj):
+        return f"{obj.waiter.first_name} {obj.waiter.last_name}" if obj.waiter else None
 
     def get_revenue(self, obj):
-        paid_orders = Order.objects.filter(table=obj, status='paid for')
-        total_revenue = sum(order.total_price for order in paid_orders)
-        print(f"Table {obj.number} revenue calculated: {total_revenue}")  # Debugging line
-        return total_revenue
-        
-    def get_waiter_name(self, obj):
-        return obj.waiter.first_name if obj.waiter else "None"
+        paid_orders = obj.orders.filter(status='paid for')
+        return sum(order.total_price for order in paid_orders)
 
 
+class OrderItemSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source="menu_item.name", read_only=True)
+    price = serializers.DecimalField(source="menu_item.price", max_digits=6, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = ["name", "price", "quantity"]
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    table_id = serializers.PrimaryKeyRelatedField(
-        queryset=Table.objects.all(), source="table"
-    )  # Only show table ID, not full table details
+    table_id = serializers.PrimaryKeyRelatedField(queryset=Table.objects.all(), source="table")
+    items = OrderItemSerializer(source="orderitem_set", many=True, read_only=True)  # ✅ FIXED
 
-    items = MenuItemSerializer(many=True, read_only=True)  # Nested items in response
     item_ids = serializers.PrimaryKeyRelatedField(
         queryset=MenuItem.objects.all(), source="items", many=True, write_only=True
-    )  # Accept `item_ids` list when creating/updating an order
+    )
 
     class Meta:
         model = Order
         fields = [
             "id", "table_id", "order_date", "status", "total_price", "items", "item_ids"
         ]
+
 
 class CustomerSerializer(serializers.ModelSerializer):
     class Meta:

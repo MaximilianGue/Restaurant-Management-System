@@ -1,0 +1,211 @@
+/* waiter.css (scoped with .waiter-container prefix) */
+
+.waiter-container {
+    padding: 2rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f9f9fb;
+    color: #333;
+    max-width: 1200px;
+    margin: auto;
+  }
+  
+  .waiter-container .return-button {
+    background-color: #444;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-bottom: 20px;
+  }
+  
+  .waiter-container .return-button:hover {
+    background-color: #222;
+  }
+  
+  .waiter-container h3,
+  .waiter-container h4 {
+    color: #222;
+    margin-top: 1.5rem;
+  }
+  
+  .waiter-container .order-tables {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+  }
+  
+  .waiter-container .order-table {
+    flex: 1;
+    min-width: 350px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+  }
+  
+  .waiter-container .order-table table,
+  .waiter-container .notifications table,
+  .waiter-container .table-alert table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  
+  .waiter-container th,
+  .waiter-container td {
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .waiter-container select {
+    padding: 6px;
+    border-radius: 4px;
+  }
+  
+  .waiter-container .menu-select {
+    margin-top: 20px;
+    background-color: #fdfdfd;
+    padding: 16px;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  
+  .waiter-container .menu-select h4 {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: #333;
+  }
+  
+  .waiter-container .menu-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+  
+  .waiter-container .menu-item {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #333;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .waiter-container .menu-item:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .waiter-container .menu-item input {
+    margin-right: 8px;
+  }
+  
+  .waiter-container .alert-button,
+  .waiter-container .order-button,
+  .waiter-container .filter-button {
+    background-color: #ff5c5c;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .waiter-container .alert-button:hover,
+  .waiter-container .order-button:hover,
+  .waiter-container .filter-button:hover {
+    background-color: #d94a4a;
+  }
+  
+  .waiter-container .alert-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+  
+  .waiter-container .alert-modal-content {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 10px;
+    width: 400px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  .waiter-container .alert-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+  
+  .waiter-container .modal-close-button {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #888;
+  }
+  
+  .waiter-container .form-group {
+    margin-bottom: 1rem;
+  }
+  
+  .waiter-container label {
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+  }
+  
+  .waiter-container input[type="text"],
+  .waiter-container select {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .waiter-container .notifications {
+    margin-top: 2rem;
+    background-color: white;
+    padding: 1rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  .waiter-container .custom-popup {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #444;
+    color: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+  }
+  
+  .waiter-container .custom-popup button {
+    background-color: white;
+    color: #444;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .waiter-container .custom-popup button:hover {
+    background-color: #eee;
+  }
+  

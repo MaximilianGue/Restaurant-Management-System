@@ -4,6 +4,10 @@ import { fetchNotificationsForStaff } from "./api";
 import axios from "axios";
 import { fetchTables, fetchOrdersForTable } from "./api";
 import "./manager.css";
+import { fetchWaiters, fetchKitchenStaff } from "./api";
+import { useMemo } from "react";
+import { deleteTable } from "./api";
+
 
 function Manager() {
     const [menuItems, setMenuItems] = useState([]);
@@ -53,28 +57,125 @@ function Manager() {
     const [productionCosts, setProductionCosts] = useState({});
 
     const handleCostChange = (itemId, cost) => {
+        const cleaned = cost.replace(',', '.');
         setProductionCosts((prev) => ({
             ...prev,
-            [itemId]: cost
+            [itemId]: cleaned
         }));
     };
     
+    const [showOrdersPopup, setShowOrdersPopup] = useState(false);
+    const [selectedTableOrders, setSelectedTableOrders] = useState([]);
+    const [selectedTableNumber, setSelectedTableNumber] = useState(null);
+
+    const [newTableNumber, setNewTableNumber] = useState("");
+    const [newTableWaiterId, setNewTableWaiterId] = useState("");
+    const [showEditTablePopup, setShowEditTablePopup] = useState(false);
+    const [editedTable, setEditedTable] = useState(null);
+
+
+    const handleDeleteTable = async (tableId) => {
+        if (window.confirm("Are you sure you want to delete this table?")) {
+          const success = await deleteTable(tableId);
+          if (success) {
+            setTables((prev) => prev.filter((table) => table.id !== tableId));
+            alert("Table deleted successfully.");
+          } else {
+            alert("Failed to delete table.");
+          }
+        }
+      };      
+    
+    const handleAddTable = async () => {
+        if (!newTableNumber || !newTableWaiterId) {
+            alert("Please enter a table number and select a waiter.");
+            return;
+        }
+    
+        try {
+            const response = await axios.post("http://127.0.0.1:8000/cafeApi/tables/", {
+                number: newTableNumber,
+                waiter: newTableWaiterId
+            });
+    
+            if (response.status === 201 || response.status === 200) {
+                setNewTableNumber("");
+                setNewTableWaiterId("");
+                const updatedTables = await fetchTables();
+                setTables(updatedTables || []);
+                alert("Table added successfully!");
+            } else {
+                alert("Failed to add table.");
+            }
+        } catch (error) {
+            console.error("Error adding table:", error.response?.data || error.message);
+            alert("Error creating table.");
+        }
+    };
+    
+    const handleEditTable = async (tableId, updatedData) => {
+        try {
+          const response = await axios.put(
+            `http://127.0.0.1:8000/cafeApi/tables/${tableId}/update/`,
+            updatedData
+          );
+          if (response.status === 200) {
+            const updatedTables = await fetchTables();
+            setTables(updatedTables);
+            setShowEditTablePopup(false);
+            alert("Table updated successfully.");
+          }
+        } catch (err) {
+          console.error("Error updating table:", err);
+          alert("Failed to update table.");
+        }
+      };
+      
+      
 
     const handleEditEmployee = (employee) => {
-        console.log("Editing employee:", employee);  // Log the selected employee
+        console.log("Editing employee:", employee);
+    
         setSelectedEmployee(employee);
         setUpdatedEmployee({
             first_name: employee.first_name,
             last_name: employee.last_name,
             email: employee.email,
             phone: employee.phone,
-            role: employee.role || 'waiter',  // Make sure the role is passed correctly
+            role: employee.role?.toLowerCase() || 'waiter', // use provided role
         });
-        setShowEditModal(true); // Open the modal
+    
+        setShowEditModal(true);
     };
     
     
+    const getWaiterRevenue = (waiter) => {
+        return tables
+            .filter(table => (table.waiter_name || "").trim().toLowerCase() === waiter.first_name.trim().toLowerCase())
+            .reduce((sum, table) => sum + (table.revenue || 0), 0);
+    };
     
+    
+    const getWaiterRevenues = () => {
+        return waiters.map(waiter => {
+            const revenue = tables
+                .filter(table => (table.waiter_name || "").trim().toLowerCase() === waiter.first_name.trim().toLowerCase())
+                .reduce((sum, table) => sum + (table.revenue || 0), 0);
+            return { ...waiter, revenue };
+        });
+    };
+    
+    const topWaiter = useMemo(() => {
+        const revenues = getWaiterRevenues();
+        if (!revenues || revenues.length === 0) return null;
+    
+        return revenues.reduce((top, curr) =>
+            curr.revenue > (top?.revenue || 0) ? curr : top,
+            null
+        );
+    }, [waiters, tables]);
+    
+      
     
     const handleChangeRole = (e) => {
         const { value } = e.target;
@@ -84,15 +185,34 @@ function Manager() {
         }));
     };
     
-    const handleSubmitEdit = async () => {
-        console.log("Submitting employee update", updatedEmployee);  // Log the updated data
+    const handleSubmitEdit = async (e) => {
+        e.preventDefault(); // prevent page reload
+    
         try {
-            const response = await axios.put(`/cafeApi/employee/${selectedEmployee.id}/`, updatedEmployee);
-            console.log('Employee updated:', response.data);
+            const response = await axios.put(
+                `http://127.0.0.1:8000/cafeApi/employee/${selectedEmployee.id}/update/`,
+                updatedEmployee
+            );
+            console.log("Employee updated:", response.data);
+    
             setShowEditModal(false);
-            // Optionally, refresh employee list or update state accordingly
+    
+            // ✅ Refresh both waiters and kitchen staff immediately
+            const [updatedWaiters, updatedKitchenStaff] = await Promise.all([
+                fetchWaiters(),
+                fetchKitchenStaff(),
+            ]);
+    
+            setWaiters(updatedWaiters);
+            setKitchenStaff(updatedKitchenStaff);
+    
+            // ✅ Force React to re-render by flipping selectedTab
+            setSelectedTab("dummy"); // Switch to a dummy tab
+            setTimeout(() => setSelectedTab("employees"), 10); // Switch back to refresh UI
+    
         } catch (error) {
-            console.error("Error updating employee:", error);
+            console.error("Error updating employee:", error.response?.data || error.message);
+            alert("Failed to update employee.");
         }
     };
     
@@ -100,32 +220,50 @@ function Manager() {
     
     
     useEffect(() => {
-        const loadWaiters = async () => {
-            try {
-                const response = await axios.get("http://127.0.0.1:8000/cafeApi/waiters/");
-                console.log("Fetched Waiters:", response.data); // Log to check
-                setWaiters(response.data);
-            } catch (error) {
-                console.error("Error fetching waiters:", error);
-            }
+        const handleKeyDown = (e) => {
+          if (e.key === "Escape") setShowOrdersPopup(false);
         };
-        
-        const loadKitchenStaff = async () => {
-            try {
-                const response = await axios.get("http://127.0.0.1:8000/cafeApi/kitchen_staff/");
-                console.log("Fetched Kitchen Staff:", response.data); // Log to check
-                setKitchenStaff(response.data);
-            } catch (error) {
-                console.error("Error fetching kitchen staff:", error);
-            }
-        };
-        
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
 
-        if (selectedTab === "employees") {
-            loadWaiters();
-            loadKitchenStaff();
+    useEffect(() => {
+        if (showOrdersPopup) {
+          document.body.style.overflow = "hidden";
+        } else {
+          document.body.style.overflow = "unset";
         }
-    }, [selectedTab]);
+    }, [showOrdersPopup]);
+            
+    
+    
+    useEffect(() => {
+        const loadWaiters = async () => {
+          try {
+            const response = await axios.get("http://127.0.0.1:8000/cafeApi/waiters/");
+            console.log("Fetched Waiters:", response.data);
+            setWaiters(response.data);
+          } catch (error) {
+            console.error("Error fetching waiters:", error);
+          }
+        };
+      
+        const loadKitchenStaff = async () => {
+          try {
+            const response = await axios.get("http://127.0.0.1:8000/cafeApi/kitchen_staff/");
+            console.log("Fetched Kitchen Staff:", response.data);
+            setKitchenStaff(response.data);
+          } catch (error) {
+            console.error("Error fetching kitchen staff:", error);
+          }
+        };
+      
+        if (selectedTab === "employees" || selectedTab === "tables") {
+          loadWaiters();
+          loadKitchenStaff();
+        }
+      }, [selectedTab]);
+      
 
     const availableCategories = [
         "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian",
@@ -192,46 +330,26 @@ function Manager() {
             const tablesData = await fetchTables();
             setTables(tablesData || []);
         };
-        if (selectedTab === "tables") {
+    
+        // Load when employees tab or tables tab is selected
+        if (selectedTab === "tables" || selectedTab === "employees") {
             loadTables();
         }
     }, [selectedTab]);
+    
 
-    const handleViewOrders = async (tableId) => {
+    const handleViewOrders = async (tableId, tableNumber) => {
         try {
-            // Toggle visibility of orders for the current table
-            if (visibleOrders[tableId]) {
-                // Hide orders by deleting the table ID from visibleOrders state
-                setVisibleOrders((prevOrders) => {
-                    const newOrders = { ...prevOrders };
-                    delete newOrders[tableId]; // Remove the table from visible orders to hide it
-                    return newOrders;
-                });
-                return; // Exit here if we're hiding the orders
-            }
-    
-            // Fetch orders if not visible
-            const tableOrders = await fetchOrdersForTable(tableId);
-            console.log("Fetched Orders for Table", tableId, tableOrders);
-    
-            // Save the orders in the state
-            setOrders((prevOrders) => ({
-                ...prevOrders,
-                [tableId]: {
-                    orders: tableOrders,
-                    revenue: tableOrders.reduce((sum, order) => sum + parseFloat(order.total_price || 0), 0),
-                },
-            }));
-    
-            // Set the orders as visible for this table
-            setVisibleOrders((prevOrders) => ({
-                ...prevOrders,
-                [tableId]: true,
-            }));
+          const tableOrders = await fetchOrdersForTable(tableId);
+      
+          setSelectedTableOrders(tableOrders || []);
+          setSelectedTableNumber(tableNumber);
+          setShowOrdersPopup(true);
         } catch (error) {
-            console.error("Error fetching orders:", error);
+          console.error("Error fetching orders for table:", error);
         }
-    };
+      };
+      
     
     const handleViewOrderDetails = (order) => {
         setSelectedOrder(order);
@@ -263,12 +381,35 @@ function Manager() {
     
     const handleInputChange = (e, isEdit = false) => {
         const { name, value } = e.target;
+        let processedValue = value;
+    
+        // Replace comma with dot for number fields
+        if (["price", "calories", "cooking_time", "availability", "production_cost"].includes(name)) {
+            processedValue = processedValue.replace(',', '.');
+        }
+    
+        if (name === "allergies") {
+            const parsed = processedValue
+                .split(',')
+                .map(item => item.trim())
+                .filter(Boolean);
+    
+            if (isEdit) {
+                setEditItem(prev => ({ ...prev, allergies: parsed }));
+            } else {
+                setNewItem(prev => ({ ...prev, allergies: parsed }));
+            }
+            return;
+        }
+    
         if (isEdit) {
-            setEditItem({ ...editItem, [name]: value });
+            setEditItem({ ...editItem, [name]: processedValue });
         } else {
-            setNewItem({ ...newItem, [name]: value });
+            setNewItem({ ...newItem, [name]: processedValue });
         }
     };
+    
+      
 
     const handleCategoryChange = (category, isEdit = false) => {
         if (isEdit) {
@@ -339,21 +480,34 @@ function Manager() {
     };
 
     const handleEditItem = (item) => {
+        // Force price and cost into a dot-decimal string format (2 decimal places if needed)
+        const formattedPrice = typeof item.price === "number"
+            ? item.price.toFixed(2).replace(",", ".")
+            : item.price?.toString().replace(",", ".");
+    
+        const formattedCost = typeof item.production_cost === "number"
+            ? item.production_cost.toFixed(2).replace(",", ".")
+            : item.production_cost?.toString().replace(",", ".");
+    
         setEditItem({
             ...item,
+            price: formattedPrice,
             category: Array.isArray(item.category) ? item.category : JSON.parse(item.category || "[]"),
-            allergies: item.allergies.length === 0 ? "none" : item.allergies, 
-            image: item.image, 
+            allergies: item.allergies.join(", "), 
+            image: item.image,
         });
     
-        setEditPreviewImage(item.image); 
+        setEditPreviewImage(item.image);
+    
         setProductionCosts((prev) => ({
             ...prev,
-            [item.id]: item.production_cost || ""
+            [item.id]: formattedCost
         }));
-        
+    
         setShowEditPopup(true);
     };
+    
+    
     
     const handleUpdateItem = async () => {
         if (!editItem.name || !editItem.calories || !editItem.price || editItem.category.length === 0) {
@@ -365,7 +519,30 @@ function Manager() {
     
         formData.append("name", editItem.name);
         formData.append("price", editItem.price);
-        formData.append("allergies", editItem.allergies === "None" ? [] : editItem.allergies); 
+        let rawAllergies = editItem.allergies;
+        let finalAllergies;
+        try {
+        // Try parsing JSON if it's a stringified array
+        if (typeof rawAllergies === "string" && rawAllergies.trim().startsWith("[")) {
+            finalAllergies = JSON.parse(rawAllergies);
+        } else if (Array.isArray(rawAllergies)) {
+            finalAllergies = rawAllergies;
+        } else {
+            finalAllergies = rawAllergies.split(",").map(a => a.trim()).filter(Boolean);
+        }
+        } catch (e) {
+        console.warn("Failed to parse allergies, defaulting to array split:", e);
+        finalAllergies = rawAllergies.split(",").map(a => a.trim()).filter(Boolean);
+        }
+
+        // ✅ Correct allergy handling
+        const allergies = Array.isArray(finalAllergies) ? finalAllergies : [];
+        allergies.forEach(allergy => {
+            formData.append("allergies", allergy); // Don't JSON.stringify
+        });
+
+
+
         formData.append("calories", editItem.calories);
         formData.append("cooking_time", editItem.cooking_time);
         formData.append("availability", editItem.availability);
@@ -428,7 +605,7 @@ function Manager() {
         } else if (equal60 > 0 && above60 > 0) {
             return { color: 'yellow', message: 'Some items have a profit margin of 60%' };
         } else {
-            return { color: 'green', message: 'All items profit margin above 60%' };
+            return { color: 'green', message: 'Overall profit margin above 60%' };
         }
     };
     
@@ -504,25 +681,35 @@ function Manager() {
                         {/* Waiters Table */}
                         <div className="employee-section">
                             <h4>🍽️ Waiters</h4>
+                            <div className="waiter-note">
+                                Best performing waiter has a crown 👑 next to their name. (Performance is based on table revenue, which is the total from all tables assigned to the waiter.)
+                            </div>
                             <table className="employee-table">
                                 <thead>
                                     <tr>
-                                        <th>Name</th>
-                                        <th>Email</th>
-                                        <th>Phone</th>
-                                        <th>Actions</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Table Revenue (£)</th>
+                                    <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {waiters.length > 0 ? (
                                         waiters.map((waiter) => (
                                             <tr key={waiter.id}>
-                                                <td>{waiter.first_name} {waiter.last_name}</td>
+                                                <td>
+                                                    {waiter.first_name} {waiter.last_name}
+                                                    {topWaiter && topWaiter.id === waiter.id && (
+                                                        <span style={{ marginLeft: "6px" }} title="Top Performer">👑</span>
+                                                    )}
+                                                </td>
                                                 <td>{waiter.email}</td>
                                                 <td>{waiter.phone || 'N/A'}</td>
+                                                <td>£{getWaiterRevenue(waiter).toFixed(2)}</td> {/* ✅ Display revenue */}
                                                 <td>
-                                                    <button onClick={() => handleEditEmployee(waiter)}>Edit</button>
-                                                    <button onClick={() => handleFireEmployee(waiter.id)}>Fire</button>
+                                                <button onClick={() => handleEditEmployee(waiter)}>Edit</button>
+                                                <button onClick={() => handleFireEmployee(waiter.id)}>Fire</button>
                                                 </td>
                                             </tr>
                                         ))
@@ -555,7 +742,7 @@ function Manager() {
                                                 <td>{staff.email}</td>
                                                 <td>{staff.phone || 'N/A'}</td>
                                                 <td>
-                                                    <button onClick={() => handleEditEmployee(staff.id)}>Edit</button>
+                                                    <button onClick={() => handleEditEmployee(staff)}>Edit</button>
                                                     <button onClick={() => handleFireEmployee(staff.id)}>Fire</button>
                                                 </td>
                                             </tr>
@@ -578,8 +765,7 @@ function Manager() {
                         <table className="notifications-table">
                             <thead>
                                 <tr>
-                                    <th>Type</th>
-                                    <th>Table</th>
+                                    <th>Type</th>                                    
                                     <th>Message</th>
                                     <th>Time</th>
                                     <th>Action</th>
@@ -590,7 +776,6 @@ function Manager() {
                                     notifications.map((notification) => (
                                         <tr key={notification.id}>
                                             <td>{notification.notification_type}</td>
-                                            <td>{notification.table ? notification.table.number : "N/A"}</td>
                                             <td>{notification.message}</td>
                                             <td>{new Date(notification.created_at).toLocaleString()}</td>
                                             <td>
@@ -610,16 +795,47 @@ function Manager() {
                     </div>
                 )}
                 {selectedTab === "tables" && (
+                    
                     <div className="tables-container">
                         <h3>Tables and Orders</h3>
+                        <div className="add-table-form">
+                            <h4>Add New Table</h4>
+
+                            <div className="add-table-inner">
+                                <div className="table-input-row">
+                                    <input
+                                        type="number"
+                                        placeholder="Table Number"
+                                        value={newTableNumber}
+                                        onChange={(e) => setNewTableNumber(e.target.value)}
+                                    />
+                                    <select
+                                        value={newTableWaiterId}
+                                        onChange={(e) => setNewTableWaiterId(e.target.value)}
+                                    >
+                                        <option value="">Select Waiter</option>
+                                        {waiters.map((waiter) => (
+                                            <option key={waiter.id} value={waiter.id}>
+                                                {waiter.first_name} {waiter.last_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <button className="centered-add-btn" onClick={handleAddTable}>Add Table</button>
+                            </div>
+                        </div>
+
+
                         <table className="tables-table">
-                            <thead>
-                                <tr>
-                                    <th>Table #</th>
-                                    <th>Status</th>
-                                    <th>Revenue (£)</th>
-                                    <th>Actions</th>
-                                </tr>
+                        <thead>
+                            <tr>
+                                <th>Table #</th>
+                                <th>Status</th>
+                                <th>Waiter</th> {/* ✅ Add this */}
+                                <th>Revenue (£)</th>
+                                <th>Actions</th>
+                            </tr>
                             </thead>
                             <tbody>
                                 {tables.length > 0 ? (
@@ -627,14 +843,31 @@ function Manager() {
                                         <tr key={table.id}>
                                             <td>{table.number}</td>
                                             <td>{table.status}</td>
+                                            <td>{table.waiter_name || "—"}</td> {/* ✅ Show assigned waiter */}
                                             <td>£{(table.revenue !== undefined ? table.revenue : 0).toFixed(2)}</td> 
                                             <td>
-                                                <button 
-                                                    className="view-orders-button"
-                                                    onClick={() => handleViewOrders(table.id)}
-                                                >
+                                                <button className="view-orders-button" onClick={() => handleViewOrders(table.id, table.number)}>
                                                     {visibleOrders[table.id] ? "Hide Orders" : "View Orders"}
                                                 </button>
+                                                <button
+                                                    className="edit-btn"
+                                                    onClick={() => {
+                                                    setEditedTable({
+                                                    id: table.id,
+                                                    number: table.number,
+                                                    status: table.status,
+                                                    waiter: waiters.find(w => w.first_name === table.waiter_name)?.id || ""
+                                                    });
+                                                    setShowEditTablePopup(true);
+                                                    }}
+                                                    >
+                                                    Edit
+                                                </button>
+
+                                                <button className="delete-btn" onClick={() => handleDeleteTable(table.id)} style={{ marginLeft: "8px" }}>
+                                                    Delete
+                                                </button>
+                                                
                                             </td>
                                         </tr>
                                     ))
@@ -680,6 +913,7 @@ function Manager() {
                             )
                         ))}
                     </div>
+                    
                 )}
 
 
@@ -829,14 +1063,21 @@ function Manager() {
                         <div className="edit-grid">
                             <label>Name<input type="text" name="name" value={editItem.name} onChange={(e) => handleInputChange(e, true)} /></label>
                             <label>Calories<input type="number" name="calories" value={editItem.calories} onChange={(e) => handleInputChange(e, true)} /></label>
-                            <label>Allergies<input type="text" name="allergies" value={editItem.allergies} onChange={(e) => handleInputChange(e, true)} /></label>
+                            <label>Allergies
+                                <input type="text" name="allergies" value={editItem.allergies} onChange={(e) => handleInputChange(e, true)} />
+                            </label>
                             <label>Cooking Time<input type="number" name="cooking_time" value={editItem.cooking_time} onChange={(e) => handleInputChange(e, true)} /></label>
                             <label>Availability<input type="number" name="availability" value={editItem.availability} onChange={(e) => handleInputChange(e, true)} /></label>
-                            <label>Price<input type="number" name="price" value={editItem.price} onChange={(e) => handleInputChange(e, true)} /></label>
+                            <label>Price<input
+                                    type="text"
+                                    name="price"
+                                    value={editItem.price}
+                                    onChange={(e) => handleInputChange(e, true)}/>
+                            </label>
                             <label>
                                 Production Cost
                                 <input
-                                    type="number"
+                                    type="text"
                                     name="production_cost"
                                     value={productionCosts[editItem?.id] ?? ""}
                                     onChange={(e) => handleCostChange(editItem.id, e.target.value)}
@@ -870,6 +1111,78 @@ function Manager() {
                     </div>
                 </>
             )}
+
+            {showEditTablePopup && (
+            <>
+                <div className="overlay" onClick={() => setShowEditTablePopup(false)}></div>
+                <div className="edit-popup edit-table-popup">
+                    <h3>Edit Table</h3>
+
+                    <div className="edit-table-grid">
+                        <label>
+                            Table Number:
+                            <input
+                                type="number"
+                                value={editedTable.number}
+                                onChange={(e) =>
+                                    setEditedTable({ ...editedTable, number: e.target.value })
+                                }
+                            />
+                        </label>
+
+                        <label>
+                            Status:
+                            <select
+                                value={editedTable.status}
+                                onChange={(e) =>
+                                    setEditedTable({ ...editedTable, status: e.target.value })
+                                }
+                            >
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="paid for">Paid For</option>
+                                <option value="unconfirmed">Unconfirmed</option>
+                                <option value="canceled">Canceled</option>
+                            </select>
+                        </label>
+
+                        <label className="full-width">
+                            Assigned Waiter:
+                            <select
+                                value={editedTable.waiter || ""}
+                                onChange={(e) =>
+                                    setEditedTable({ ...editedTable, waiter: e.target.value })
+                                }
+                            >
+                                <option value="">Select Waiter</option>
+                                {waiters.map((w) => (
+                                    <option key={w.id} value={w.id}>
+                                        {w.first_name} {w.last_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                    </div>
+
+                    <div className="popup-buttons">
+                        <button
+                            onClick={() =>
+                                handleEditTable(editedTable.id, {
+                                    number: editedTable.number,
+                                    status: editedTable.status,
+                                    waiter_id: editedTable.waiter,
+                                })
+                            }
+                        >
+                            Save
+                        </button>
+                        <button onClick={() => setShowEditTablePopup(false)}>Cancel</button>
+                    </div>
+                </div>
+
+            </>
+            )}
+            
             {showEditModal && (
     <>
                     {/* Overlay to dim the background */}
@@ -928,13 +1241,14 @@ function Manager() {
                                 <label>
                                     Role
                                     <select
-                                        value={updatedEmployee.role}  // This binds the role value from updatedEmployee state
+                                        value={updatedEmployee.role}
                                         onChange={handleChangeRole}
                                         className="select-role"
                                     >
                                         <option value="waiter">Waiter</option>
                                         <option value="kitchen staff">Kitchen Staff</option>
                                     </select>
+
                                 </label>
 
                             </div>
@@ -949,8 +1263,53 @@ function Manager() {
                 </>
             )}
 
+            {showOrdersPopup && (
+            <>
+                <div className="overlay" onClick={() => setShowOrdersPopup(false)}></div>
+                <div className="order-popup">
+                <div className="order-popup-content">
+                    <h3>Orders for Table #{selectedTableNumber}</h3>
 
-        
+                    {selectedTableOrders.length > 0 ? (
+                    <table className="orders-table">
+                        <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Total Price (£)</th>
+                            <th>Status</th>
+                            <th>Items</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {selectedTableOrders.map((order) => (
+                            <tr key={order.id}>
+                            <td>{order.id}</td>
+                            <td>£{parseFloat(order.total_price).toFixed(2)}</td>
+                            <td>{order.status}</td>
+                            <td>
+                                <ul>
+                                {order.items.map((item, index) => (
+                                    <li key={index}>
+                                    {item.name} x {item.quantity}
+                                    </li>
+                                ))}
+                                </ul>
+                            </td>
+                            </tr>
+                        ))}
+                        </tbody>
+                    </table>
+                    ) : (
+                    <p>No orders for this table.</p>
+                    )}
+
+                    <button className="close-popup" onClick={() => setShowOrdersPopup(false)}>
+                    Close
+                    </button>
+                </div>
+                </div>
+            </>
+            )}
 
         </div>
     );
