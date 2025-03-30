@@ -412,4 +412,15 @@ button:hover {
     animation: fadeIn 0.3s ease-in-out;
   }
   
+  .waiter-note {
+    font-size: 0.85rem;         /* Smaller text */
+    font-weight: bold;          /* Bold text */
+    font-family: 'Poppins', sans-serif; /* Modern, clean font */
+    color: #444;                /* Slightly muted black for elegance */
+    margin-bottom: 10px;
+    padding: 6px 10px;
+    border-left: 4px solid #ffd700; /* Golden left border for crown context */
+    background-color: #fdf9e7; /* Subtle background to make it stand out */
+    border-radius: 4px;
+  }
   

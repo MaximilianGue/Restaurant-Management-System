@@ -5,7 +5,7 @@ import axios from "axios";
 import { fetchTables, fetchOrdersForTable } from "./api";
 import "./manager.css";
 import { fetchWaiters, fetchKitchenStaff } from "./api";
-
+import { useMemo } from "react";
 
 function Manager() {
     const [menuItems, setMenuItems] = useState([]);
@@ -82,29 +82,33 @@ function Manager() {
     };
     
     
-    
-    
     const getWaiterRevenue = (waiter) => {
-        const waiterTables = tables.filter(table => table.waiter_name === waiter.first_name); // Match by first name
-        return waiterTables.reduce((sum, table) => sum + (table.revenue || 0), 0);
+        return tables
+            .filter(table => (table.waiter_name || "").trim().toLowerCase() === waiter.first_name.trim().toLowerCase())
+            .reduce((sum, table) => sum + (table.revenue || 0), 0);
     };
+    
     
     const getWaiterRevenues = () => {
         return waiters.map(waiter => {
-          const revenue = tables
-            .filter(table => table.waiter_name === `${waiter.first_name} ${waiter.last_name}`)
-            .reduce((sum, table) => sum + (table.revenue || 0), 0);
-      
-          return { ...waiter, revenue };
+            const revenue = tables
+                .filter(table => (table.waiter_name || "").trim().toLowerCase() === waiter.first_name.trim().toLowerCase())
+                .reduce((sum, table) => sum + (table.revenue || 0), 0);
+            return { ...waiter, revenue };
         });
-      };
-      
-      const topWaiter = (() => {
-        const revenues = getWaiterRevenues();
-        return revenues.reduce((top, curr) => (curr.revenue > (top?.revenue || 0) ? curr : top), null);
-      })();
-      
+    };
     
+    const topWaiter = useMemo(() => {
+        const revenues = getWaiterRevenues();
+        if (!revenues || revenues.length === 0) return null;
+    
+        return revenues.reduce((top, curr) =>
+            curr.revenue > (top?.revenue || 0) ? curr : top,
+            null
+        );
+    }, [waiters, tables]);
+    
+      
     
     const handleChangeRole = (e) => {
         const { value } = e.target;
@@ -587,6 +591,9 @@ function Manager() {
                         {/* Waiters Table */}
                         <div className="employee-section">
                             <h4>🍽️ Waiters</h4>
+                            <div className="waiter-note">
+                                Best performing waiter has a crown 👑 next to their name. (Performance is based on table revenue, which is the total from all tables assigned to the waiter.)
+                            </div>
                             <table className="employee-table">
                                 <thead>
                                     <tr>
@@ -601,7 +608,12 @@ function Manager() {
                                     {waiters.length > 0 ? (
                                         waiters.map((waiter) => (
                                             <tr key={waiter.id}>
-                                                <td>{waiter.first_name} {waiter.last_name}</td>
+                                                <td>
+                                                    {waiter.first_name} {waiter.last_name}
+                                                    {topWaiter && topWaiter.id === waiter.id && (
+                                                        <span style={{ marginLeft: "6px" }} title="Top Performer">👑</span>
+                                                    )}
+                                                </td>
                                                 <td>{waiter.email}</td>
                                                 <td>{waiter.phone || 'N/A'}</td>
                                                 <td>£{getWaiterRevenue(waiter).toFixed(2)}</td> {/* ✅ Display revenue */}
@@ -663,8 +675,7 @@ function Manager() {
                         <table className="notifications-table">
                             <thead>
                                 <tr>
-                                    <th>Type</th>
-                                    <th>Table</th>
+                                    <th>Type</th>                                    
                                     <th>Message</th>
                                     <th>Time</th>
                                     <th>Action</th>
@@ -675,7 +686,6 @@ function Manager() {
                                     notifications.map((notification) => (
                                         <tr key={notification.id}>
                                             <td>{notification.notification_type}</td>
-                                            <td>{notification.table ? notification.table.number : "N/A"}</td>
                                             <td>{notification.message}</td>
                                             <td>{new Date(notification.created_at).toLocaleString()}</td>
                                             <td>

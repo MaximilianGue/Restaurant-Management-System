@@ -416,7 +416,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
           <thead>
             <tr>
               <th>Type</th>
-              <th>Table</th>
               <th>Message</th>
               <th>Time</th>
               <th>Action</th>
@@ -427,7 +426,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
               notifications.map((notification) => (
                 <tr key={notification.id}>
                   <td>{notification.notification_type}</td>
-                  <td>{notification.table ? notification.table.number : "N/A"}</td>
                   <td>{notification.message}</td>
                   <td>{new Date(notification.created_at).toLocaleString()}</td>
                   <td>
