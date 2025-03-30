@@ -162,7 +162,9 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
 
   // Filter tables assigned to this waiter
   const waiterName = waiterDetails?.first_name || "";
-  const assignedTables = tables.filter(table => table.waiter_name === waiterName);  
+  const assignedTables = tables.filter(table => table.waiter === waiterDetails?.id);
+
+  
 
   const toggleHiddenItem = (itemName) => {
     setHiddenItems((prevHiddenItems) => {

@@ -4,6 +4,8 @@ from .views import get_employees
 from . import views
 from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, NotificationViewSet, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView,WaiterDetailView,TableStaffIDView
 from .views import update_table
+from .views import TableStaffIDView
+
 
 notification_list = NotificationViewSet.as_view({'get': 'list', 'post': 'create'})
 notify_staff = NotificationViewSet.as_view({'post': 'notify_staff'})
@@ -24,7 +26,7 @@ urlpatterns = [
     path("tables/<int:pk>/", TableDetailView.as_view(), name="table-detail"),
     path('tables/<int:table_number>/staff_id/', TableStaffIDView.as_view(), name='table-staff-id'),
     path('tables/<int:table_id>/update/', update_table, name='update_table'),
-
+    
 
     # Other endpoints...
     path("customers/", CustomerView.as_view(), name="customers"),

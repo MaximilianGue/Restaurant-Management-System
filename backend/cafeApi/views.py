@@ -218,22 +218,13 @@ class TableStaffIDView(APIView):
     def get(self, request, table_number):
         try:
             table = Table.objects.get(number=table_number)
-            waiter_name = table.waiter_name
-
-            if not waiter_name:
-                return Response({"detail": "No waiter assigned to this table."}, status=status.HTTP_404_NOT_FOUND)
-
-            # Try to match using just first name
-            waiter = Waiter.objects.filter(first_name=waiter_name).first()
-
-            if not waiter:
-                return Response({"detail": "No matching waiter found for this table."}, status=status.HTTP_404_NOT_FOUND)
-
-            return Response({"staff_id": waiter.Staff_id}, status=status.HTTP_200_OK)
-
+            if table.waiter:
+                return Response({"staff_id": table.waiter.Staff_id})
+            else:
+                return Response({"error": "No waiter is assigned to your table."}, status=status.HTTP_404_NOT_FOUND)
         except Table.DoesNotExist:
-            return Response({"detail": "Table not found."}, status=status.HTTP_404_NOT_FOUND)
-
+            return Response({"error": "Table does not exist."}, status=status.HTTP_404_NOT_FOUND)
+            
 class CustomerView(generics.ListCreateAPIView):
     serializer_class = CustomerSerializer
     queryset = Customer.objects.all()  # It gets all customers as a JSON list object
