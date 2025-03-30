@@ -4,6 +4,7 @@ import { fetchNotificationsForStaff } from "./api";
 import axios from "axios";
 import { fetchTables, fetchOrdersForTable } from "./api";
 import "./manager.css";
+import { fetchWaiters, fetchKitchenStaff } from "./api";
 
 
 function Manager() {
@@ -66,17 +67,22 @@ function Manager() {
     
 
     const handleEditEmployee = (employee) => {
-        console.log("Editing employee:", employee);  // Log the selected employee
+        console.log("Editing employee:", employee);
+    
         setSelectedEmployee(employee);
         setUpdatedEmployee({
             first_name: employee.first_name,
             last_name: employee.last_name,
             email: employee.email,
             phone: employee.phone,
-            role: employee.role || 'waiter',  // Make sure the role is passed correctly
+            role: employee.role?.toLowerCase() || 'waiter', // use provided role
         });
-        setShowEditModal(true); // Open the modal
+    
+        setShowEditModal(true);
     };
+    
+    
+    
     
     const getWaiterRevenue = (waiter) => {
         const waiterTables = tables.filter(table => table.waiter_name === waiter.first_name); // Match by first name
@@ -108,17 +114,39 @@ function Manager() {
         }));
     };
     
-    const handleSubmitEdit = async () => {
-        console.log("Submitting employee update", updatedEmployee);  // Log the updated data
+    const handleSubmitEdit = async (e) => {
+        e.preventDefault(); // prevent page reload
+    
         try {
-            const response = await axios.put(`/cafeApi/employee/${selectedEmployee.id}/`, updatedEmployee);
-            console.log('Employee updated:', response.data);
+            const response = await axios.put(
+                `http://127.0.0.1:8000/cafeApi/employee/${selectedEmployee.id}/update/`,
+                updatedEmployee
+            );
+            console.log("Employee updated:", response.data);
+    
             setShowEditModal(false);
-            // Optionally, refresh employee list or update state accordingly
+    
+            // ✅ Refresh both waiters and kitchen staff immediately
+            const [updatedWaiters, updatedKitchenStaff] = await Promise.all([
+                fetchWaiters(),
+                fetchKitchenStaff(),
+            ]);
+    
+            setWaiters(updatedWaiters);
+            setKitchenStaff(updatedKitchenStaff);
+    
+            // ✅ Force React to re-render by flipping selectedTab
+            setSelectedTab("dummy"); // Switch to a dummy tab
+            setTimeout(() => setSelectedTab("employees"), 10); // Switch back to refresh UI
+    
         } catch (error) {
-            console.error("Error updating employee:", error);
+            console.error("Error updating employee:", error.response?.data || error.message);
+            alert("Failed to update employee.");
         }
     };
+    
+    
+    
     
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -612,7 +640,7 @@ function Manager() {
                                                 <td>{staff.email}</td>
                                                 <td>{staff.phone || 'N/A'}</td>
                                                 <td>
-                                                    <button onClick={() => handleEditEmployee(staff.id)}>Edit</button>
+                                                    <button onClick={() => handleEditEmployee(staff)}>Edit</button>
                                                     <button onClick={() => handleFireEmployee(staff.id)}>Fire</button>
                                                 </td>
                                             </tr>
@@ -986,13 +1014,14 @@ function Manager() {
                                 <label>
                                     Role
                                     <select
-                                        value={updatedEmployee.role}  // This binds the role value from updatedEmployee state
+                                        value={updatedEmployee.role}
                                         onChange={handleChangeRole}
                                         className="select-role"
                                     >
                                         <option value="waiter">Waiter</option>
                                         <option value="kitchen staff">Kitchen Staff</option>
                                     </select>
+
                                 </label>
 
                             </div>

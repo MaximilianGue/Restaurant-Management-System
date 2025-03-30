@@ -69,6 +69,10 @@ class Waiter(models.Model):
 
     def __str__(self):
         return f"Staff_id {self.Staff_id} | Name: {self.first_name} {self.last_name} | Email: {self.email} | Phone: {self.phone if self.phone else 'None'}"
+    
+    @property
+    def role(self):
+        return "Waiter"
 
 class KitchenStaff(models.Model):
     Staff_id = models.CharField(max_length=50, unique=True)
@@ -79,6 +83,10 @@ class KitchenStaff(models.Model):
 
     def __str__(self):
         return f"Staff_id {self.Staff_id} | Name: {self.first_name} {self.last_name} | Email: {self.email} | Phone: {self.phone if self.phone else 'None'}"
+    
+    @property
+    def role(self):
+        return "Kitchen Staff"
 
 class Order(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True, related_name='orders')

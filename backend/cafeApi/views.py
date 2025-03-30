@@ -721,23 +721,26 @@ def assign_waiter_to_table(request, table_id):
     table.save()
     return Response({"message": f"Waiter {waiter.first_name} {waiter.last_name} assigned to Table {table.number}"}, status=status.HTTP_200_OK)
 
+
 @api_view(['PUT'])
 def update_employee(request, employee_id):
-    # Fetch the employee (Waiter or KitchenStaff) by ID
+    print("Data received in PUT:", request.data)
+
+    # Try to fetch both a waiter and kitchen staff with this ID
     waiter = Waiter.objects.filter(id=employee_id).first()
     kitchen_staff = KitchenStaff.objects.filter(id=employee_id).first()
 
-    # Check if employee exists and handle based on type (Waiter or Kitchen Staff)
-    if waiter:
-        employee = waiter
-        is_waiter = True
-    elif kitchen_staff:
+    # ✅ Prioritize kitchen staff if both exist with same ID
+    if kitchen_staff:
         employee = kitchen_staff
         is_waiter = False
+    elif waiter:
+        employee = waiter
+        is_waiter = True
     else:
         return Response({"detail": "Employee not found."}, status=404)
 
-    # Update employee details
+    # Update basic fields
     employee.first_name = request.data.get("first_name", employee.first_name)
     employee.last_name = request.data.get("last_name", employee.last_name)
     employee.email = request.data.get("email", employee.email)
@@ -746,34 +749,41 @@ def update_employee(request, employee_id):
     # Handle role change
     role = request.data.get("role")
     if role:
-        # If role is changing to 'waiter' from kitchen staff
-        if role.lower() == "waiter" and not is_waiter:
-            # Moving from KitchenStaff to Waiter
-            waiter_data = {
-                "first_name": employee.first_name,
-                "last_name": employee.last_name,
-                "email": employee.email,
-                "phone": employee.phone,
-            }
-            new_waiter = Waiter.objects.create(**waiter_data)
-            kitchen_staff.delete()  # Remove old kitchen staff
-            employee = new_waiter  # Point to the new waiter
-            is_waiter = True
-        # If role is changing to 'kitchen staff' from waiter
-        elif role.lower() == "kitchen staff" and is_waiter:
-            # Moving from Waiter to KitchenStaff
-            kitchen_staff_data = {
-                "first_name": employee.first_name,
-                "last_name": employee.last_name,
-                "email": employee.email,
-                "phone": employee.phone,
-            }
-            new_kitchen_staff = KitchenStaff.objects.create(**kitchen_staff_data)
-            waiter.delete()  # Remove old waiter
-            employee = new_kitchen_staff  # Point to the new kitchen staff
-            is_waiter = False
+        current_role = "waiter" if is_waiter else "kitchen staff"
+        new_role = role.lower()
 
-    # Save the updated employee details
+        if new_role != current_role:
+            if new_role == "waiter" and not is_waiter:
+                # Ensure no duplicate email for waiter
+                if Waiter.objects.filter(email=employee.email).exists():
+                    return Response({"detail": "A waiter with this email already exists."}, status=400)
+
+                new_waiter = Waiter.objects.create(
+                    first_name=employee.first_name,
+                    last_name=employee.last_name,
+                    email=employee.email,
+                    phone=employee.phone,
+                )
+                kitchen_staff.delete()
+                employee = new_waiter
+                is_waiter = True
+
+            elif new_role == "kitchen staff" and is_waiter:
+                # Ensure no duplicate email for kitchen staff
+                if KitchenStaff.objects.filter(email=employee.email).exclude(pk=employee.pk).exists():
+                    return Response({"detail": "A kitchen staff member with this email already exists."}, status=400)
+
+                new_kitchen_staff = KitchenStaff.objects.create(
+                    first_name=employee.first_name,
+                    last_name=employee.last_name,
+                    email=employee.email,
+                    phone=employee.phone,
+                )
+                waiter.delete()
+                employee = new_kitchen_staff
+                is_waiter = False
+
+    # Save updates (if no role switch happened, or after switching)
     employee.save()
 
     return Response({"detail": "Employee updated successfully."}, status=200)
