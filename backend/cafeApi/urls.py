@@ -56,6 +56,9 @@ urlpatterns = [
 
     path('employees/', get_employees, name='get-employees'),
     path('employee/<int:employee_id>/update/', views.update_employee, name='update_employee'),
-    path('employee/<int:employee_id>/fire/', views.fire_employee, name='fire_employee')
+    path('employee/<int:employee_id>/fire/', views.fire_employee, name='fire_employee'),
+
+    path("employee/create/", views.create_employee, name="create_employee")
+
 
 ]

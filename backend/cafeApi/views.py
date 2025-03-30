@@ -857,3 +857,37 @@ def update_table(request, table_id):
 
     table.save()
     return Response({"message": "Table updated successfully."}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def create_employee(request):
+    role = request.data.get("role", "").lower()
+    
+    if role not in ["waiter", "kitchen staff"]:
+        return Response({"error": "Invalid role. Must be 'waiter' or 'kitchen staff'."}, status=400)
+
+    required_fields = ["first_name", "last_name", "email"]
+    for field in required_fields:
+        if not request.data.get(field):
+            return Response({"error": f"{field.replace('_', ' ').capitalize()} is required."}, status=400)
+
+    base_data = {
+        "first_name": request.data.get("first_name"),
+        "last_name": request.data.get("last_name"),
+        "email": request.data.get("email"),
+        "phone": request.data.get("phone", ""),
+        "Staff_id": f"{role.replace(' ', '')}_{request.data.get('email')}".lower(),  # auto-generate staff ID
+    }
+
+    if role == "waiter":
+        if Waiter.objects.filter(email=base_data["email"]).exists():
+            return Response({"error": "A waiter with this email already exists."}, status=400)
+        waiter = Waiter.objects.create(**base_data)
+        serializer = WaiterSerializer(waiter)
+        return Response(serializer.data, status=201)
+
+    elif role == "kitchen staff":
+        if KitchenStaff.objects.filter(email=base_data["email"]).exists():
+            return Response({"error": "A kitchen staff member with this email already exists."}, status=400)
+        kitchen_staff = KitchenStaff.objects.create(**base_data)
+        serializer = KitchenStaffSerializer(kitchen_staff)
+        return Response(serializer.data, status=201)

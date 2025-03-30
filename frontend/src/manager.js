@@ -22,6 +22,7 @@ function Manager() {
         image: null,
         production_cost: "", 
       });
+    
       
 
     const [previewImage, setPreviewImage] = useState("");
@@ -53,6 +54,17 @@ function Manager() {
         phone: '',
         role: ''
     });
+
+    const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
+
+    const [newEmployee, setNewEmployee] = useState({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        role: 'waiter',
+    });
+
 
     const [productionCosts, setProductionCosts] = useState({});
 
@@ -356,7 +368,39 @@ function Manager() {
         setShowOrderPopup(true);
     };
     
-   
+    const handleAddEmployee = async (e) => {
+        e.preventDefault();
+    
+        try {
+            const response = await axios.post("http://127.0.0.1:8000/cafeApi/employee/create/", newEmployee);
+    
+            if (response.status === 201 || response.status === 200) {
+                alert("Employee added successfully!");
+                setNewEmployee({
+                    first_name: '',
+                    last_name: '',
+                    email: '',
+                    phone: '',
+                    role: 'waiter'
+                });
+                setShowAddEmployeeModal(false);
+    
+                const [updatedWaiters, updatedKitchenStaff] = await Promise.all([
+                    fetchWaiters(),
+                    fetchKitchenStaff(),
+                ]);
+    
+                setWaiters(updatedWaiters);
+                setKitchenStaff(updatedKitchenStaff);
+            } else {
+                alert("Failed to add employee.");
+            }
+        } catch (error) {
+            console.error("Error adding employee:", error.response?.data || error.message);
+            alert("Failed to add employee.");
+        }
+    };
+    
 
 
     useEffect(() => {
@@ -677,6 +721,9 @@ function Manager() {
                 {selectedTab === "employees" && (
                     <div className="employees-container">
                         <h3>Employee Management</h3>
+                        <button className="add-btn" onClick={() => setShowAddEmployeeModal(true)}>
+                            Add Employee
+                        </button>
 
                         {/* Waiters Table */}
                         <div className="employee-section">
@@ -1182,6 +1229,76 @@ function Manager() {
 
             </>
             )}
+
+            {showAddEmployeeModal && (
+            <>
+                <div className="overlay" onClick={() => setShowAddEmployeeModal(false)}></div>
+
+                <div className="edit-employee-popup">
+                    <h2>Add New Employee</h2>
+                    <form onSubmit={handleAddEmployee}>
+                        <div className="edit-grid">
+                            <label>
+                                First Name
+                                <input
+                                    type="text"
+                                    name="first_name"
+                                    value={newEmployee.first_name}
+                                    onChange={(e) => setNewEmployee({ ...newEmployee, first_name: e.target.value })}
+                                />
+                            </label>
+
+                            <label>
+                                Last Name
+                                <input
+                                    type="text"
+                                    name="last_name"
+                                    value={newEmployee.last_name}
+                                    onChange={(e) => setNewEmployee({ ...newEmployee, last_name: e.target.value })}
+                                />
+                            </label>
+
+                            <label>
+                                Email
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={newEmployee.email}
+                                    onChange={(e) => setNewEmployee({ ...newEmployee, email: e.target.value })}
+                                />
+                            </label>
+
+                            <label>
+                                Phone
+                                <input
+                                    type="text"
+                                    name="phone"
+                                    value={newEmployee.phone}
+                                    onChange={(e) => setNewEmployee({ ...newEmployee, phone: e.target.value })}
+                                />
+                            </label>
+
+                            <label>
+                                Role
+                                <select
+                                    value={newEmployee.role}
+                                    onChange={(e) => setNewEmployee({ ...newEmployee, role: e.target.value })}
+                                >
+                                    <option value="waiter">Waiter</option>
+                                    <option value="kitchen staff">Kitchen Staff</option>
+                                </select>
+                            </label>
+                        </div>
+
+                        <div className="popup-buttons">
+                            <button type="submit">Add Employee</button>
+                            <button type="button" onClick={() => setShowAddEmployeeModal(false)}>Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </>
+            )}
+
             
             {showEditModal && (
     <>
