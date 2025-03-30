@@ -287,7 +287,7 @@ class OrderView(APIView):
                 message=f"New order received for Table {table.number}",
                 table=table
             )
-            payment = Payment.objects.create(
+            Payment.objects.create(
                     order=order,
                     table=table,
                     amount=data["total_price"],
@@ -574,7 +574,7 @@ class CreateStripeCheckoutSessionView(APIView):
                 line_items=[{
                     'price_data': {
                         'currency': 'usd',
-                        'unit_amount': int(payment.amount * 100),  
+                        'unit_amount': int(payment.amount*100),  
                         'product_data': {'name': f"Payment for Order {payment.order.id}"},
                     },
                     'quantity': 1,
@@ -585,8 +585,8 @@ class CreateStripeCheckoutSessionView(APIView):
             )
 
             payment.stripe_session_id = checkout_session.id
+            
             payment.save()
-
             return Response({"checkout_url": checkout_session.url}, status=status.HTTP_200_OK)
 
         except Exception as e:
@@ -604,23 +604,23 @@ class StripePaymentSuccessView(APIView):
         payment = get_object_or_404(Payment, pk=pk)
         order = payment.order
 
-        if payment.status == "paid":
-            return redirect("http://localhost:3000/home")  # Already paid, redirect immediately
-
+        # Check if stripe_session_id exists before retrieving the session
         if not payment.stripe_session_id:
             return Response({"error": "No Stripe session ID found for this payment."},
                             status=400)
 
+        # Optionally, check if order is already marked as paid
+        if order.status == "paid for":
+            return Response({"message": "Order is already paid for."}, status=200)
+
         try:
             stripe_session = stripe.checkout.Session.retrieve(payment.stripe_session_id)
-
             if stripe_session.payment_status == "paid":
                 payment.status = "paid"
                 payment.save()
                 order.status = "paid for"
                 order.save()
-                return redirect("http://localhost:3000/home")  # Redirect on success
-
+                return Response({"message": "Order is paid for."}, status=200)
         except stripe.error.StripeError as e:
             return Response({"error": str(e)}, status=400)
 
@@ -643,13 +643,13 @@ class StripePaymentCancelView(APIView):
         order = payment.order  # Directly reference the related Order
 
         if payment.status == "paid":
-            return Response({"message": "Cannot cancel a paid payment."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Cannot cancel a paid payment."}, status=400)
 
         payment.status = "canceled"
         payment.save()
         order.status = "canceled"
         order.save()
-        return Response({"message": "Payment canceled!", "status": "canceled"}, status=status.HTTP_200_OK)
+        return Response({"message": "Payment canceled!"},status=200)
 
 class SalesPerWaiterView(APIView):
   

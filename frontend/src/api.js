@@ -408,10 +408,9 @@ export const createCheckoutSession = async (paymentId) => {
 export const verifyPayment = async (paymentId) => {
   try {
     const response = await api.get(`/payments/${paymentId}/verify/`);
-    console.log("Payment Verification Response:", response.data);
-    return response.data;
+    return response.status;
   } catch (error) {
-    console.error("Error verifying payment:", error.response?.data || error.message);
+    console.error("Error verifying payment:", error);
     return null;
   }
 };
@@ -420,8 +419,7 @@ export const verifyPayment = async (paymentId) => {
 export const cancelPayment = async (paymentId) => {
   try {
     const response = await api.get(`/payments/${paymentId}/cancel/`);
-    console.log("Payment Cancel Response:", response.data);
-    return response.data;
+    return response.status;
   } catch (error) {
     console.error("Error canceling payment:", error.response?.data || error.message);
     return null;
