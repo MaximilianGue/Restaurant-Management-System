@@ -55,11 +55,13 @@ function Manager() {
     const [productionCosts, setProductionCosts] = useState({});
 
     const handleCostChange = (itemId, cost) => {
+        const cleaned = cost.replace(',', '.');
         setProductionCosts((prev) => ({
             ...prev,
-            [itemId]: cost
+            [itemId]: cleaned
         }));
     };
+    
     const [showOrdersPopup, setShowOrdersPopup] = useState(false);
     const [selectedTableOrders, setSelectedTableOrders] = useState([]);
     const [selectedTableNumber, setSelectedTableNumber] = useState(null);
@@ -311,27 +313,34 @@ function Manager() {
     
     const handleInputChange = (e, isEdit = false) => {
         const { name, value } = e.target;
-      
+        let processedValue = value;
+    
+        // Replace comma with dot for number fields
+        if (["price", "calories", "cooking_time", "availability", "production_cost"].includes(name)) {
+            processedValue = processedValue.replace(',', '.');
+        }
+    
         if (name === "allergies") {
-          const parsed = value
-            .split(',')
-            .map(item => item.trim())
-            .filter(Boolean);
-      
-          if (isEdit) {
-            setEditItem(prev => ({ ...prev, allergies: parsed }));
-          } else {
-            setNewItem(prev => ({ ...prev, allergies: parsed }));
-          }
-          return;
+            const parsed = processedValue
+                .split(',')
+                .map(item => item.trim())
+                .filter(Boolean);
+    
+            if (isEdit) {
+                setEditItem(prev => ({ ...prev, allergies: parsed }));
+            } else {
+                setNewItem(prev => ({ ...prev, allergies: parsed }));
+            }
+            return;
         }
-      
+    
         if (isEdit) {
-          setEditItem({ ...editItem, [name]: value });
+            setEditItem({ ...editItem, [name]: processedValue });
         } else {
-          setNewItem({ ...newItem, [name]: value });
+            setNewItem({ ...newItem, [name]: processedValue });
         }
-      };
+    };
+    
       
 
     const handleCategoryChange = (category, isEdit = false) => {
@@ -403,21 +412,34 @@ function Manager() {
     };
 
     const handleEditItem = (item) => {
+        // Force price and cost into a dot-decimal string format (2 decimal places if needed)
+        const formattedPrice = typeof item.price === "number"
+            ? item.price.toFixed(2).replace(",", ".")
+            : item.price?.toString().replace(",", ".");
+    
+        const formattedCost = typeof item.production_cost === "number"
+            ? item.production_cost.toFixed(2).replace(",", ".")
+            : item.production_cost?.toString().replace(",", ".");
+    
         setEditItem({
             ...item,
+            price: formattedPrice,
             category: Array.isArray(item.category) ? item.category : JSON.parse(item.category || "[]"),
             allergies: item.allergies.join(", "), 
-            image: item.image, 
+            image: item.image,
         });
     
-        setEditPreviewImage(item.image); 
+        setEditPreviewImage(item.image);
+    
         setProductionCosts((prev) => ({
             ...prev,
-            [item.id]: item.production_cost || ""
+            [item.id]: formattedCost
         }));
-        
+    
         setShowEditPopup(true);
     };
+    
+    
     
     const handleUpdateItem = async () => {
         if (!editItem.name || !editItem.calories || !editItem.price || editItem.category.length === 0) {
@@ -928,11 +950,16 @@ function Manager() {
                             </label>
                             <label>Cooking Time<input type="number" name="cooking_time" value={editItem.cooking_time} onChange={(e) => handleInputChange(e, true)} /></label>
                             <label>Availability<input type="number" name="availability" value={editItem.availability} onChange={(e) => handleInputChange(e, true)} /></label>
-                            <label>Price<input type="number" name="price" value={editItem.price} onChange={(e) => handleInputChange(e, true)} /></label>
+                            <label>Price<input
+                                    type="text"
+                                    name="price"
+                                    value={editItem.price}
+                                    onChange={(e) => handleInputChange(e, true)}/>
+                            </label>
                             <label>
                                 Production Cost
                                 <input
-                                    type="number"
+                                    type="text"
                                     name="production_cost"
                                     value={productionCosts[editItem?.id] ?? ""}
                                     onChange={(e) => handleCostChange(editItem.id, e.target.value)}
