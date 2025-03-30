@@ -218,6 +218,45 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
       </button>
       <h3>Waiter Dashboard</h3>
 
+      {/* Pending Orders */}
+      <div className="order-table pending-orders-table">
+          <h4>Pending Orders</h4>
+          <table>
+            <thead>
+              <tr>
+                <th>Table/Order #</th>
+                <th>Total (£)</th>
+                <th>Action</th>
+                <th>Time (Min)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pendingOrders.length > 0 ? (
+                pendingOrders.map((order) => (
+                  <tr key={order.table_id}>
+                    <td>{order.table_id} | {order.id}</td>
+                    <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
+                    <td>
+                      <button className="cancel-button" onClick={() => handleCancelOrder(order.id)}>
+                        Cancel Order
+                      </button>
+                      <button className="confirm-button" onClick={() => handleConfirmOrder(order.id)}>
+                        Confirm Order
+                      </button>
+                    </td>
+                    <td>{Math.round((new Date().getTime() - new Date(order.order_date))/60000)}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr><td colSpan="4">No pending orders.</td></tr>
+              )}
+            </tbody>
+          </table>
+          <button className="cancel-all-button" onClick={cancelAllOrders}>
+            Cancel All Orders
+          </button>
+      </div>
+
       <div className="order-tables">
         {/* Orders Ready for Pick Up */}
         <div className="order-table">
@@ -289,6 +328,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
 
       </div>
 
+
       {/* Table Alert System */}
       <div className="table-alert">
         <h4>Table Alert System</h4>
@@ -325,6 +365,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
       </div>
       
       
+    
     {/* Hide/Unhide Menu Items */}
     <div className="menu-select">
       <h4>Hide/Unhide Menu Items</h4>
