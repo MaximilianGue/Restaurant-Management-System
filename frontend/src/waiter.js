@@ -13,6 +13,7 @@ import {
   notifyStaff 
 } from "./api";
 import "./Dropdown.css";
+import "./waiter.css"
 import { STAFF_ID } from "./constants";
 
 function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
@@ -282,26 +283,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
           </table>
         </div>
 
-    {/* Hide/Unhide Menu Items */}
-      <div className="menu-select">
-        <h4>Hide/Unhide Menu Items</h4>
-        {menuItems.length > 0 ? (
-          menuItems.map((item) => (
-            <div key={item.id} className="menu-item">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={!hiddenItems.includes(item.name)}
-                  onChange={() => toggleHiddenItem(item.name)}
-                />
-                {item.name}
-              </label>
-            </div>
-          ))
-        ) : (
-          <p>No menu items available.</p>
-        )}
-      </div>
 
 
       </div>
@@ -340,6 +321,31 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
           </tbody>
         </table>
       </div>
+      
+      
+    {/* Hide/Unhide Menu Items */}
+    <div className="menu-select">
+      <h4>Hide/Unhide Menu Items</h4>
+      {menuItems.length > 0 ? (
+        <div className="menu-grid">
+          {menuItems.map((item) => (
+            <div key={item.id} className="menu-item">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={!hiddenItems.includes(item.name)}
+                  onChange={() => toggleHiddenItem(item.name)}
+                />
+                {item.name}
+              </label>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p>No menu items available.</p>
+      )}
+    </div>
+
 
       {/* Improved Alert Form Modal */}
       {showAlertForm && (

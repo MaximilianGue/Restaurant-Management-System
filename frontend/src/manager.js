@@ -537,7 +537,7 @@ function Manager() {
         } else if (equal60 > 0 && above60 > 0) {
             return { color: 'yellow', message: 'Some items have a profit margin of 60%' };
         } else {
-            return { color: 'green', message: 'All items profit margin above 60%' };
+            return { color: 'green', message: 'Overall profit margin above 60%' };
         }
     };
     
