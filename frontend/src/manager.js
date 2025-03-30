@@ -265,10 +265,13 @@ function Manager() {
             const tablesData = await fetchTables();
             setTables(tablesData || []);
         };
-        if (selectedTab === "tables") {
+    
+        // Load when employees tab or tables tab is selected
+        if (selectedTab === "tables" || selectedTab === "employees") {
             loadTables();
         }
     }, [selectedTab]);
+    
 
     const handleViewOrders = async (tableId, tableNumber) => {
         try {
