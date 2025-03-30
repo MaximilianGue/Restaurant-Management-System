@@ -7,26 +7,33 @@
   color: #333;
   max-width: 1200px;
   margin: auto;
+  font-size: 0.85rem;
+  font-weight: bold;
 }
 
 .waiter-container .return-button {
-  background-color: #444;
+  background-color: #ff6600;
   color: white;
   padding: 10px 16px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
   margin-bottom: 20px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  transition: background 0.3s ease;
 }
 
 .waiter-container .return-button:hover {
-  background-color: #222;
+  background-color: #cc5200;
 }
 
 .waiter-container h3,
 .waiter-container h4 {
   color: #222;
   margin-top: 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
 }
 
 /* ===== Pending Orders FULL-WIDTH Table ===== */
@@ -37,7 +44,8 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   padding: 1.25rem;
   margin-bottom: 1.5rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: bold;
 }
 
 .waiter-container .pending-orders-table table {
@@ -48,15 +56,17 @@
 
 .waiter-container .pending-orders-table th,
 .waiter-container .pending-orders-table td {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   padding: 4px 6px;
   border-bottom: 1px solid #ddd;
+  font-weight: bold;
 }
 
 .waiter-container .pending-orders-table .cancel-button,
 .waiter-container .pending-orders-table .confirm-button {
   padding: 4px 8px;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
+  font-weight: bold;
   margin: 2px;
 }
 
@@ -68,7 +78,8 @@
   border-radius: 6px;
   cursor: pointer;
   margin-top: 12px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+  font-weight: bold;
 }
 
 .waiter-container .cancel-all-button:hover {
@@ -89,6 +100,8 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   padding: 1.25rem;
   margin-bottom: 1.5rem;
+  font-size: 0.85rem;
+  font-weight: bold;
 }
 
 .waiter-container .order-table table {
@@ -102,11 +115,15 @@
   padding: 10px;
   text-align: left;
   border-bottom: 1px solid #ddd;
+  font-size: 0.85rem;
+  font-weight: bold;
 }
 
 .waiter-container select {
   padding: 6px;
   border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: bold;
 }
 
 /* ===== Menu Visibility Section ===== */
@@ -116,10 +133,11 @@
   padding: 16px;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  font-weight: bold;
 }
 
 .waiter-container .menu-select h4 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: bold;
   margin-bottom: 12px;
   color: #333;
@@ -138,7 +156,7 @@
   padding: 10px;
   text-align: center;
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: bold;
   color: #333;
   transition: all 0.2s ease-in-out;
 }
@@ -161,7 +179,8 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.85rem;
+  font-weight: bold;
 }
 
 .waiter-container .alert-button:hover,
@@ -187,6 +206,7 @@
   border-radius: 10px;
   width: 400px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-weight: bold;
 }
 
 .waiter-container .alert-modal-header {
@@ -209,7 +229,7 @@
 }
 
 .waiter-container label {
-  font-weight: 500;
+  font-weight: bold;
   display: block;
   margin-bottom: 4px;
 }
@@ -220,6 +240,8 @@
   padding: 6px;
   border: 1px solid #ccc;
   border-radius: 5px;
+  font-size: 0.85rem;
+  font-weight: bold;
 }
 
 /* ===== Notifications ===== */
@@ -229,12 +251,19 @@
   padding: 1rem;
   border-radius: 10px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  font-weight: bold;
 }
 
 .waiter-container .notifications table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
+}
+
+.waiter-container .notifications th,
+.waiter-container .notifications td {
+  font-size: 0.85rem;
+  font-weight: bold;
 }
 
 /* ===== Popup ===== */
@@ -248,6 +277,8 @@
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   z-index: 1000;
+  font-weight: bold;
+  font-size: 0.85rem;
 }
 
 .waiter-container .custom-popup button {
@@ -258,7 +289,8 @@
   border-radius: 4px;
   margin-top: 10px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 0.85rem;
+  font-weight: bold;
 }
 
 .waiter-container .custom-popup button:hover {
