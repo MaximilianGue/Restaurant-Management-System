@@ -151,19 +151,19 @@ function Manager() {
     
     const getWaiterRevenue = (waiter) => {
         return tables
-            .filter(table => (table.waiter_name || "").trim().toLowerCase() === waiter.first_name.trim().toLowerCase())
+            .filter(table => table.waiter === waiter.id) // safer: ID comparison
             .reduce((sum, table) => sum + (table.revenue || 0), 0);
     };
-    
     
     const getWaiterRevenues = () => {
         return waiters.map(waiter => {
             const revenue = tables
-                .filter(table => (table.waiter_name || "").trim().toLowerCase() === waiter.first_name.trim().toLowerCase())
+                .filter(table => table.waiter === waiter.id)
                 .reduce((sum, table) => sum + (table.revenue || 0), 0);
             return { ...waiter, revenue };
         });
     };
+    
     
     const topWaiter = useMemo(() => {
         const revenues = getWaiterRevenues();
