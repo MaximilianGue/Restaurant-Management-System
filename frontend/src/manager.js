@@ -800,25 +800,32 @@ function Manager() {
                         <h3>Tables and Orders</h3>
                         <div className="add-table-form">
                             <h4>Add New Table</h4>
-                            <input
-                                type="number"
-                                placeholder="Table Number"
-                                value={newTableNumber}
-                                onChange={(e) => setNewTableNumber(e.target.value)}
-                            />
-                            <select
-                                value={newTableWaiterId}
-                                onChange={(e) => setNewTableWaiterId(e.target.value)}
-                            >
-                                <option value="">Select Waiter</option>
-                                {waiters.map((waiter) => (
-                                    <option key={waiter.id} value={waiter.id}>
-                                        {waiter.first_name} {waiter.last_name}
-                                    </option>
-                                ))}
-                            </select>
-                            <button onClick={handleAddTable}>Add Table</button>
+
+                            <div className="add-table-inner">
+                                <div className="table-input-row">
+                                    <input
+                                        type="number"
+                                        placeholder="Table Number"
+                                        value={newTableNumber}
+                                        onChange={(e) => setNewTableNumber(e.target.value)}
+                                    />
+                                    <select
+                                        value={newTableWaiterId}
+                                        onChange={(e) => setNewTableWaiterId(e.target.value)}
+                                    >
+                                        <option value="">Select Waiter</option>
+                                        {waiters.map((waiter) => (
+                                            <option key={waiter.id} value={waiter.id}>
+                                                {waiter.first_name} {waiter.last_name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <button className="centered-add-btn" onClick={handleAddTable}>Add Table</button>
+                            </div>
                         </div>
+
 
                         <table className="tables-table">
                         <thead>
@@ -1104,73 +1111,78 @@ function Manager() {
                     </div>
                 </>
             )}
+
             {showEditTablePopup && (
             <>
                 <div className="overlay" onClick={() => setShowEditTablePopup(false)}></div>
-                <div className="edit-popup">
-                <h3>Edit Table</h3>
+                <div className="edit-popup edit-table-popup">
+                    <h3>Edit Table</h3>
 
-                <label>
-                    Table Number:
-                    <input
-                    type="number"
-                    value={editedTable.number}
-                    onChange={(e) =>
-                        setEditedTable({ ...editedTable, number: e.target.value })
-                    }
-                    />
-                </label>
+                    <div className="edit-table-grid">
+                        <label>
+                            Table Number:
+                            <input
+                                type="number"
+                                value={editedTable.number}
+                                onChange={(e) =>
+                                    setEditedTable({ ...editedTable, number: e.target.value })
+                                }
+                            />
+                        </label>
 
-                <label>
-                    Status:
-                    <select
-                    value={editedTable.status}
-                    onChange={(e) =>
-                        setEditedTable({ ...editedTable, status: e.target.value })
-                    }
-                    >
-                    <option value="pending">Pending</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="paid for">Paid For</option>
-                    <option value="unconfirmed">Unconfirmed</option>
-                    <option value="canceled">Canceled</option>
-                    </select>
-                </label>
+                        <label>
+                            Status:
+                            <select
+                                value={editedTable.status}
+                                onChange={(e) =>
+                                    setEditedTable({ ...editedTable, status: e.target.value })
+                                }
+                            >
+                                <option value="pending">Pending</option>
+                                <option value="confirmed">Confirmed</option>
+                                <option value="paid for">Paid For</option>
+                                <option value="unconfirmed">Unconfirmed</option>
+                                <option value="canceled">Canceled</option>
+                            </select>
+                        </label>
 
-                <label>
-                    Assigned Waiter:
-                    <select
-                    value={editedTable.waiter || ""}
-                    onChange={(e) =>
-                        setEditedTable({ ...editedTable, waiter: e.target.value })
-                    }
-                    >
-                    <option value="">Select Waiter</option>
-                    {waiters.map((w) => (
-                        <option key={w.id} value={w.id}>
-                        {w.first_name} {w.last_name}
-                        </option>
-                    ))}
-                    </select>
-                </label>
+                        <label className="full-width">
+                            Assigned Waiter:
+                            <select
+                                value={editedTable.waiter || ""}
+                                onChange={(e) =>
+                                    setEditedTable({ ...editedTable, waiter: e.target.value })
+                                }
+                            >
+                                <option value="">Select Waiter</option>
+                                {waiters.map((w) => (
+                                    <option key={w.id} value={w.id}>
+                                        {w.first_name} {w.last_name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+                    </div>
 
-                <div className="popup-buttons">
-                    <button
-                    onClick={() =>
-                        handleEditTable(editedTable.id, {
-                        number: editedTable.number,
-                        status: editedTable.status,
-                        waiter_id: editedTable.waiter,
-                        })
-                    }
-                    >
-                    Save
-                    </button>
-                    <button onClick={() => setShowEditTablePopup(false)}>Cancel</button>
+                    <div className="popup-buttons">
+                        <button
+                            onClick={() =>
+                                handleEditTable(editedTable.id, {
+                                    number: editedTable.number,
+                                    status: editedTable.status,
+                                    waiter_id: editedTable.waiter,
+                                })
+                            }
+                        >
+                            Save
+                        </button>
+                        <button onClick={() => setShowEditTablePopup(false)}>Cancel</button>
+                    </div>
                 </div>
-                </div>
+
             </>
             )}
+            
             {showEditModal && (
     <>
                     {/* Overlay to dim the background */}
