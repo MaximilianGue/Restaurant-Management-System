@@ -20,6 +20,7 @@ import json
 from django.db.models import Q
 import stripe
 from django.conf import settings
+from .models import Table
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
@@ -188,6 +189,27 @@ class TableViewSet(viewsets.ViewSet):
 
         return Response(table_revenue)
 
+    def create(self, request):
+        number = request.data.get("number")
+        waiter_id = request.data.get("waiter")
+
+        if not number or not waiter_id:
+            return Response({"error": "Table number and waiter ID are required."}, status=400)
+
+        waiter = Waiter.objects.filter(id=waiter_id).first()
+        if not waiter:
+            return Response({"error": "Waiter not found."}, status=404)
+
+        # ✅ Save waiter as FK
+        table = Table.objects.create(
+            number=number,
+            waiter=waiter,
+        )
+
+        serializer = TableSerializer(table)
+        return Response(serializer.data, status=201)
+
+
 class TableDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = TableSerializer
     queryset = Table.objects.all()
@@ -349,6 +371,7 @@ class KitchenStaffView(generics.ListCreateAPIView):
 class KitchenStaffDetailView(generics.RetrieveAPIView):
     queryset = KitchenStaff.objects.all()
     serializer_class = KitchenStaffSerializer
+
 
 
 class ConfirmOrderUpdateView(generics.UpdateAPIView):
@@ -807,3 +830,30 @@ def fire_employee(request, employee_id):
     except Exception as e:
         print(f"Error: {str(e)}")  # Log the error to the console
         return JsonResponse({"error": str(e)}, status=500)
+
+@api_view(['PUT'])
+def update_table(request, table_id):
+    try:
+        table = Table.objects.get(id=table_id)
+    except Table.DoesNotExist:
+        return Response({"error": "Table not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    number = request.data.get("number")
+    status_value = request.data.get("status")
+    waiter_id = request.data.get("waiter_id")  # or 'waiter' depending on your frontend
+
+    if number is not None:
+        table.number = number
+
+    if status_value is not None:
+        table.status = status_value
+
+    if waiter_id:
+        try:
+            waiter = Waiter.objects.get(id=waiter_id)
+            table.waiter = waiter  # ✅ This is the fix
+        except Waiter.DoesNotExist:
+            return Response({"error": "Waiter not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    table.save()
+    return Response({"message": "Table updated successfully."}, status=status.HTTP_200_OK)

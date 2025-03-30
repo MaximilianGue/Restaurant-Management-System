@@ -40,14 +40,13 @@ class MenuItem(models.Model):
 
 class Table(models.Model):
     number = models.IntegerField(unique=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Ok')
-    waiter_name = models.CharField(max_length=100, blank=True, null=True)
-    estimated_time = models.IntegerField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    waiter = models.ForeignKey('Waiter', on_delete=models.SET_NULL, null=True, blank=True, related_name='tables')
+    estimated_time = models.IntegerField(blank=True, null=True, default=5)
     capacity = models.IntegerField(default=4)
 
     def __str__(self):
         return f"Table {self.number} | Status: {self.status} | Capacity: {self.capacity}"
- 
 
 
 class Customer(models.Model):

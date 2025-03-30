@@ -465,3 +465,12 @@ export const fetchOrdersForTable = async (tableId) => {
   }
 }
 
+export const deleteTable = async (tableId) => {
+  try {
+    const response = await axios.delete(`http://127.0.0.1:8000/cafeApi/tables/${tableId}/`);
+    return response.status === 204; // Django returns 204 No Content on success
+  } catch (error) {
+    console.error("Error deleting table:", error);
+    return false;
+  }
+};

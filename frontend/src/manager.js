@@ -6,6 +6,8 @@ import { fetchTables, fetchOrdersForTable } from "./api";
 import "./manager.css";
 import { fetchWaiters, fetchKitchenStaff } from "./api";
 import { useMemo } from "react";
+import { deleteTable } from "./api";
+
 
 function Manager() {
     const [menuItems, setMenuItems] = useState([]);
@@ -66,7 +68,70 @@ function Manager() {
     const [selectedTableOrders, setSelectedTableOrders] = useState([]);
     const [selectedTableNumber, setSelectedTableNumber] = useState(null);
 
+    const [newTableNumber, setNewTableNumber] = useState("");
+    const [newTableWaiterId, setNewTableWaiterId] = useState("");
+    const [showEditTablePopup, setShowEditTablePopup] = useState(false);
+    const [editedTable, setEditedTable] = useState(null);
+
+
+    const handleDeleteTable = async (tableId) => {
+        if (window.confirm("Are you sure you want to delete this table?")) {
+          const success = await deleteTable(tableId);
+          if (success) {
+            setTables((prev) => prev.filter((table) => table.id !== tableId));
+            alert("Table deleted successfully.");
+          } else {
+            alert("Failed to delete table.");
+          }
+        }
+      };      
     
+    const handleAddTable = async () => {
+        if (!newTableNumber || !newTableWaiterId) {
+            alert("Please enter a table number and select a waiter.");
+            return;
+        }
+    
+        try {
+            const response = await axios.post("http://127.0.0.1:8000/cafeApi/tables/", {
+                number: newTableNumber,
+                waiter: newTableWaiterId
+            });
+    
+            if (response.status === 201 || response.status === 200) {
+                setNewTableNumber("");
+                setNewTableWaiterId("");
+                const updatedTables = await fetchTables();
+                setTables(updatedTables || []);
+                alert("Table added successfully!");
+            } else {
+                alert("Failed to add table.");
+            }
+        } catch (error) {
+            console.error("Error adding table:", error.response?.data || error.message);
+            alert("Error creating table.");
+        }
+    };
+    
+    const handleEditTable = async (tableId, updatedData) => {
+        try {
+          const response = await axios.put(
+            `http://127.0.0.1:8000/cafeApi/tables/${tableId}/update/`,
+            updatedData
+          );
+          if (response.status === 200) {
+            const updatedTables = await fetchTables();
+            setTables(updatedTables);
+            setShowEditTablePopup(false);
+            alert("Table updated successfully.");
+          }
+        } catch (err) {
+          console.error("Error updating table:", err);
+          alert("Failed to update table.");
+        }
+      };
+      
+      
 
     const handleEditEmployee = (employee) => {
         console.log("Editing employee:", employee);
@@ -174,31 +239,31 @@ function Manager() {
     
     useEffect(() => {
         const loadWaiters = async () => {
-            try {
-                const response = await axios.get("http://127.0.0.1:8000/cafeApi/waiters/");
-                console.log("Fetched Waiters:", response.data); // Log to check
-                setWaiters(response.data);
-            } catch (error) {
-                console.error("Error fetching waiters:", error);
-            }
+          try {
+            const response = await axios.get("http://127.0.0.1:8000/cafeApi/waiters/");
+            console.log("Fetched Waiters:", response.data);
+            setWaiters(response.data);
+          } catch (error) {
+            console.error("Error fetching waiters:", error);
+          }
         };
-        
+      
         const loadKitchenStaff = async () => {
-            try {
-                const response = await axios.get("http://127.0.0.1:8000/cafeApi/kitchen_staff/");
-                console.log("Fetched Kitchen Staff:", response.data); // Log to check
-                setKitchenStaff(response.data);
-            } catch (error) {
-                console.error("Error fetching kitchen staff:", error);
-            }
+          try {
+            const response = await axios.get("http://127.0.0.1:8000/cafeApi/kitchen_staff/");
+            console.log("Fetched Kitchen Staff:", response.data);
+            setKitchenStaff(response.data);
+          } catch (error) {
+            console.error("Error fetching kitchen staff:", error);
+          }
         };
-        
-
-        if (selectedTab === "employees") {
-            loadWaiters();
-            loadKitchenStaff();
+      
+        if (selectedTab === "employees" || selectedTab === "tables") {
+          loadWaiters();
+          loadKitchenStaff();
         }
-    }, [selectedTab]);
+      }, [selectedTab]);
+      
 
     const availableCategories = [
         "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian",
@@ -730,8 +795,31 @@ function Manager() {
                     </div>
                 )}
                 {selectedTab === "tables" && (
+                    
                     <div className="tables-container">
                         <h3>Tables and Orders</h3>
+                        <div className="add-table-form">
+                            <h4>Add New Table</h4>
+                            <input
+                                type="number"
+                                placeholder="Table Number"
+                                value={newTableNumber}
+                                onChange={(e) => setNewTableNumber(e.target.value)}
+                            />
+                            <select
+                                value={newTableWaiterId}
+                                onChange={(e) => setNewTableWaiterId(e.target.value)}
+                            >
+                                <option value="">Select Waiter</option>
+                                {waiters.map((waiter) => (
+                                    <option key={waiter.id} value={waiter.id}>
+                                        {waiter.first_name} {waiter.last_name}
+                                    </option>
+                                ))}
+                            </select>
+                            <button onClick={handleAddTable}>Add Table</button>
+                        </div>
+
                         <table className="tables-table">
                         <thead>
                             <tr>
@@ -751,9 +839,28 @@ function Manager() {
                                             <td>{table.waiter_name || "—"}</td> {/* ✅ Show assigned waiter */}
                                             <td>£{(table.revenue !== undefined ? table.revenue : 0).toFixed(2)}</td> 
                                             <td>
-                                                <button className="view-orders-button" onClick={() => handleViewOrders(table.id)}>
-                                                {visibleOrders[table.id] ? "Hide Orders" : "View Orders"}
+                                                <button className="view-orders-button" onClick={() => handleViewOrders(table.id, table.number)}>
+                                                    {visibleOrders[table.id] ? "Hide Orders" : "View Orders"}
                                                 </button>
+                                                <button
+                                                    className="edit-btn"
+                                                    onClick={() => {
+                                                    setEditedTable({
+                                                    id: table.id,
+                                                    number: table.number,
+                                                    status: table.status,
+                                                    waiter: waiters.find(w => w.first_name === table.waiter_name)?.id || ""
+                                                    });
+                                                    setShowEditTablePopup(true);
+                                                    }}
+                                                    >
+                                                    Edit
+                                                </button>
+
+                                                <button className="delete-btn" onClick={() => handleDeleteTable(table.id)} style={{ marginLeft: "8px" }}>
+                                                    Delete
+                                                </button>
+                                                
                                             </td>
                                         </tr>
                                     ))
@@ -799,6 +906,7 @@ function Manager() {
                             )
                         ))}
                     </div>
+                    
                 )}
 
 
@@ -995,6 +1103,73 @@ function Manager() {
 
                     </div>
                 </>
+            )}
+            {showEditTablePopup && (
+            <>
+                <div className="overlay" onClick={() => setShowEditTablePopup(false)}></div>
+                <div className="edit-popup">
+                <h3>Edit Table</h3>
+
+                <label>
+                    Table Number:
+                    <input
+                    type="number"
+                    value={editedTable.number}
+                    onChange={(e) =>
+                        setEditedTable({ ...editedTable, number: e.target.value })
+                    }
+                    />
+                </label>
+
+                <label>
+                    Status:
+                    <select
+                    value={editedTable.status}
+                    onChange={(e) =>
+                        setEditedTable({ ...editedTable, status: e.target.value })
+                    }
+                    >
+                    <option value="pending">Pending</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="paid for">Paid For</option>
+                    <option value="unconfirmed">Unconfirmed</option>
+                    <option value="canceled">Canceled</option>
+                    </select>
+                </label>
+
+                <label>
+                    Assigned Waiter:
+                    <select
+                    value={editedTable.waiter || ""}
+                    onChange={(e) =>
+                        setEditedTable({ ...editedTable, waiter: e.target.value })
+                    }
+                    >
+                    <option value="">Select Waiter</option>
+                    {waiters.map((w) => (
+                        <option key={w.id} value={w.id}>
+                        {w.first_name} {w.last_name}
+                        </option>
+                    ))}
+                    </select>
+                </label>
+
+                <div className="popup-buttons">
+                    <button
+                    onClick={() =>
+                        handleEditTable(editedTable.id, {
+                        number: editedTable.number,
+                        status: editedTable.status,
+                        waiter_id: editedTable.waiter,
+                        })
+                    }
+                    >
+                    Save
+                    </button>
+                    <button onClick={() => setShowEditTablePopup(false)}>Cancel</button>
+                </div>
+                </div>
+            </>
             )}
             {showEditModal && (
     <>

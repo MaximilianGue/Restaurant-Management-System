@@ -3,11 +3,14 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import get_employees
 from . import views
 from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, NotificationViewSet, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView,WaiterDetailView,TableStaffIDView
+from .views import update_table
+
 notification_list = NotificationViewSet.as_view({'get': 'list', 'post': 'create'})
 notify_staff = NotificationViewSet.as_view({'post': 'notify_staff'})
 notify_waiter = NotificationViewSet.as_view({'post': 'notify_waiter'})
 # Define actions for TableView
-table_list = TableView.as_view({'get': 'list'})  # 'get' -> 'list' action for tables
+table_list = TableView.as_view({'get': 'list', 'post': 'create'})  # 'get' -> 'list' action for tables
+
 
 urlpatterns = [
     
@@ -20,6 +23,8 @@ urlpatterns = [
     path('tables/', table_list, name="tables"),
     path("tables/<int:pk>/", TableDetailView.as_view(), name="table-detail"),
     path('tables/<int:table_number>/staff_id/', TableStaffIDView.as_view(), name='table-staff-id'),
+    path('tables/<int:table_id>/update/', update_table, name='update_table'),
+
 
     # Other endpoints...
     path("customers/", CustomerView.as_view(), name="customers"),

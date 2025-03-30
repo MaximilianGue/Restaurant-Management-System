@@ -56,22 +56,20 @@ class UpdateAvailabilitySerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
 class TableSerializer(serializers.ModelSerializer):
+    waiter_name = serializers.SerializerMethodField()
     revenue = serializers.SerializerMethodField()
 
     class Meta:
         model = Table
-        fields = ['id', 'number', 'status', 'waiter_name', 'estimated_time', 'capacity', 'revenue']
+        fields = ['id', 'number', 'status', 'waiter', 'waiter_name', 'estimated_time', 'capacity', 'revenue']
+
+    def get_waiter_name(self, obj):
+        return f"{obj.waiter.first_name} {obj.waiter.last_name}" if obj.waiter else None
 
     def get_revenue(self, obj):
-        paid_orders = Order.objects.filter(table=obj, status='paid for')
-        total_revenue = sum(order.total_price for order in paid_orders)
-        print(f"Table {obj.number} revenue calculated: {total_revenue}")  # Debugging line
-        return total_revenue
-        
-    def get_waiter_name(self, obj):
-        return obj.waiter.first_name if obj.waiter else "None"
+        paid_orders = obj.orders.filter(status='paid for')
+        return sum(order.total_price for order in paid_orders)
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
