@@ -108,6 +108,8 @@ function Home() {
 
   const handlePlaceOrder = async () => {
     const tableNum = parseInt(tableNumber, 10);
+    console.log(tableNumber)
+    console.log(tableNum)
     const staffId = await fetchStaffIdForTable(tableNum);
     if (isNaN(tableNum)) {
       setErrorMessage("Please enter a valid table number.");
@@ -387,7 +389,7 @@ function Home() {
               orders
                 .filter(
                   (order) =>
-                    order.table_id === parseInt(tableNumber, 10)
+                    order.table_number === parseInt(tableNumber, 10)
                 )
                 .map((order) => (
                   <div key={order.id} className="placed-order">
