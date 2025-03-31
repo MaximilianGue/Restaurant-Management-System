@@ -200,7 +200,7 @@ class TableViewSet(viewsets.ViewSet):
         if not waiter:
             return Response({"error": "Waiter not found."}, status=404)
 
-        # ✅ Save waiter as FK
+        #  Save waiter as FK
         table = Table.objects.create(
             number=number,
             waiter=waiter,
@@ -246,6 +246,7 @@ class OrderView(APIView):
             order_data = {
                 "id": order.id,
                 "table_id": order.table.id,
+                "table_number":order.table.number,
                 "order_date": order.order_date,
                 "status": order.status,
                 "total_price": order.total_price,
@@ -627,12 +628,17 @@ class StripePaymentSuccessView(APIView):
 
         # Check if stripe_session_id exists before retrieving the session
         if not payment.stripe_session_id:
-            return Response({"error": "No Stripe session ID found for this payment."},
-                            status=400)
+            return Response(
+                {"error": "No Stripe session ID found for this payment."},
+                status=400
+            )
 
         # Optionally, check if order is already marked as paid
         if order.status == "paid for":
-            return Response({"message": "Order is already paid for."}, status=200)
+            return Response(
+                {"message": "Order is already paid for."},
+                status=200
+            )
 
         try:
             stripe_session = stripe.checkout.Session.retrieve(payment.stripe_session_id)
@@ -641,11 +647,18 @@ class StripePaymentSuccessView(APIView):
                 payment.save()
                 order.status = "paid for"
                 order.save()
-                return Response({"message": "Order is paid for."}, status=200)
+                # Redirect after successful payment processing
+                return redirect("http://localhost:3000/home")
         except stripe.error.StripeError as e:
-            return Response({"error": str(e)}, status=400)
+            return Response(
+                {"error": str(e)},
+                status=400
+            )
 
-        return Response({"message": "Payment not completed yet."}, status=400)
+        return Response(
+            {"message": "Payment not completed yet."},
+            status=400
+        )
 
 
 class StripePaymentCancelView(APIView):
@@ -744,7 +757,7 @@ def update_employee(request, employee_id):
     waiter = Waiter.objects.filter(id=employee_id).first()
     kitchen_staff = KitchenStaff.objects.filter(id=employee_id).first()
 
-    # ✅ Prioritize kitchen staff if both exist with same ID
+    #  Prioritize kitchen staff if both exist with same ID
     if kitchen_staff:
         employee = kitchen_staff
         is_waiter = False
@@ -842,7 +855,7 @@ def update_table(request, table_id):
     if waiter_id:
         try:
             waiter = Waiter.objects.get(id=waiter_id)
-            table.waiter = waiter  # ✅ This is the fix
+            table.waiter = waiter  #  This is the fix
         except Waiter.DoesNotExist:
             return Response({"error": "Waiter not found."}, status=status.HTTP_404_NOT_FOUND)
 

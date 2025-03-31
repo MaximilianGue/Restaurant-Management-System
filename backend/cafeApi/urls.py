@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from .views import get_employees
 from . import views
-from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, NotificationViewSet, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView,WaiterDetailView,TableStaffIDView
+from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, NotificationViewSet, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView,WaiterDetailView,TableStaffIDView, CreateStripeCheckoutSessionView,StripePaymentSuccessView,StripePaymentCancelView,SalesPerWaiterView,PaymentListView
 from .views import update_table
 from .views import TableStaffIDView
 
@@ -54,6 +54,12 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('users/', UserListView.as_view(), name='user-list'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    
+    path("payments/<int:pk>/checkout/", CreateStripeCheckoutSessionView.as_view(), name="create_checkout_session"),
+    path("payments/<int:pk>/verify/", StripePaymentSuccessView.as_view(), name="verify_payment"),
+    path("payments/<int:pk>/cancel/", StripePaymentCancelView.as_view(), name="cancel_payment"),
+    path("sales/<int:pk>/", SalesPerWaiterView.as_view(), name="sales_per_waiter"),
+    path("payments/", PaymentListView.as_view(), name="payment-list"),
 
 
     path('employees/', get_employees, name='get-employees'),
