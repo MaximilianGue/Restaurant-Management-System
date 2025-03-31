@@ -3,13 +3,20 @@ import { jwtDecode } from "jwt-decode";
 import { REFRESH_TOKEN, ACCESS_TOKEN } from "./constants";
 import { useState, useEffect } from "react";
 
-function ProtectedRoute({ children }) {
-    const [isAuthorized, setIsAuthorized] = useState(null);
 
+/**
+ * ProtectedRoute component
+ * Ensures routes are only then accessible if user has a valid and not expired access token. (And automatically refreshes) 
+ */
+function ProtectedRoute({ children }) {
+    const [isAuthorized, setIsAuthorized] = useState(null); // null = loading state
+
+    // Runs the authentication check on component mount
     useEffect(() => {
         auth().catch(() => setIsAuthorized(false));
     }, []);
 
+    /** Attempts to refresh access token using the refresh token */
     const refreshToken = async () => {
         const refreshToken = localStorage.getItem(REFRESH_TOKEN);
         if (!refreshToken) {
@@ -28,7 +35,7 @@ function ProtectedRoute({ children }) {
 
             if (res.status === 200) {
                 const data = await res.json();
-                localStorage.setItem(ACCESS_TOKEN, data.access);
+                localStorage.setItem(ACCESS_TOKEN, data.access);    // Save new access token
                 setIsAuthorized(true);
             } else {
                 setIsAuthorized(false);
@@ -39,6 +46,7 @@ function ProtectedRoute({ children }) {
         }
     };
 
+     /** Validatse the access token's expiration and refreshes if expired **/
     const auth = async () => {
         const token = localStorage.getItem(ACCESS_TOKEN);
         if (!token) {
@@ -57,10 +65,12 @@ function ProtectedRoute({ children }) {
         }
     };
 
+    // While checking authentication
     if (isAuthorized === null) {
         return <div>Loading...</div>;
     }
 
+    // If authorized, it renders protected content. If not it redirects you to the login.
     return isAuthorized ? children : <Navigate to="/login" />;
 }
 

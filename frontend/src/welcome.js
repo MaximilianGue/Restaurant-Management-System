@@ -1,13 +1,16 @@
 import React from "react";
 import kitchenGif from "./assets/kitchen.gif";
-import unknownImg from "./assets/unknown.jpg"; // Placeholder profile picture
+import unknownImg from "./assets/unknown.jpg"; // Placeholder for team profile picture
 import "./welcome.css";
-import "./App.css"
+import "./App.css" 
 
+/**
+ * Welcome page Component, which serves as the landing page
+ */
 function Welcome() {
   return (
     <div className="page-wrapper">
-      {/* --- Hero (Side-by-Side) Section --- */}
+      {/* Side by side section*/}
       <div className="welcome-container">
         <div className="welcome-text-section">
           <h1 className="welcome-title">
@@ -30,12 +33,12 @@ function Welcome() {
         </div>
       </div>
 
-      {/* --- Meet the Team Section --- */}
+      {/* Meet the Team Section*/}
       <div className="team-section">
         <h2 className="team-title">Meet the Team</h2>
         <div className="team-roles">
 
-          {/* WAITERS -> FRONTEND DEVS */}
+          {/* Waiter/frontend devs */}
           <div className="team-category waiters">
             <h3>Waiters</h3>
             <p>Our friendly wait staff is here to serve you with a smile.</p>
@@ -76,7 +79,7 @@ function Welcome() {
             </div>
           </div>
 
-          {/* KITCHEN STAFF -> BACKEND DEVS */}
+          {/* Kitchen staff/backend devs */}
           <div className="team-category kitchen-staff">
             <h3>Kitchen Staff</h3>
             <p>Passionate chefs and cooks bringing authentic Mexican flavors to life.</p>
@@ -117,7 +120,7 @@ function Welcome() {
             </div>
           </div>
 
-          {/* MANAGERS -> DEVOPS */}
+          {/* managers/devops */}
           <div className="team-category managers">
             <h3>Managers</h3>
             <p>Keeping everything running smoothly, from opening time to last call.</p>

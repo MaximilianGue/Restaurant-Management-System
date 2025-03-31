@@ -40,7 +40,7 @@ body {
   transform: scale(1.05);
 }
 
-/* Layout: Orders + Notifications */
+/* Layout of orders and notifications*/
 .order-tables {
   display: flex;
   flex-wrap: wrap;
@@ -48,7 +48,7 @@ body {
   justify-content: space-between;
 }
 
-/* Shared Card Style */
+/* Shared Style for order and notifications */
 .order-table,
 .notifications {
   flex: 1 1 48%;
@@ -60,7 +60,7 @@ body {
   font-size: 0.85rem;
   font-weight: bold;
 }
-
+/* The section headers */
 .order-table h3,
 .notifications h3 {
   color: #ff6600;
@@ -70,7 +70,7 @@ body {
   font-weight: bold;
 }
 
-/* Tables */
+/* Table styling*/
 table {
   width: 100%;
   border-collapse: collapse;
@@ -95,7 +95,7 @@ th {
   text-transform: uppercase;
 }
 
-/* Dropdown Styling */
+/* Style of dropdown */
 select {
   padding: 6px 10px;
   border-radius: 5px;
@@ -112,7 +112,7 @@ select:hover {
   transform: scale(1.03);
 }
 
-/* Buttons in Tables */
+/* Buttons inside the Tables */
 .order-button,
 .filter-button {
   background-color: #ff6600;
@@ -132,7 +132,7 @@ select:hover {
   background-color: #cc5200;
 }
 
-/* Notification Container */
+/* Notification table tweak */
 .notifications table {
   margin-top: 10px;
 }
@@ -175,7 +175,7 @@ select:hover {
   background-color: #cc5200;
 }
 
-/* Responsive Tweak */
+/* Responsivness for smaller screens */
 @media (max-width: 768px) {
   .order-tables {
     flex-direction: column;

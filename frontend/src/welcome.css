@@ -1,3 +1,4 @@
+/* Base Styles for welcome page */
 html,
 body {
   margin: 0;
@@ -6,12 +7,13 @@ body {
   font-family: 'Inter', 'Poppins', 'Segoe UI', sans-serif;
   background-color: #f9fafb;
 }
-
+/* Prevents horizontal scroll */
 .page-wrapper {
   width: 100%;
   overflow-x: hidden;
 }
 
+/* Welcome section */
 .welcome-container {
   min-height: 80vh;
   display: flex;
@@ -23,6 +25,7 @@ body {
   box-sizing: border-box;
 }
 
+/* text contennt on the left */
 .welcome-text-section {
   flex: 1;
   text-align: left;
@@ -50,6 +53,7 @@ body {
   justify-content: center;
 }
 
+/* Image on the right*/
 .kitchen-image {
   width: 100%;
   max-width: 500px;
@@ -57,6 +61,7 @@ body {
   box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
 }
 
+/* Style of team section*/
 .team-section {
   padding: 3rem;
   text-align: center;
@@ -70,6 +75,7 @@ body {
   margin-bottom: 2rem;
 }
 
+/* Team roles container */
 .team-roles {
   display: flex;
   gap: 2rem;
@@ -77,7 +83,7 @@ body {
   flex-wrap: wrap;
   margin-top: 2rem;
 }
-
+/* Individual team roles styles*/
 .team-category {
   flex: 1 1 240px;
   max-width: 320px;
@@ -93,7 +99,7 @@ body {
   transform: translateY(-5px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
-
+/* Role title */
 .team-category h3 {
   margin-top: 0;
   margin-bottom: 1rem;
@@ -101,12 +107,14 @@ body {
   font-size: 1.25rem;
 }
 
+/* Role description */
 .team-category p {
   margin: 0 0 1.5rem 0;
   line-height: 1.5;
   color: #374151;
 }
 
+/* Member list inside every role */
 .team-members {
   display: flex;
   flex-direction: column;
@@ -119,6 +127,7 @@ body {
   gap: 1rem;
 }
 
+/* profile photo */
 .profile-pic {
   width: 60px;
   height: 60px;
@@ -126,6 +135,7 @@ body {
   border-radius: 50%;
 }
 
+/* Styling of staff info */
 .staff-info h4 {
   margin: 0 0 0.25rem 0;
   color: #111827;
@@ -133,6 +143,7 @@ body {
   font-weight: bold;
 }
 
+/* Styling of staff quote */
 .staff-quote {
   margin: 0;
   font-style: italic;
@@ -141,6 +152,8 @@ body {
   line-height: 1.4;
 }
 
+/* Easter egg hover effects */
+/* Role based developer labels */
 .team-category.waiters h3,
 .team-category.kitchen-staff h3,
 .team-category.managers h3 {
@@ -148,6 +161,7 @@ body {
   transition: color 0.3s;
 }
 
+/* Reveal Title on Hover */
 .team-category.waiters h3::after,
 .team-category.kitchen-staff h3::after,
 .team-category.managers h3::after {
@@ -160,7 +174,7 @@ body {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s;
-  white-space: nowrap; /* ensures the text stays on one line */
+  white-space: nowrap;
 }
 
 .team-category.waiters h3::after {
@@ -247,6 +261,7 @@ body {
   opacity: 1;
 }
 
+/* Ensures reponsiveness s*/
 @media (max-width: 768px) {
   .welcome-container {
     flex-direction: column;
