@@ -1,7 +1,7 @@
 from django.test import TestCase
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
-from .models import MenuItem, Notification, Order, Table, Waiter, KitchenStaff
+from .models import MenuItem, Notification, Order, Table, Waiter, KitchenStaff, Payment
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -302,3 +302,5 @@ class Log_inAPITestCase(APITestCase):
         response = self.client.post('/cafeApi/login/', non_existent_data)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('detail', response.data)
+
+
