@@ -10,12 +10,17 @@ import Register from "./Register";
 import Welcome from "./welcome"
 import Manager from "./manager"
 
-
+/**
+ * Clears the local storage to log user out and redirect to login page
+ */
 function Logout() {
   localStorage.clear();
   return <Navigate to="/login" />;
 }
 
+/**
+ * The navigation bar, which is displayed on top of all pages
+ */
 function Navbar() {
     return (
       <nav style={{ padding: "1rem", background: "#333", color: "white", width: "100%", position: "fixed", top: 0, left: 0 }}>
@@ -27,7 +32,10 @@ function Navbar() {
       </nav>
     );
   }
-  
+
+/**
+ * The main App component with routes
+ */
 function App() {
     const [role, setRole] = useState(0);
     const [hiddenItems, setHiddenItems] = useState([]);
@@ -36,10 +44,11 @@ function App() {
         <BrowserRouter>
             <Navbar />
             <Routes>
+                {/* Public Pages */}
                 <Route path="/welcome" element={<Welcome />} />
                 <Route path="/home" element={<Home />} />
                 
-                {/* Protected Routes */}
+                {/* Protected Routes (only accessible after login) */}
                 <Route 
                     path="/waiter" 
                     element={
@@ -66,10 +75,12 @@ function App() {
                 />
 
                 
-                {/* Public Routes */}
+                {/* The authentifcation and registration Routes */}
                 <Route path="/login" element={<StaffLogin setRole={setRole} />} />
                 <Route path="/logout" element={<Logout />} />
                 <Route path="/register" element={<Register />} />
+
+                {/* The default and fallback routes */}
                 <Route path="/" element={<Navigate to="/welcome" replace />} />  {/*Where the user is first directed to*/}
                 <Route path="*" element={<NotFound />} />
                 
