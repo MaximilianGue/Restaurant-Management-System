@@ -194,6 +194,8 @@ function Home() {
   const handlePayNow = async (orderId) => {
     // orderId is same as paymentId because of one-to-one relationship
     const checkoutUrl = await createCheckoutSession(orderId);
+
+    console.log(checkoutUrl)
     if (checkoutUrl) {
       // Redirect user to Stripe Checkout
       window.location.href = checkoutUrl;

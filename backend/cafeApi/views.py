@@ -504,7 +504,7 @@ class WaiterDetailView(generics.RetrieveAPIView):
 
     
 class StatusUpdateView(generics.UpdateAPIView):
-     """
+    """
     StatusUpdateView class.
 
     Allows kitchen staff or waiters to update the status of orders.
@@ -525,6 +525,7 @@ class StatusUpdateView(generics.UpdateAPIView):
         waiter = get_object_or_404(Waiter, Staff_id=Staff_id)
         serializer.instance.waiter = waiter  
         serializer.save()
+
 class KitchenStaffView(generics.ListCreateAPIView):
     """
     KitchenStaffView class.
@@ -819,7 +820,7 @@ class CreateStripeCheckoutSessionView(APIView):
                 payment_method_types=['card'],
                 line_items=[{
                     'price_data': {
-                        'currency': 'usd',
+                        'currency': 'gbp',
                         'unit_amount': int(payment.amount*100),  
                         'product_data': {'name': f"Payment for Order {payment.order.id}"},
                     },
@@ -833,9 +834,11 @@ class CreateStripeCheckoutSessionView(APIView):
             payment.stripe_session_id = checkout_session.id
             
             payment.save()
+            
             return Response({"checkout_url": checkout_session.url}, status=status.HTTP_200_OK)
 
         except Exception as e:
+            print("Stripe Error:", str(e))
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 

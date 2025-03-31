@@ -147,7 +147,7 @@ function Kitchen({ setRole }) {
               {activeOrders.length > 0 ? (
                 activeOrders.map((order) => (
                   <tr key={order.table_id}>
-                    <td>{order.table_id} | {order.id}</td>
+                    <td>{order.table_number} | {order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
                     <td>
                       <select
