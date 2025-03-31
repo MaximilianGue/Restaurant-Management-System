@@ -2,6 +2,7 @@ from django.test import TestCase
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from .models import MenuItem, Notification, Order, Table, Waiter, KitchenStaff
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -104,7 +105,7 @@ class RegisterAPITestCase(APITestCase):
 
     Includes tests for missing fields, duplicate emails, and successful registration.
     """
-    def setUp(self):
+def setUp(self):
         """
         Sets up initial data for registration tests.
 
@@ -122,7 +123,7 @@ class RegisterAPITestCase(APITestCase):
             "email": "invalidemail"
         }
 
-    def test_register_user_missing_fields(self):
+def test_register_user_missing_fields(self):
         """
         Tests registration with missing required fields.
 
@@ -133,7 +134,7 @@ class RegisterAPITestCase(APITestCase):
         response = self.client.post("/cafeApi/register/", {}, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_register_user_invalid_data(self):
+def test_register_user_invalid_data(self):
         """
         Tests registration with invalid user data.
 
@@ -144,7 +145,7 @@ class RegisterAPITestCase(APITestCase):
         response = self.client.post("/cafeApi/register/", self.invalid_user_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_register_user_duplicate_username(self):
+def test_register_user_duplicate_username(self):
         """
         Tests registration with a username that already exists.
 
@@ -227,3 +228,77 @@ class StatusUpdateAPITestCase(APITestCase):
         """
         response = self.client.patch("/cafeApi/orders/999/update/", self.valid_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+
+class Log_inAPITestCase(APITestCase):
+    """
+    Test case for the user login API endpoint.
+    
+    Includes tests for successful login, missing credentials, invalid credentials, and non-existent users.
+    """
+
+    def setUp(self):
+        """
+        Sets up initial data for login tests.
+
+        Creates a test user with valid credentials.
+        """
+        self.client = APIClient()
+        self.username = 'testuser'
+        self.password = 'password123'
+        self.staff_id = 'ID123'
+        self.user = get_user_model().objects.create_user(username=self.username, password=self.password, staff_id=self.staff_id)
+        self.valid_data = {'username': self.username, 'password': self.password}
+
+    def test_login_successful(self):
+        """
+        Tests successful login with valid credentials.
+
+        Asserts:
+            - The response status is 200 OK.
+            - Access and refresh tokens are returned.
+            - The correct staff_id is included.
+        """
+        response = self.client.post('/cafeApi/login/', self.valid_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('access_token', response.data)
+        self.assertIn('refresh_token', response.data)
+        self.assertEqual(response.data['staff_id'], self.staff_id)
+
+    def test_login_missing_credentials(self):
+        """
+        Tests login with missing username or password.
+
+        Asserts:
+            - The response status is 400 BAD REQUEST.
+            - The appropriate error message is returned.
+        """
+        response = self.client.post('/cafeApi/login/', {'username': self.username})
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('detail', response.data)
+
+    def test_login_invalid_credentials(self):
+        """
+        Tests login with an incorrect password.
+
+        Asserts:
+            - The response status is 400 BAD REQUEST.
+            - The appropriate error message is returned.
+        """
+        invalid_data = {'username': self.username, 'password': 'wrongpassword'}
+        response = self.client.post('/cafeApi/login/', invalid_data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('detail', response.data)
+
+    def test_login_non_existent_user(self):
+        """
+        Tests login with a username that does not exist.
+
+        Asserts:
+            - The response status is 400 BAD REQUEST.
+            - The appropriate error message is returned.
+        """
+        non_existent_data = {'username': 'unknownuser', 'password': 'password123'}
+        response = self.client.post('/cafeApi/login/', non_existent_data)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('detail', response.data)
