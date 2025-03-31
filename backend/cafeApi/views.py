@@ -26,16 +26,35 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # Views for CRUD operations on MenuItems, Tables, and Customers
 class MenuItemView(generics.ListCreateAPIView):
+    """
+    MenuItemView class.
+
+    Handles operations related to menu items such as creation and updates.
+
+    Attributes:
+        serializer_class (Serializer): The serializer used for menu items.
+        permission_classes (list): List of permission classes applied to the view.
+    """
+    
     serializer_class = MenuItemSerializer
     queryset = MenuItem.objects.all()
 
     def post(self, request, *args, **kwargs):
+        """
+        Handles POST request to create a new menu item.
+
+        Args:
+            request (Request): The HTTP request containing menu item data.
+
+        Returns:
+            Response: A Response object containing the serialized menu item data or errors.
+        """
         data = request.data
         image = request.FILES.get('image')  # New uploaded image
         existing_image = data.get("existing_image")  # Old image URL if no new image
 
         try:
-            category = json.loads(data.get("category", "[]"))  # ✅ Properly parse list
+            category = json.loads(data.get("category", "[]"))  # 
         except json.JSONDecodeError:
             return Response({"error": "Invalid category format"}, status=400)
 
@@ -67,6 +86,16 @@ class MenuItemView(generics.ListCreateAPIView):
     queryset = MenuItem.objects.all()
 
     def update(self, request, *args, **kwargs):
+        """
+        Handles PUT request to update a menu item.
+
+        Args:
+            request (Request): The HTTP request containing updated data.
+            pk (int or str): The primary key of the menu item to update.
+
+        Returns:
+            Response: A Response object containing updated data or errors.
+        """
         print("Incoming PATCH Request Data:", request.data)  # Debugging
         print(" Incoming PATCH Request Files:", request.FILES)  # Debugging file uploads
 
@@ -97,10 +126,30 @@ class MenuItemView(generics.ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    MenuItemDetailView class.
+
+    Provides detailed information about a specific menu item.
+
+    Attributes:
+        queryset (QuerySet): QuerySet containing all menu items.
+        serializer_class (Serializer): Serializer used for displaying item details.
+    """
     serializer_class = MenuItemSerializer
     queryset = MenuItem.objects.all()
 
     def patch(self, request, *args, **kwargs):
+        """
+        Handles PATCH request to partially update a menu item.
+
+        Args:
+            request (Request): The HTTP request with partial update data.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments (includes `pk` of the item).
+
+        Returns:
+            Response: A Response object with updated data or errors.
+        """
         print("Incoming PATCH Request Data:", request.data)
         print("Incoming PATCH Request Files:", request.FILES)
 
@@ -144,17 +193,42 @@ class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class MenuItemAvailabilityView(APIView):
+    """
+    MenuItemAvailabilityView class.
+
+    Provides availability information for a specific menu item.
+
+    Attributes:
+        permission_classes (list): List of permission classes required to access the view.
+    """
     def get(self,pk):
         menu_item = get_object_or_404(MenuItem, pk=pk)
         serializer = MenuItemSerializer(menu_item)
         return Response({"id": menu_item.id, "availability": serializer.data["availability"]})
 
 class AvailabilityUpdateView(generics.UpdateAPIView):
-  
+    """
+    AvailabilityUpdateView class.
+
+    Updates the availability status of a menu item.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all menu items.
+        serializer_class (Serializer): Serializer to update availability.
+    """
     queryset = MenuItem.objects.all()
     serializer_class = UpdateAvailabilitySerializer
 
     def perform_update(self, serializer):
+        """
+        Custom update logic during PATCH or PUT request.
+
+        Args:
+            serializer (Serializer): The serializer instance to save.
+
+        Returns:
+            None
+        """
         availability = self.request.data.get("availability", None)
 
         if availability is None:
@@ -167,7 +241,15 @@ class TableView(viewsets.ModelViewSet):
     serializer_class = TableSerializer
 
 class TableViewSet(viewsets.ViewSet):
-    
+    """
+    TableView class.
+
+    Manages CRUD operations for tables in the restaurant.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all tables.
+        serializer_class (Serializer): Serializer used for table operations.
+    """
     def list(self, request):
         # Query all tables and for each table calculate the revenue
         tables = Table.objects.all()
@@ -211,11 +293,36 @@ class TableViewSet(viewsets.ViewSet):
 
 
 class TableDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    TableDetailView class.
+
+    Retrieves details of a specific table.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all tables.
+        serializer_class (Serializer): Serializer for displaying table details.
+    """
+
     serializer_class = TableSerializer
     queryset = Table.objects.all()
 
 class TableStaffIDView(APIView):
+    """
+    TableStaffIDView class.
+
+    Handles fetching the waiter assigned to a particular table.
+    """
     def get(self, request, table_number):
+        """
+        Handles GET request to retrieve waiter assigned to a specific table.
+
+        Args:
+            request (Request): The HTTP request object.
+            table_id (int): ID of the table.
+
+        Returns:
+            Response: Waiter details or error if not found.
+        """
         try:
             table = Table.objects.get(number=table_number)
             if table.waiter:
@@ -226,14 +333,41 @@ class TableStaffIDView(APIView):
             return Response({"error": "Table does not exist."}, status=status.HTTP_404_NOT_FOUND)
             
 class CustomerView(generics.ListCreateAPIView):
+    """
+    CustomerView class.
+
+    Allows listing all customers and adding a new customer.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all customers.
+        serializer_class (Serializer): Serializer used for customer data.
+    """
     serializer_class = CustomerSerializer
     queryset = Customer.objects.all()  # It gets all customers as a JSON list object
 
 class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    CustomerDetailView class.
+
+    Provides retrieval, update, and delete functionality for a single customer.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all customers.
+        serializer_class (Serializer): Serializer for customer operations.
+    """
     serializer_class = CustomerSerializer
     queryset = Customer.objects.all()  # It gets a single customer by ID, allowing update or delete
 
 class OrderView(APIView):
+    """
+    OrderView class.
+
+    Handles listing all orders and creating new ones.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all orders.
+        serializer_class (Serializer): Serializer used for order creation and display.
+    """
     def get(self, request):
         table_id = request.query_params.get("table")
         if table_id:
@@ -323,18 +457,44 @@ class OrderView(APIView):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
-# OrderDetailView for retrieving, updating, or deleting a specific order
 class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    OrderDetailView class.
+
+    Enables retrieval, update, and deletion of a specific order.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all orders.
+        serializer_class (Serializer): Serializer used for order operations.
+    """
     serializer_class = OrderSerializer
     queryset = Order.objects.all()
 
 class WaiterView(generics.ListCreateAPIView):
+    """
+    WaiterView class.
+
+    Handles creation and listing of waiter profiles.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all waiters.
+        serializer_class (Serializer): Serializer used for waiter data.
+    """
     serializer_class = WaiterSerializer
-    queryset = Waiter.objects.all()  # It gets all waiters as a JSON list object
+    queryset = Waiter.objects.all()  
 
 class WaiterDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    WaiterDetailView class.
+
+    Retrieves, updates, or deletes a specific waiter.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all waiters.
+        serializer_class (Serializer): Serializer used for waiter operations.
+    """
     serializer_class = WaiterSerializer
-    queryset = Waiter.objects.all()  # It gets a single waiter by ID, allowing update or delete
+    queryset = Waiter.objects.all()  
 
 
 class WaiterDetailView(generics.RetrieveAPIView):
@@ -344,6 +504,15 @@ class WaiterDetailView(generics.RetrieveAPIView):
 
     
 class StatusUpdateView(generics.UpdateAPIView):
+     """
+    StatusUpdateView class.
+
+    Allows kitchen staff or waiters to update the status of orders.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all orders.
+        serializer_class (Serializer): Serializer used for status updates.
+    """
     queryset = Order.objects.all()
     serializer_class = UpdateStatusSerializer
 
@@ -357,16 +526,43 @@ class StatusUpdateView(generics.UpdateAPIView):
         serializer.instance.waiter = waiter  
         serializer.save()
 class KitchenStaffView(generics.ListCreateAPIView):
+    """
+    KitchenStaffView class.
+
+    Lists all kitchen staff members and allows creation of new ones.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all kitchen staff.
+        serializer_class (Serializer): Serializer used for kitchen staff data.
+    """
     serializer_class = KitchenStaffSerializer
     queryset = KitchenStaff.objects.all()  # It gets all kitchen staff as a JSON list object
 
 class KitchenStaffDetailView(generics.RetrieveAPIView):
+    """
+    KitchenStaffDetailView class.
+
+    Retrieves, updates, or deletes a specific kitchen staff member.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all kitchen staff.
+        serializer_class (Serializer): Serializer used for kitchen staff operations.
+    """
     queryset = KitchenStaff.objects.all()
     serializer_class = KitchenStaffSerializer
 
 
 
 class ConfirmOrderUpdateView(generics.UpdateAPIView):
+    """
+    ConfirmOrderUpdateView class.
+
+    Allows confirmation of customer orders.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all orders.
+        serializer_class (Serializer): Serializer used for confirming orders.
+    """
     queryset = Order.objects.all()
     serializer_class = ConfirmOrderSerializer
 
@@ -398,7 +594,13 @@ class StatusUpdateView(generics.UpdateAPIView):
 
 class NotificationViewSet(viewsets.ModelViewSet):
     """
-    A viewset to manage notifications between waiters and kitchen staff.
+    NotificationViewSet class.
+
+    Handles operations related to customer/waiter/kitchen staff notifications.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all notifications.
+        serializer_class (Serializer): Serializer used for notification data.
     """
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
@@ -462,12 +664,10 @@ class NotificationViewSet(viewsets.ModelViewSet):
         if not staff_id or not target_staff_id:
             return Response({"detail": "Staff_id and target_staff_id are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Confirm sender is a waiter
         waiter = Waiter.objects.filter(Staff_id=staff_id).first()
         if not waiter:
             return Response({"detail": "Only waiters can send assistance requests."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Try to find target staff — it could be either a waiter or kitchen staff
         target_staff = None
         is_kitchen_staff = False
 
@@ -484,15 +684,12 @@ class NotificationViewSet(viewsets.ModelViewSet):
         if not target_staff:
             return Response({"detail": "Target staff member not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Build message
         note_message = message if message else f"Waiter {waiter.first_name} {waiter.last_name} needs assistance."
         if table_number:
             note_message += f" at Table {table_number}."
 
-        # Look up table if provided
         table = Table.objects.filter(number=table_number).first() if table_number else None
 
-        # Create notification (with flexible target)
         notification = Notification.objects.create(
             notification_type='alert',
             kitchen_staff=kitchen_staff if is_kitchen_staff else None,
@@ -534,6 +731,11 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
 
 class MarkNotificationRead(APIView):
+    """
+    MarkNotificationRead class.
+
+    Marks a specific notification as read.
+    """
     def post(self, request, pk):
         notification = get_object_or_404(Notification, pk=pk)
         notification.is_read = True
@@ -543,6 +745,14 @@ class MarkNotificationRead(APIView):
 
 
 class RegisterView(generics.CreateAPIView):
+    """
+    RegisterView class.
+
+    Handles user registration and account creation.
+
+    Attributes:
+        permission_classes (list): Permissions for open access to registration.
+    """
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
@@ -551,6 +761,11 @@ class RegisterView(generics.CreateAPIView):
         serializer.save()
 
 class LoginView(APIView):
+    """
+    LoginView class.
+
+    Handles user login and JWT token generation.
+    """
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -574,6 +789,15 @@ class LoginView(APIView):
     
 
 class UserListView(generics.ListAPIView):
+    """
+    UserListView class.
+
+    Lists all registered users.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all users.
+        serializer_class (Serializer): Serializer used for user data.
+    """
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
@@ -662,7 +886,11 @@ class StripePaymentSuccessView(APIView):
 
 
 class StripePaymentCancelView(APIView):
+    """
+    StripePaymentCancelView class.
 
+    Handles actions when a Stripe payment is canceled.
+    """
     permission_classes = [AllowAny]
 
     def get(self, request, pk, **kwargs):
@@ -679,7 +907,11 @@ class StripePaymentCancelView(APIView):
         return Response({"message": "Payment canceled!"},status=200)
 
 class SalesPerWaiterView(APIView):
-  
+    """
+    SalesPerWaiterView class.
+
+    Provides a report of total sales per waiter.
+    """
     permission_classes =[AllowAny]
 
     def get(self, request, staff_id):
@@ -692,7 +924,15 @@ class SalesPerWaiterView(APIView):
             "total_sales": sum(payment.amount for payment in successful_payments) 
         }, status=status.HTTP_200_OK)
 class PaymentListView(APIView):
-  
+    """
+    PaymentListView class.
+
+    Lists all recorded payments.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all payments.
+        serializer_class (Serializer): Serializer used for payment data.
+    """
     permission_classes = [AllowAny] 
     def get(self, request):
         payments = Payment.objects.all()
@@ -710,13 +950,30 @@ class PaymentListView(APIView):
 
 
 class ManagerListView(generics.ListAPIView):
+    """
+    ManagerListView class.
 
+    Lists all users with the manager role.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of manager users.
+        serializer_class (Serializer): Serializer used for user data.
+    """
     queryset = Manager.objects.all()
     serializer_class = ManagerSerializer
     
 
 @api_view(['GET'])
 def get_employees(request):
+    """
+    Retrieves all users with roles such as waiter, kitchen staff, or manager.
+
+    Args:
+        request (Request): The HTTP request object.
+
+    Returns:
+        Response: A list of filtered users based on role.
+    """
     # Fetch all waiters and kitchen staff
     waiters = Waiter.objects.all()
     kitchen_staff = KitchenStaff.objects.all()
@@ -733,6 +990,15 @@ def get_employees(request):
 
 @api_view(['PUT'])
 def assign_waiter_to_table(request, table_id):
+    """
+    Assigns a waiter to a specific table.
+
+    Args:
+        request (Request): The HTTP request with assignment data.
+
+    Returns:
+        Response: A confirmation or error message.
+    """
     try:
         table = Table.objects.get(id=table_id)
     except Table.DoesNotExist:
@@ -751,6 +1017,16 @@ def assign_waiter_to_table(request, table_id):
 
 @api_view(['PUT'])
 def update_employee(request, employee_id):
+    """
+    Updates information about a specific employee.
+
+    Args:
+        request (Request): The HTTP request containing updated data.
+        user_id (int): The ID of the employee to update.
+
+    Returns:
+        Response: The updated employee data or an error.
+    """
     print("Data received in PUT:", request.data)
 
     # Try to fetch both a waiter and kitchen staff with this ID
@@ -817,6 +1093,16 @@ def update_employee(request, employee_id):
 
 @api_view(['DELETE'])
 def fire_employee(request, employee_id):
+    """
+    Removes an employee from the system.
+
+    Args:
+        request (Request): The HTTP request.
+        user_id (int): The ID of the employee to remove.
+
+    Returns:
+        Response: A success message or error.
+    """
     try:
         # Check if it's a waiter or kitchen staff and delete accordingly
         waiter = Waiter.objects.filter(id=employee_id).first()
@@ -837,6 +1123,16 @@ def fire_employee(request, employee_id):
 
 @api_view(['PUT'])
 def update_table(request, table_id):
+    """
+    Updates the details of a table.
+
+    Args:
+        request (Request): The HTTP request containing table data.
+        table_id (int): ID of the table to update.
+
+    Returns:
+        Response: Updated table data or validation errors.
+    """
     try:
         table = Table.objects.get(id=table_id)
     except Table.DoesNotExist:
@@ -864,6 +1160,15 @@ def update_table(request, table_id):
 
 @api_view(['POST'])
 def create_employee(request):
+    """
+    Creates a new employee with a specific role.
+
+    Args:
+        request (Request): The HTTP request with employee details.
+
+    Returns:
+        Response: Newly created employee data or errors.
+    """
     role = request.data.get("role", "").lower()
     
     if role not in ["waiter", "kitchen staff"]:
