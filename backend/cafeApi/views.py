@@ -504,7 +504,7 @@ class WaiterDetailView(generics.RetrieveAPIView):
 
     
 class StatusUpdateView(generics.UpdateAPIView):
-     """
+    """
     StatusUpdateView class.
 
     Allows kitchen staff or waiters to update the status of orders.
@@ -525,6 +525,7 @@ class StatusUpdateView(generics.UpdateAPIView):
         waiter = get_object_or_404(Waiter, Staff_id=Staff_id)
         serializer.instance.waiter = waiter  
         serializer.save()
+
 class KitchenStaffView(generics.ListCreateAPIView):
     """
     KitchenStaffView class.
