@@ -1,7 +1,7 @@
 from django.test import TestCase
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
-from .models import MenuItem
+from .models import MenuItem, Notification, Order, Table, Waiter, KitchenStaff
 from django.contrib.auth.models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -35,3 +35,98 @@ class MenuItemAPITestCase(APITestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(response.data[0]["name"], "Burrito")
         self.assertEqual(response.data[0]["allergies"], ["Dairy", "Gluten"])
+
+
+class NotificationAPITestCase(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.waiter = Waiter.objects.create(Staff_id="W123", first_name="John", last_name="Doe")
+        self.kitchen_staff = KitchenStaff.objects.create(Staff_id="K456", first_name="Jane", last_name="Smith")
+        self.table = Table.objects.create(number=5)
+        self.order = Order.objects.create(table=self.table, waiter=self.waiter, status="pending", total_price=20.0)
+        self.notification_data = {
+            "notification_type": "order_ready",
+            "waiter": self.waiter.id,
+            "order": self.order.id,
+            "table": self.table.id,
+            "message": "Order is ready for pickup."
+        }
+
+    def test_create_notification(self):
+        response = self.client.post("/cafeApi/notifications/", self.notification_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["message"], "Order is ready for pickup.")
+
+    def test_mark_notification_as_read(self):
+        notification = Notification.objects.create(notification_type="order_ready", waiter=self.waiter, order=self.order, table=self.table, message="Order is ready.")
+        response = self.client.post(f"/cafeApi/notifications/{notification.id}/mark_as_read/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        notification.refresh_from_db()
+        self.assertTrue(notification.is_read)
+
+class RegisterAPITestCase(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.valid_user_data = {
+            "username": "newuser",
+            "password": "securepassword123",
+            "email": "newuser@example.com"
+        }
+        self.invalid_user_data = {
+            "username": "",
+            "password": "short",
+            "email": "invalidemail"
+        }
+
+    def test_register_user_success(self):
+        response = self.client.post("/cafeApi/register/", self.valid_user_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIn("username", response.data)
+        self.assertEqual(response.data["username"], "newuser")
+
+    def test_register_user_missing_fields(self):
+        response = self.client.post("/cafeApi/register/", {}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_register_user_invalid_data(self):
+        response = self.client.post("/cafeApi/register/", self.invalid_user_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_register_user_duplicate_username(self):
+        self.client.post("/cafeApi/register/", self.valid_user_data, format="json")  # First registration
+        response = self.client.post("/cafeApi/register/", self.valid_user_data, format="json")  # Duplicate
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    
+class StatusUpdateAPITestCase(APITestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.waiter = Waiter.objects.create(Staff_id="W123", first_name="John", last_name="Doe")
+        self.table = Table.objects.create(number=1)
+        self.order = Order.objects.create(table=self.table, waiter=self.waiter, status="pending", total_price=25.0)
+        self.valid_data = {
+            "status": "completed",
+            "Staff_id": "W123"
+        }
+        self.invalid_data = {
+            "status": "completed"  # Missing Staff_id
+        }
+
+    def test_update_order_status_success(self):
+        response = self.client.patch(f"/cafeApi/orders/{self.order.id}/update/", self.valid_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.order.refresh_from_db()
+        self.assertEqual(self.order.status, "completed")
+
+    def test_update_order_status_missing_staff_id(self):
+        response = self.client.patch(f"/cafeApi/orders/{self.order.id}/update/", self.invalid_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Staff_id", response.data)
+
+    def test_update_order_status_invalid_staff_id(self):
+        data = {"status": "completed", "Staff_id": "INVALID"}
+        response = self.client.patch(f"/cafeApi/orders/{self.order.id}/update/", data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_order_status_nonexistent_order(self):
+        response = self.client.patch("/cafeApi/orders/999/update/", self.valid_data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
