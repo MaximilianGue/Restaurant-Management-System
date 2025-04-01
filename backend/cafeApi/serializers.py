@@ -12,6 +12,12 @@ from .models import OrderItem
 
 
 class MenuItemSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer to display and update the MenuItem model.
+    Handles allergies and categories for MenuItems.
+    """
+
     allergies = serializers.ListField(
         child=serializers.CharField(), required=False
     )
@@ -47,6 +53,11 @@ class MenuItemSerializer(serializers.ModelSerializer):
 
 
 class UpdateAvailabilitySerializer(serializers.ModelSerializer):
+
+    """
+    Serializer to update the availability of a MenuItem.
+    """
+
     class Meta:
         model = MenuItem
         fields = ['availability']  # Only allow updating the availability field
@@ -57,6 +68,12 @@ class UpdateAvailabilitySerializer(serializers.ModelSerializer):
         return instance
 
 class TableSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Table model to display details about tables including their assigned waiter
+    and total revenue.
+    """
+
     waiter_name = serializers.SerializerMethodField()
     revenue = serializers.SerializerMethodField()
 
@@ -73,6 +90,12 @@ class TableSerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Table model to display details about tables including their assigned waiter
+    and total revenue.
+    """
+
     name = serializers.CharField(source="menu_item.name", read_only=True)
     price = serializers.DecimalField(source="menu_item.price", max_digits=6, decimal_places=2, read_only=True)
 
@@ -82,6 +105,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Order model to handle orders and their associated items.
+    """
+
     table_id = serializers.PrimaryKeyRelatedField(queryset=Table.objects.all(), source="table")
     items = OrderItemSerializer(source="orderitem_set", many=True, read_only=True)  # ✅ FIXED
 
@@ -97,12 +125,22 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class CustomerSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Customer model to handle customer data.
+    """
+
     class Meta:
         model = Customer
         fields = '__all__'
 
         
 class UpdateStatusSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer to update the status of an order by waiter.
+    """
+
     Staff_id = serializers.CharField(source = "waiter.Staff_id", allow_blank=True, required=False)
     order_id = serializers.CharField(source = "order.id", allow_blank=True, required=False)
     class Meta:
@@ -118,6 +156,11 @@ class UpdateStatusSerializer(serializers.ModelSerializer):
 
         
 class ConfirmOrderSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for confirming an order by kitchen staff, changing its status.
+    """
+
     Staff_id = serializers.CharField(source="KitchenStaff.Staff_id", allow_blank=True, required=False)
     order_id = serializers.CharField(source = "order.id", allow_blank=True, required=False)
     class Meta:
@@ -131,6 +174,11 @@ class ConfirmOrderSerializer(serializers.ModelSerializer):
         return instance
 
 class NotificationSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Notification model to display notification details.
+    """
+
     class Meta:
         model = Notification
         fields = '__all__'
@@ -139,6 +187,11 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer to display and create User accounts, including role and staff ID.
+    """
+
     class Meta:
         model = get_user_model()
         fields = ['username', 'password', 'role', 'staff_id']  # Include staff_id
@@ -149,6 +202,11 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class WaiterSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Waiter model to handle waiter details.
+    """
+
     role = serializers.CharField(default="Waiter")  # Add role info
 
     class Meta:
@@ -156,6 +214,11 @@ class WaiterSerializer(serializers.ModelSerializer):
         fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'role']
 
 class KitchenStaffSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the KitchenStaff model to handle kitchen staff details.
+    """
+
     role = serializers.CharField(default="Kitchen Staff")  # Add role info
 
     class Meta:
@@ -163,11 +226,21 @@ class KitchenStaffSerializer(serializers.ModelSerializer):
         fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'role']
 
 class PaymentSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Payment model to display and manage payments for orders.
+    """
+
     class Meta:
         model = Payment
         fields = ["id","order" ,"table", "waiter", "amount",]
 
 class ManagerSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Manager model to display manager details.
+    """
+
     class Meta:
         model = Manager
         fields = '__all__'
