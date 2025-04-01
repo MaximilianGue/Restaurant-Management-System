@@ -1,10 +1,11 @@
-/* --- Existing Styles --- */
+/* Contaier for manager section */
 .manager-container {
     max-width: 800px;
     margin: auto;
     text-align: center;
 }
 
+/* Simple add item form */
 .add-item-form {
     background: #f3f4f6;
     padding: 1.5rem;
@@ -20,6 +21,7 @@
     border-radius: 6px;
 }
 
+/* Styling for the buttons */
 button {
     background-color: #2563eb;
     color: white;
@@ -34,12 +36,14 @@ button:hover {
     background-color: #1e40af;
 }
 
+/* menu list container */
 .menu-list {
     background: #ffffff;
     padding: 1.5rem;
     border-radius: 8px;
 }
 
+/* individual menu item row */
 .menu-item {
     display: flex;
     align-items: center;
@@ -60,7 +64,7 @@ button:hover {
     text-align: left;
 }
 
-/* --- Edit Popup Styles --- */
+/* General style for edit popup */
 .edit-popup {
     position: fixed;
     top: 50%;
@@ -78,7 +82,7 @@ button:hover {
     
 }
 
-/* --- 3x2 Grid for Edit Fields --- */
+/* 3x2 Grid for fields */
 .edit-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -99,7 +103,7 @@ button:hover {
     border-radius: 6px;
 }
 
-/* --- Category Grid --- */
+/*  4 * x category selection grid */
 .category-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -125,7 +129,7 @@ button:hover {
     background-color: #e0f2fe;
 }
 
-/* --- Buttons at the Bottom --- */
+/* Buttoms at bottom for edit pop up*/
 .edit-buttons {
     display: flex;
     justify-content: center;
@@ -133,7 +137,7 @@ button:hover {
     margin-top: 20px;
 }
 
-/* --- Delete & Edit Buttons --- */
+/* Styling of delete and edit button */
 .delete-btn {
     background-color: #e11d48;
 }
@@ -150,80 +154,77 @@ button:hover {
     background-color: #d97706;
 }
 
+/* Styling for preview of uploaded images*/
 .image-preview {
-    width: 150px; /* Adjust as needed */
-    height: 150px; /* Keep the aspect ratio consistent */
-    object-fit: cover; /* Ensures the image covers the entire area without distortion */
+    width: 150px; 
+    height: 150px; 
+    object-fit: cover; 
     border-radius: 8px;
     margin-top: 10px;
 }
 
-/* Container for buttons */
 .popup-buttons {
     display: flex;
     justify-content: center;
-    gap: 10px; /* Space between buttons */
-    margin-top: 15px; /* Space from image */
+    gap: 10px; 
+    margin-top: 15px;
 }
 
-/* Ensure buttons have consistent size */
 .popup-buttons button {
     padding: 10px 20px;
     font-size: 16px;
     border-radius: 6px;
 }
 
-/* Add spacing below the Add Item button */
+
 .add-btn {
-    margin-bottom: 20px; /* Adds space below the button */
+    margin-bottom: 20px; 
 }
 
 
-/* Center everything inside menu-container */
+/* Centers menu items */
 .menu-container {
     display: flex;
     flex-direction: column;
-    align-items: center; /* Centers the entire menu section */
+    align-items: center; 
     justify-content: center;
     width: 100%;
-    margin-top: 20px; /* Adds spacing from above */
+    margin-top: 20px; 
 }
 
-/* Center the title */
 .menu-title {
     font-size: 1.8rem;
     font-weight: bold;
     text-align: center;
-    margin-bottom: 15px; /* Space between title and grid */
+    margin-bottom: 15px; 
 }
 
-/* Menu List - 5-column grid with wider items */
+/*  styling for 5 column menu list */
 .menu-list {
     display: grid;
-    grid-template-columns: repeat(5, minmax(180px, 1fr)); /* Each column is almost double in width */
-    gap: 25px; /* Slightly increased spacing */
+    grid-template-columns: repeat(5, minmax(180px, 1fr)); 
+    gap: 25px; 
     background: #ffffff;
     padding: 1.5rem;
     border-radius: 8px;
-    width: 95%; /* Make the table take up more space */
+    width: 95%; 
     justify-content: center;
 }
 
-/* Menu Item - Make each item wider */
+/* Styling of each menu item in grid*/
 .menu-item {
     display: flex;
     flex-direction: column;
     align-items: center;
     background: #f3f4f6;
-    padding: 1.5rem; /* More padding */
+    padding: 1.5rem; 
     border-radius: 8px;
     text-align: center;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    width: 100%; /* Makes items expand */
-    max-width: 230px; /* Increase max width to make items wider */
+    width: 100%; 
+    max-width: 230px; 
 }
 
-/* Menu Images - Increase size slightly */
 .menu-image {
     width: 120px;
     height: 120px;
@@ -232,13 +233,12 @@ button:hover {
     margin-bottom: 10px;
 }
 
-/* Ensure buttons inside each menu item are properly spaced */
 .menu-item button {
     width: 100%;
     margin-top: 5px;
 }
 
-/* --- Edit Employee Popup --- */
+/* Styling of edit employee popup */
 .edit-employee-popup {
     position: fixed;
     top: 50%;
@@ -249,31 +249,29 @@ button:hover {
     border-radius: 10px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     z-index: 1000;
-    width: 600px; /* Adjust the width */
+    width: 600px; 
     max-height: 85vh;
     overflow-y: auto;
     text-align: center;
     animation: fadeIn 0.3s ease-in-out;
 }
 
-/* Overlay background */
 .overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay */
+    background: rgba(0, 0, 0, 0.6);
     
 }
 
-/* Smooth fade-in animation */
 @keyframes fadeIn {
     from { opacity: 0; transform: scale(0.9); }
     to { opacity: 1; transform: scale(1); }
 }
 
-/* --- Form Fields --- */
+/* Styling of edit grid which is used in employee forms */
 .edit-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -294,7 +292,7 @@ button:hover {
     border-radius: 6px;
 }
 
-/* --- Role Selection --- */
+/* Role Selection */
 .select-role {
     padding: 0.5rem;
     border: 1px solid #d1d5db;
@@ -302,12 +300,11 @@ button:hover {
     width: 100%;
 }
 
-/* --- Buttons --- */
 .popup-buttons {
     display: flex;
     justify-content: center;
     gap: 10px;
-    margin-top: 15px; /* Space from form */
+    margin-top: 15px;
 }
 
 .popup-buttons button {
@@ -316,11 +313,11 @@ button:hover {
     border-radius: 6px;
 }
 
-/* Close Button (styled for modal) */
+/* Close Button */
 .close-popup {
     margin-top: 15px;
     padding: 10px 15px;
-    background: #e11d48; /* Red close button */
+    background: #e11d48;
     color: white;
     border: none;
     border-radius: 6px;
@@ -333,6 +330,7 @@ button:hover {
     background: #c81e3f;
 }
 
+/* Styling of suggestions tab */
 .suggestions-container {
     padding: 20px;
 }
@@ -359,11 +357,11 @@ button:hover {
     text-align: center;
 }
 .profit-high {
-    background-color: #d4edda; /* ✅ Light green */
+    background-color: #d4edda; 
 }
 
 .profit-low {
-    background-color: #ffe5b4; /* ✅ Light orange */
+    background-color: #ffe5b4; 
 }
 .suggestions-table tr.profit-high td {
     background-color: #d4edda !important;
@@ -374,7 +372,7 @@ button:hover {
 }
 
 .suggestions-table thead th {
-    background-color: #91aae5; /* Navy/Dark Blue */
+    background-color: #91aae5; 
     color: white;
     font-weight: 600;
     font-size: 16px;
@@ -388,13 +386,14 @@ button:hover {
     vertical-align: middle;
 }
 
+/* Styling of order popup */
 .order-popup {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5); /* dark overlay */
+    background: rgba(0, 0, 0, 0.5); 
     display: flex;
     justify-content: center;
     align-items: center;
@@ -405,8 +404,8 @@ button:hover {
     background: white;
     padding: 30px;
     border-radius: 12px;
-    width: 80%; /* Increased width */
-    max-width: 1000px; /* Limit max width for large screens */
+    width: 80%; 
+    max-width: 1000px; 
     max-height: 80vh;
     overflow-y: auto;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
@@ -414,14 +413,14 @@ button:hover {
   }
   
   .waiter-note {
-    font-size: 0.85rem;         /* Smaller text */
-    font-weight: bold;          /* Bold text */
-    font-family: 'Poppins', sans-serif; /* Modern, clean font */
-    color: #444;                /* Slightly muted black for elegance */
+    font-size: 0.85rem;        
+    font-weight: bold;       
+    font-family: 'Poppins', sans-serif; 
+    color: #444;             
     margin-bottom: 10px;
     padding: 6px 10px;
-    border-left: 4px solid #ffd700; /* Golden left border for crown context */
-    background-color: #fdf9e7; /* Subtle background to make it stand out */
+    border-left: 4px solid #ffd700;
+    background-color: #fdf9e7;
     border-radius: 4px;
   }
 
@@ -438,23 +437,23 @@ button:hover {
   }
   
   .add-btn:hover {
-    background-color: #388e3c; /* Darker green on hover */
+    background-color: #388e3c; 
   }
 
+  /* Styling of navigation bar */
   .nav-bar {
     display: flex;
-    justify-content: center; /* ✅ Center the buttons */
+    justify-content: center; 
     gap: 16px;
     margin-bottom: 20px;
     flex-wrap: wrap;
   }
   
-  
   .nav-button {
     padding: 10px 16px;
     border: none;
-    background-color: #f0f0f0;  /* Softer light gray */
-    color: #333;                /* Darker text for better visibility */
+    background-color: #f0f0f0;  
+    color: #333;   
     border-radius: 6px;
     cursor: pointer;
     font-weight: 500;
@@ -505,7 +504,7 @@ button:hover {
     background-color: #3e9142;
   }
 
-  /* --- Improved Add Table Section --- */
+  
 .add-table-form {
     margin-bottom: 1.5rem;
     padding: 1.5rem;
@@ -551,7 +550,7 @@ button:hover {
 .add-table-form button:hover {
     background-color: #16a34a;
 }
-/* --- Edit Table Popup --- */
+
 .edit-popup label {
     display: block;
     margin-bottom: 12px;
@@ -626,7 +625,6 @@ button:hover {
     max-width: 200px;
 }
 
-/* Center the Add Table button under inputs */
 .centered-add-btn {
     background-color: #4caf50;
     color: white;
@@ -675,7 +673,6 @@ button:hover {
     margin-top: 5px;
 }
 
-/* Adjust popup button spacing */
 .popup-buttons {
     display: flex;
     justify-content: center;

@@ -14,7 +14,9 @@ DB_NAME='Cafe-Database'
 DB_USER='myuser'
 DB_PASSWORD='NewStrongPassword'
 DB_HOST='34.89.89.22'
-DB_PORT='3306'" > .env
+DB_PORT='3306'
+STRIPE_PUBLISHABLE_KEY=pk_test_51R4Y27C5t9VLsictA5mCv7SzOvXdlB2zQ8aWVfhZsBImpYC3gfWs5oSXKVfI7V4FnsXkPSa0ufPORVQFyJhC5bje00IrZiDo8k
+STRIPE_SECRET_KEY=sk_test_51R4Y27C5t9VLsictp6uht1Y02Z8BHYA3Pe2xjsTUC77mudetMTWSAiqrgbTMXkIvLfyvGB748FMl5q6AHHHCNhem001zf6VlfY" > .env
 
 # Apply database migrations:
 python3 manage.py makemigrations

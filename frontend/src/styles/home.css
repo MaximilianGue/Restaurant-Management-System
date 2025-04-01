@@ -1,16 +1,11 @@
-/* 
-  Modernized home.css 
-  - Focus on modern card layout, buttons, and subtle transitions
-*/
-
-/* Home page container */
+/* Home page Container */
 .container {
   display: flex;
   flex-direction: column;
   gap: 2rem;
 }
 
-/* Title for the restaurant */
+/* Styling for the title for the restaurant */
 .restaurant-title {
   font-family: 'Merriweather', serif;
   font-size: 3rem;
@@ -21,7 +16,7 @@
   margin-bottom: 2rem;
 }
 
-/* Filter container + buttons */
+/* Filter container buttons */
 .filter-container {
   display: flex;
   flex-wrap: wrap;
@@ -29,6 +24,7 @@
   gap: 1rem;
 }
 
+/* Styling for the filter buttons */
 .filter-button {
   background-color: #e5e7eb;
   color: #1f2937;
@@ -39,6 +35,7 @@
   border: none;
 }
 
+/* The hover and active states for the filter buttons */
 .filter-button:hover {
   background-color: #2563eb;
   color: #ffffff;
@@ -50,19 +47,19 @@
   color: #ffffff;
 }
 
-/* Main Layout: Ensures menu and order summary are side by side */
+/* The layout container for the menu and the order summary */
 .main-container {
   display: flex;
-  flex-direction: row; /* Keep side-by-side layout */
+  flex-direction: row;
   justify-content: space-between;
-  align-items: stretch; /* Ensure both sections have equal height */
+  align-items: stretch; 
   gap: 2rem;
   padding: 2rem;
   width: 100%;
-  min-height: 600px; /* Optional: Ensures a decent minimum height */
+  min-height: 600px;
 }
 
-/* Menu container: Holds menu grid */
+/* Styling of menu section*/
 .menu-container {
   flex: 2;
   display: flex;
@@ -70,14 +67,14 @@
   gap: 2rem;
 }
 
-/* Menu grid: Displays items in 2 columns */
+/* Grid layout for themenu items */
 .menu-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(100px, 1fr)); /* Always 2 columns */
+  grid-template-columns: repeat(3, minmax(100px, 1fr)); 
   gap: 2rem;
 }
 
-/* Order summary: Stays next to menu grid */
+/* The order summary styling */
 .order-summary {
   flex: 1;
   max-width: 350px;
@@ -94,14 +91,14 @@
   margin-top: 1rem;
 }
 
-/* Order summary heading */
+/* Heading inside of hte order summary */
 .order-summary h4 {
   font-size: 1.5rem;
   color: #111827;
   margin-bottom: 1rem;
 }
 
-/* Order summary input */
+/* Input for the table number */
 .table-input {
   width: 100%;
   max-width: 200px;
@@ -111,7 +108,7 @@
   border-radius: 6px;
 }
 
-/* Menu item card */
+/* Styling for menu items */
 .menu-item {
   background-color: #ffffff;
   border-radius: 8px;
@@ -120,10 +117,9 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   
   margin-top: 0 !important;
-  
-  
 }
 
+/* The hover effect for the menu item */
 .menu-item:hover {
   transform: translateY(-5px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -136,7 +132,7 @@
   object-fit: cover;
 }
 
-/* Menu item details */
+/* Details of menu item */
 .menu-item-details {
   padding: 1rem;
   display: flex;
@@ -162,7 +158,7 @@
   font-weight: 600;
 }
 
-/* Select & counter buttons */
+/* Buttons for selecting items or modifying its count */
 .select-button,
 .counter-btn {
   background-color: #2563eb;
@@ -176,13 +172,14 @@
   font-weight: 500;
 }
 
+/* The hover effect for select/counter buttons */
 .select-button:hover,
 .counter-btn:hover {
   background-color: #1e3a8a;
   transform: scale(1.02);
 }
 
-/* Counter for quantity selection */
+/* The layout for quantity counter*/
 .counter {
   display: flex;
   align-items: center;
@@ -191,11 +188,11 @@
 }
 
 .counter span {
-  font-weight: 500;
+  font-weight: 500; 
   font-size: 1.1rem;
 }
 
-/* Order summary items */
+/* Style of each item in the order summary */
 .order-summary-item {
   display: flex;
   justify-content: space-between;
@@ -204,7 +201,7 @@
   font-size: 1rem;
 }
 
-/* Total line */
+/* Styling of line in order sumamry*/
 .order-summary-total {
   display: flex;
   justify-content: space-between;
@@ -217,7 +214,7 @@
   
 }
 
-/* Place order button */
+/* Button to place an order */
 .order-button {
   background: #f97316;
   color: white;
@@ -228,12 +225,13 @@
   font-weight: 600;
 }
 
+/* Order button hover effect */
 .order-button:hover {
   background-color: #c2410c;
   transform: scale(1.02);
 }
 
-/* Placed orders container */
+/* The container for orders, which were already placed */
 .placed-orders-container {
   background-color: #f9fafb;
   border-radius: 6px;
@@ -247,6 +245,7 @@
   margin-bottom: 1rem;
 }
 
+/* Styling of the placed order */
 .placed-order {
   background-color: #ffffff;
   padding: 1rem;
@@ -266,7 +265,7 @@
   color: #334155;
 }
 
-/* Popup modal */
+/* Styling of popup modal */
 .custom-popup {
   position: fixed;
   top: 50%;
@@ -303,7 +302,7 @@
   transform: scale(1.02);
 }
 
-/* Responsive Design */
+/* Responsiveness for tablets, etc */
 @media (max-width: 1024px) {
   .main-container {
     flex-direction: column;

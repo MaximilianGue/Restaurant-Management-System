@@ -1,4 +1,4 @@
-/* Container */
+/* Staff login container */
 .staff-login-container {
     text-align: center;
     margin-top: 60px;
@@ -6,7 +6,7 @@
     flex-direction: column;
     align-items: center;
     gap: 20px;
-    background: #f4f8ff; /* Soft light blue background */
+    background: #f4f8ff; 
     padding: 40px;
     border-radius: 16px;
     box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.1);
@@ -19,15 +19,15 @@ h2 {
     font-size: 32px;
     font-weight: bold;
     margin-bottom: 30px;
-    color: #5c6bc0; /* Soft blue color for the heading */
+    color: #5c6bc0;
 }
 
-/* Inputs */
+/* Staff input fields */
 .staff-input {
     width: 100%;
     padding: 14px;
     font-size: 18px;
-    border: 1px solid #d1d9e6; /* Light grayish blue border */
+    border: 1px solid #d1d9e6; 
     border-radius: 8px;
     margin: 8px 0;
     transition: border-color 0.3s ease;
@@ -35,11 +35,11 @@ h2 {
 }
 
 .staff-input:focus {
-    border-color: #6c5ce7; /* Purple when focused */
+    border-color: #6c5ce7; 
     outline: none;
 }
 
-/* Buttons */
+/* Styling for staff buttons */
 .staff-button {
     width: 100%;
     padding: 14px;
@@ -53,8 +53,9 @@ h2 {
     box-shadow: 0px 6px 18px rgba(0, 0, 0, 0.1);
 }
 
+/* Styling for return button */
 .ret-button {
-    background-color: #a0c4ff; /* Soft blue background for return button */
+    background-color: #a0c4ff; 
     color: white;
     padding: 14px 20px;
     border-radius: 8px;
@@ -66,12 +67,13 @@ h2 {
 }
 
 .return-button:hover {
-    background-color: #89aef1; /* Slightly darker shade on hover */
+    background-color: #89aef1;
     transform: scale(1.05);
 }
 
+/* Styling for login button */
 .login-button {
-    background-color: #6c5ce7; /* Soft purple for login button */
+    background-color: #6c5ce7; 
     color: white;
     padding: 14px 20px;
     border-radius: 8px;
@@ -82,7 +84,7 @@ h2 {
 }
 
 .login-button:hover {
-    background-color: #5a48d3; /* Darker purple on hover */
+    background-color: #5a48d3; 
     transform: scale(1.05);
 }
 
@@ -104,14 +106,16 @@ h2 {
     align-items: center;
 }
 
+/* Text of pop up messages */
 .popup-content p {
     font-size: 18px;
     margin-bottom: 15px;
     color: #333;
 }
 
+/* Styling for pop up close button */
 .popup-content button {
-    background: #ff6b6b; /* Soft red button for popup */
+    background: #ff6b6b; 
     color: white;
     border: none;
     padding: 10px 20px;
@@ -123,5 +127,5 @@ h2 {
 }
 
 .popup-content button:hover {
-    background: #e63946; /* Darker red on hover */
+    background: #e63946; 
 }

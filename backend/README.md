@@ -2,10 +2,6 @@
 
 Automatical setup using .sh files
 --------------------------------
-mac/linux/windows:
-$ source setup.sh
-
-
 
 In the following, you can see how to manually do it.
 
@@ -77,3 +73,5 @@ Each API URL corresponds to a different dataset:
 ---
 This setup ensures the backend runs smoothly with all required configurations. If you encounter any issues, check the Discord server for support.
 
+On mac, this file can help:
+$ source setup.sh

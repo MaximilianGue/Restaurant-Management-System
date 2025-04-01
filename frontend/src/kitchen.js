@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // For marking notifications as read
+import axios from "axios"; 
 import { 
   fetchOrders, 
   updateOrderStatus, 
   fetchNotificationsForStaff, 
   callWaiter,
   confirmOrder 
-} from "./api";
-import "./kitchen.css";
+} from "./components/api";
+import "./styles/kitchen.css";
 import { STAFF_ID } from "./constants";
 
+/**
+ * Kitchen component, which is used by kitchen staff to:
+ * - Track different orders, change their status, view notifications and notify waiters when orders are ready
+ */
 function Kitchen({ setRole }) {
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
@@ -18,7 +22,7 @@ function Kitchen({ setRole }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
 
-  const staffId = localStorage.getItem(STAFF_ID); // Logged-in kitchen staff ID
+  const staffId = localStorage.getItem(STAFF_ID); 
 
   const statusOptions = [
     "pending",
@@ -30,6 +34,7 @@ function Kitchen({ setRole }) {
     "paid for",
   ];
 
+    // Load orders and notifications at first and then poll every 5 seconds
   useEffect(() => {
     loadOrders();
     loadNotifications();
@@ -40,17 +45,19 @@ function Kitchen({ setRole }) {
     return () => clearInterval(interval);
   }, []);
 
+  // Fetches orders from api
   const loadOrders = async () => {
     const ordersData = await fetchOrders();
     setOrders(ordersData || []);
   };
 
+   // Fetches unread notifications for this specific staff member
   const loadNotifications = async () => {
-    // fetchNotificationsForStaff is assumed to return only unread notifications for this staff member
     const notificationsData = await fetchNotificationsForStaff(staffId);
     setNotifications(notificationsData || []);
   };
 
+  // Updates order status and notifies waiter when ready
   const handleStatusChange = async (orderId, newStatus) => {
     try {
       const updatedStatus = await confirmOrder(orderId, newStatus, staffId);
@@ -75,7 +82,7 @@ function Kitchen({ setRole }) {
     await loadOrders();
   };
 
-  // Sends an "order_ready" notification to the waiter for the given order
+  // Sends notification to waiter so that he know that the order is ready for pickup
   const notifyWaiterForReadyOrder = async (orderId) => {
     const order = orders.find((o) => o.id === orderId);
     if (!order || !order.waiter) {
@@ -97,13 +104,12 @@ function Kitchen({ setRole }) {
 
   };
 
-  // Allows manual notification when an "order_received" notification is clicked
+    // Handles notification action
   const handleNotifyWaiterFromNotification = async (orderId) => {
     await notifyWaiterForReadyOrder(orderId);
-    // Optionally, mark the notification as read after notifying
   };
 
-  // Marks a notification as read and removes it from the list
+  // Marks a notification as read and updates its state
   const handleMarkNotificationRead = async (notificationId) => {
     try {
       await axios.post(`http://127.0.0.1:8000/cafeApi/notifications/${notificationId}/mark_as_read/`);
@@ -113,16 +119,18 @@ function Kitchen({ setRole }) {
     }
   };
 
+  // Filters active and completed orders based on their status
   const activeOrders = orders.filter((order) =>
     ["confirmed", "being prepared"].includes(order.status)
   );
-
   const completedOrders = orders.filter((order) =>
     ["canceled", "ready for pick up", "delivered", "paid for"].includes(order.status)
   );
 
+  /* Renders main component*/ 
   return (
     <div className="kitchen-container">
+      {/* Button to return to the customer view */}
       <button className="return-button" onClick={() => {
         setRole(0);
         navigate("/");
@@ -147,7 +155,7 @@ function Kitchen({ setRole }) {
               {activeOrders.length > 0 ? (
                 activeOrders.map((order) => (
                   <tr key={order.table_id}>
-                    <td>{order.table_id} | {order.id}</td>
+                    <td>{order.table_number} | {order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
                     <td>
                       <select
@@ -199,7 +207,7 @@ function Kitchen({ setRole }) {
           </table>
         </div>
 
-        {/* Combined Unread Notifications Table */}
+        {/* Unread Notifications Table */}
         <div className="notifications">
           <h3>Unread Notifications</h3>
           {notifications.length > 0 ? (
@@ -246,6 +254,7 @@ function Kitchen({ setRole }) {
         </div>
       </div>
 
+      {/* Popups for the status or error messages */}
       {showPopup && (
         <div className="custom-popup">
           <p>{errorMessage}</p>

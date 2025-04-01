@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from "react";
-import { fetchMenuItems, addMenuItem, deleteMenuItem, updateMenuItem, fetchEmployees } from "./api"; 
-import { fetchNotificationsForStaff } from "./api";
+import { fetchMenuItems, addMenuItem, deleteMenuItem, updateMenuItem, fetchEmployees } from "./components/api"; 
+import { fetchNotificationsForStaff } from "./components/api";
 import axios from "axios";
-import { fetchTables, fetchOrdersForTable } from "./api";
-import "./manager.css";
-import { fetchWaiters, fetchKitchenStaff } from "./api";
+import { fetchTables, fetchOrdersForTable } from "./components/api";
+import "./styles/manager.css";
+import { fetchWaiters, fetchKitchenStaff } from ".//components/api";
 import { useMemo } from "react";
-import { deleteTable } from "./api";
+import { deleteTable } from "./components/api";
 
 
+/**
+ * Manager component
+ * Manages menu items, tables, employees, displays notifications, 
+ * and offers profit suggestions
+
+ */
 function Manager() {
+
+    // Menu Items
     const [menuItems, setMenuItems] = useState([]);
     const [newItem, setNewItem] = useState({
         name: "",
@@ -23,30 +31,31 @@ function Manager() {
         production_cost: "", 
       });
     
-      
-
+    // Image previews for Add/Edit item
     const [previewImage, setPreviewImage] = useState("");
     const [editItem, setEditItem] = useState(null);
     const [showEditPopup, setShowEditPopup] = useState(false);
+
+    // Popups for editing/adding menu items
     const [showAddPopup, setShowAddPopup] = useState(false);
     const [editPreviewImage, setEditPreviewImage] = useState("");
-    const [selectedTab, setSelectedTab] = useState("Menu");
-    const [employees, setEmployees] = useState([]); 
-    const [notifications, setNotifications] = useState([]);
-    const STAFF_ID = localStorage.getItem("STAFF_ID"); // Ensure this matches your storage key
-    const [tables, setTables] = useState([]);
-    const [orders, setOrders] = useState({});
-    const [selectedOrder, setSelectedOrder] = useState(null);
-    const [showOrderPopup, setShowOrderPopup] = useState(false);
-    const [visibleOrders, setVisibleOrders] = useState({});
 
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [employeeToEdit, setEmployeeToEdit] = useState(null);
+    // Tab control (Menu, Stock, Employees, Notifications, Tables, Suggestions)
+    const [selectedTab, setSelectedTab] = useState("Menu");
+
+    // Employees
+    const [employees, setEmployees] = useState([]); 
     const [waiters, setWaiters] = useState([]);
     const [kitchenStaff, setKitchenStaff] = useState([]);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
 
-    const [isWaiter, setIsWaiter] = useState(true); 
+    // Notifications
+    const [notifications, setNotifications] = useState([]);
+    const STAFF_ID = localStorage.getItem("STAFF_ID"); // Ensure this matches your storage key
+
+    // Editing Employees
+    const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
     const [updatedEmployee, setUpdatedEmployee] = useState({
         first_name: '',
         last_name: '',
@@ -55,8 +64,8 @@ function Manager() {
         role: ''
     });
 
-    const [showAddEmployeeModal, setShowAddEmployeeModal] = useState(false);
-
+    const [employeeToEdit, setEmployeeToEdit] = useState(null);
+    const [isWaiter, setIsWaiter] = useState(true); 
     const [newEmployee, setNewEmployee] = useState({
         first_name: '',
         last_name: '',
@@ -65,9 +74,26 @@ function Manager() {
         role: 'waiter',
     });
 
-
+    // Production Costs
     const [productionCosts, setProductionCosts] = useState({});
 
+     // Order detail popups
+    const [orders, setOrders] = useState({});
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [showOrderPopup, setShowOrderPopup] = useState(false);
+    const [visibleOrders, setVisibleOrders] = useState({});
+    const [showOrdersPopup, setShowOrdersPopup] = useState(false);
+    const [selectedTableOrders, setSelectedTableOrders] = useState([]);
+    const [selectedTableNumber, setSelectedTableNumber] = useState(null);
+
+    // Tables
+    const [tables, setTables] = useState([]);
+    const [newTableNumber, setNewTableNumber] = useState("");
+    const [newTableWaiterId, setNewTableWaiterId] = useState("");
+    const [showEditTablePopup, setShowEditTablePopup] = useState(false);
+    const [editedTable, setEditedTable] = useState(null);
+
+    /* Converts comma to dot for numeric inputs */
     const handleCostChange = (itemId, cost) => {
         const cleaned = cost.replace(',', '.');
         setProductionCosts((prev) => ({
@@ -75,17 +101,8 @@ function Manager() {
             [itemId]: cleaned
         }));
     };
-    
-    const [showOrdersPopup, setShowOrdersPopup] = useState(false);
-    const [selectedTableOrders, setSelectedTableOrders] = useState([]);
-    const [selectedTableNumber, setSelectedTableNumber] = useState(null);
 
-    const [newTableNumber, setNewTableNumber] = useState("");
-    const [newTableWaiterId, setNewTableWaiterId] = useState("");
-    const [showEditTablePopup, setShowEditTablePopup] = useState(false);
-    const [editedTable, setEditedTable] = useState(null);
-
-
+    /* Handels table management functions delete/add/edit */ 
     const handleDeleteTable = async (tableId) => {
         if (window.confirm("Are you sure you want to delete this table?")) {
           const success = await deleteTable(tableId);
@@ -144,7 +161,7 @@ function Manager() {
       };
       
       
-
+    /* Handels employee management functions delete/add/edit */
     const handleEditEmployee = (employee) => {
         console.log("Editing employee:", employee);
     
@@ -159,156 +176,6 @@ function Manager() {
     
         setShowEditModal(true);
     };
-    
-    
-    const getWaiterRevenue = (waiter) => {
-        return tables
-            .filter(table => table.waiter === waiter.id) // safer: ID comparison
-            .reduce((sum, table) => sum + (table.revenue || 0), 0);
-    };
-    
-    const getWaiterRevenues = () => {
-        return waiters.map(waiter => {
-            const revenue = tables
-                .filter(table => table.waiter === waiter.id)
-                .reduce((sum, table) => sum + (table.revenue || 0), 0);
-            return { ...waiter, revenue };
-        });
-    };
-    
-    
-    const topWaiter = useMemo(() => {
-        const revenues = getWaiterRevenues();
-        if (!revenues || revenues.length === 0) return null;
-    
-        return revenues.reduce((top, curr) =>
-            curr.revenue > (top?.revenue || 0) ? curr : top,
-            null
-        );
-    }, [waiters, tables]);
-    
-      
-    
-    const handleChangeRole = (e) => {
-        const { value } = e.target;
-        setUpdatedEmployee(prevState => ({
-            ...prevState,
-            role: value,
-        }));
-    };
-    
-    const handleSubmitEdit = async (e) => {
-        e.preventDefault(); // prevent page reload
-    
-        try {
-            const response = await axios.put(
-                `http://127.0.0.1:8000/cafeApi/employee/${selectedEmployee.id}/update/`,
-                updatedEmployee
-            );
-            console.log("Employee updated:", response.data);
-    
-            setShowEditModal(false);
-    
-            // ✅ Refresh both waiters and kitchen staff immediately
-            const [updatedWaiters, updatedKitchenStaff] = await Promise.all([
-                fetchWaiters(),
-                fetchKitchenStaff(),
-            ]);
-    
-            setWaiters(updatedWaiters);
-            setKitchenStaff(updatedKitchenStaff);
-    
-            // ✅ Force React to re-render by flipping selectedTab
-            setSelectedTab("dummy"); // Switch to a dummy tab
-            setTimeout(() => setSelectedTab("employees"), 10); // Switch back to refresh UI
-    
-        } catch (error) {
-            console.error("Error updating employee:", error.response?.data || error.message);
-            alert("Failed to update employee.");
-        }
-    };
-    
-    
-    
-    
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-          if (e.key === "Escape") setShowOrdersPopup(false);
-        };
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, []);
-
-    useEffect(() => {
-        if (showOrdersPopup) {
-          document.body.style.overflow = "hidden";
-        } else {
-          document.body.style.overflow = "unset";
-        }
-    }, [showOrdersPopup]);
-            
-    
-    
-    useEffect(() => {
-        const loadWaiters = async () => {
-          try {
-            const response = await axios.get("http://127.0.0.1:8000/cafeApi/waiters/");
-            console.log("Fetched Waiters:", response.data);
-            setWaiters(response.data);
-          } catch (error) {
-            console.error("Error fetching waiters:", error);
-          }
-        };
-      
-        const loadKitchenStaff = async () => {
-          try {
-            const response = await axios.get("http://127.0.0.1:8000/cafeApi/kitchen_staff/");
-            console.log("Fetched Kitchen Staff:", response.data);
-            setKitchenStaff(response.data);
-          } catch (error) {
-            console.error("Error fetching kitchen staff:", error);
-          }
-        };
-      
-        if (selectedTab === "employees" || selectedTab === "tables") {
-          loadWaiters();
-          loadKitchenStaff();
-        }
-      }, [selectedTab]);
-      
-
-    const availableCategories = [
-        "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian",
-        "Gluten-Free", "Breakfast", "Dessert", "Drinks"
-    ];
-
-    const getStockColor = (availability) => {
-        if (availability < 10) return "red"; 
-        if (availability < 50) return "orange";
-        return "green"; 
-    };
-    
-    useEffect(() => {
-        const loadMenu = async () => {
-            const items = await fetchMenuItems();
-            setMenuItems(items || []);
-        };
-        if (selectedTab === "Menu" || selectedTab === "Stock") { 
-            loadMenu();
-        }
-    }, [selectedTab]);
-    
-    useEffect(() => {
-        // Fetch employees initially when the component is mounted
-        const loadEmployees = async () => {
-            const staff = await fetchEmployees();
-            setEmployees(staff || []);
-        };
-    
-        loadEmployees();  // Call the function to load employees on component mount
-    }, []);
-
-    
 
     const handleFireEmployee = async (employeeId) => {
         if (window.confirm("Are you sure you want to fire this employee?")) {
@@ -335,39 +202,7 @@ function Manager() {
             }
         }
     };
-    
-    
-    useEffect(() => {
-        const loadTables = async () => {
-            const tablesData = await fetchTables();
-            setTables(tablesData || []);
-        };
-    
-        // Load when employees tab or tables tab is selected
-        if (selectedTab === "tables" || selectedTab === "employees") {
-            loadTables();
-        }
-    }, [selectedTab]);
-    
 
-    const handleViewOrders = async (tableId, tableNumber) => {
-        try {
-          const tableOrders = await fetchOrdersForTable(tableId);
-      
-          setSelectedTableOrders(tableOrders || []);
-          setSelectedTableNumber(tableNumber);
-          setShowOrdersPopup(true);
-        } catch (error) {
-          console.error("Error fetching orders for table:", error);
-        }
-      };
-      
-    
-    const handleViewOrderDetails = (order) => {
-        setSelectedOrder(order);
-        setShowOrderPopup(true);
-    };
-    
     const handleAddEmployee = async (e) => {
         e.preventDefault();
     
@@ -400,99 +235,15 @@ function Manager() {
             alert("Failed to add employee.");
         }
     };
-    
 
 
-    useEffect(() => {
-        const loadNotifications = async () => {
-            const notificationsData = await fetchNotificationsForStaff(STAFF_ID); // Assuming STAFF_ID is defined
-            setNotifications(notificationsData || []);
-        };
-    
-        if (selectedTab === "notifications") {
-            loadNotifications();
-        }
-    }, [selectedTab]);
-    
-    const handleMarkNotificationRead = async (notificationId) => {
-        try {
-            await axios.post(`http://127.0.0.1:8000/cafeApi/notifications/${notificationId}/mark_as_read/`);
-            setNotifications(prevNotifications => prevNotifications.filter(n => n.id !== notificationId));
-        } catch (error) {
-            console.error("Error marking notification as read:", error);
-        }
-    };
-    
-    const handleInputChange = (e, isEdit = false) => {
-        const { name, value } = e.target;
-        let processedValue = value;
-    
-        // Replace comma with dot for number fields
-        if (["price", "calories", "cooking_time", "availability", "production_cost"].includes(name)) {
-            processedValue = processedValue.replace(',', '.');
-        }
-    
-        if (name === "allergies") {
-            const parsed = processedValue
-                .split(',')
-                .map(item => item.trim())
-                .filter(Boolean);
-    
-            if (isEdit) {
-                setEditItem(prev => ({ ...prev, allergies: parsed }));
-            } else {
-                setNewItem(prev => ({ ...prev, allergies: parsed }));
-            }
-            return;
-        }
-    
-        if (isEdit) {
-            setEditItem({ ...editItem, [name]: processedValue });
-        } else {
-            setNewItem({ ...newItem, [name]: processedValue });
-        }
-    };
-    
-      
+    /* Categories available for new or edited menu items */
+     const availableCategories = [
+        "Main Course", "Non-Vegetarian", "Appetizer", "Vegetarian",
+        "Gluten-Free", "Breakfast", "Dessert", "Drinks"
+    ];
 
-    const handleCategoryChange = (category, isEdit = false) => {
-        if (isEdit) {
-            setEditItem((prevState) => ({
-                ...prevState,
-                category: prevState.category.includes(category)
-                    ? prevState.category.filter((c) => c !== category)
-                    : [...prevState.category, category],
-            }));
-        } else {
-            setNewItem((prevState) => ({
-                ...prevState,
-                category: prevState.category.includes(category)
-                    ? prevState.category.filter((c) => c !== category)
-                    : [...prevState.category, category],
-            }));
-        }
-    };
-
-    const handleImageChange = (file, isEdit = false) => {
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                if (isEdit) {
-                    setEditPreviewImage(reader.result);
-                    setEditItem((prev) => ({ ...prev, image: file }));
-                } else {
-                    setPreviewImage(reader.result);
-                    setNewItem((prev) => ({ ...prev, image: file }));
-                }
-            };
-            reader.readAsDataURL(file);
-        } else {
-            if (isEdit) {
-                setEditItem((prev) => ({ ...prev, image: prev.image })); 
-            }
-        }
-    };
-    
+    /* Handels menu item management functions delete/add/edit */
     const handleAddItem = async () => {
         if (!newItem.name || !newItem.calories || !newItem.price || newItem.category.length === 0 || !newItem.image) {
             alert("Please fill out all fields and upload an image.");
@@ -551,8 +302,6 @@ function Manager() {
         setShowEditPopup(true);
     };
     
-    
-    
     const handleUpdateItem = async () => {
         if (!editItem.name || !editItem.calories || !editItem.price || editItem.category.length === 0) {
             alert("Please fill out all required fields.");
@@ -579,7 +328,7 @@ function Manager() {
         finalAllergies = rawAllergies.split(",").map(a => a.trim()).filter(Boolean);
         }
 
-        // ✅ Correct allergy handling
+        // orrect allergy handling
         const allergies = Array.isArray(finalAllergies) ? finalAllergies : [];
         allergies.forEach(allergy => {
             formData.append("allergies", allergy); // Don't JSON.stringify
@@ -619,7 +368,277 @@ function Manager() {
             alert(` Failed to update item: ${error.response?.data?.error || error.message}`);
         }
     };
+
+    /* Changes item imagee */
+    const handleImageChange = (file, isEdit = false) => {
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => {
+                if (isEdit) {
+                    setEditPreviewImage(reader.result);
+                    setEditItem((prev) => ({ ...prev, image: file }));
+                } else {
+                    setPreviewImage(reader.result);
+                    setNewItem((prev) => ({ ...prev, image: file }));
+                }
+            };
+            reader.readAsDataURL(file);
+        } else {
+            if (isEdit) {
+                setEditItem((prev) => ({ ...prev, image: prev.image })); 
+            }
+        }
+    };
     
+    /* retrieves the revenue of a waiter */
+    const getWaiterRevenue = (waiter) => {
+        return tables
+            .filter(table => table.waiter === waiter.id) // safer: ID comparison
+            .reduce((sum, table) => sum + (table.revenue || 0), 0);
+    }; 
+    /* Build array of waiters + revenues */
+    const getWaiterRevenues = () => {
+        return waiters.map(waiter => {
+            const revenue = tables
+                .filter(table => table.waiter === waiter.id)
+                .reduce((sum, table) => sum + (table.revenue || 0), 0);
+            return { ...waiter, revenue };
+        });
+    };
+    /* Calculates top emloyee */
+    const topWaiter = useMemo(() => {
+        const revenues = getWaiterRevenues();
+        if (!revenues || revenues.length === 0) return null;
+    
+        return revenues.reduce((top, curr) =>
+            curr.revenue > (top?.revenue || 0) ? curr : top,
+            null
+        );
+    }, [waiters, tables]);
+    
+    
+     
+    const handleChangeRole = (e) => {
+        const { value } = e.target;
+        setUpdatedEmployee(prevState => ({
+            ...prevState,
+            role: value,
+        }));
+    };
+    
+    /* Saves edited employee */
+    const handleSubmitEdit = async (e) => {
+        e.preventDefault(); // prevent page reload
+    
+        try {
+            const response = await axios.put(
+                `http://127.0.0.1:8000/cafeApi/employee/${selectedEmployee.id}/update/`,
+                updatedEmployee
+            );
+            console.log("Employee updated:", response.data);
+    
+            setShowEditModal(false);
+    
+            // Refresh both waiters and kitchen staff immediately
+            const [updatedWaiters, updatedKitchenStaff] = await Promise.all([
+                fetchWaiters(),
+                fetchKitchenStaff(),
+            ]);
+    
+            setWaiters(updatedWaiters);
+            setKitchenStaff(updatedKitchenStaff);
+    
+            // Force React to re-render by flipping selectedTab
+            setSelectedTab("dummy"); // Switch to a dummy tab
+            setTimeout(() => setSelectedTab("employees"), 10); // Switch back to refresh UI
+    
+        } catch (error) {
+            console.error("Error updating employee:", error.response?.data || error.message);
+            alert("Failed to update employee.");
+        }
+    };
+    
+
+    /* Closes order pop up with esc */
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+          if (e.key === "Escape") setShowOrdersPopup(false);
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, []);
+
+    useEffect(() => {
+        if (showOrdersPopup) {
+          document.body.style.overflow = "hidden";
+        } else {
+          document.body.style.overflow = "unset";
+        }
+    }, [showOrdersPopup]);
+            
+    
+    /* Loads kitchen and waiter if user is in employee tab */
+    useEffect(() => {
+        const loadWaiters = async () => {
+          try {
+            const response = await axios.get("http://127.0.0.1:8000/cafeApi/waiters/");
+            console.log("Fetched Waiters:", response.data);
+            setWaiters(response.data);
+          } catch (error) {
+            console.error("Error fetching waiters:", error);
+          }
+        };
+      
+        const loadKitchenStaff = async () => {
+          try {
+            const response = await axios.get("http://127.0.0.1:8000/cafeApi/kitchen_staff/");
+            console.log("Fetched Kitchen Staff:", response.data);
+            setKitchenStaff(response.data);
+          } catch (error) {
+            console.error("Error fetching kitchen staff:", error);
+          }
+        };
+      
+        if (selectedTab === "employees" || selectedTab === "tables") {
+          loadWaiters();
+          loadKitchenStaff();
+        }
+      }, [selectedTab]);
+      
+    /* Colors stock level based on availability */
+    const getStockColor = (availability) => {
+        if (availability < 10) return "red"; 
+        if (availability < 50) return "orange";
+        return "green"; 
+    };
+    
+    /* Loads menu only when necessary */
+    useEffect(() => {
+        const loadMenu = async () => {
+            const items = await fetchMenuItems();
+            setMenuItems(items || []);
+        };
+        if (selectedTab === "Menu" || selectedTab === "Stock") { 
+            loadMenu();
+        }
+    }, [selectedTab]);
+    
+    /* Loads all employees */
+    useEffect(() => {
+        // Fetch employees initially when the component is mounted
+        const loadEmployees = async () => {
+            const staff = await fetchEmployees();
+            setEmployees(staff || []);
+        };
+    
+        loadEmployees();  // Call the function to load employees on component mount
+    }, []);
+
+    
+    /* Loads tables if manager opens tables or employees tab. */
+    useEffect(() => {
+        const loadTables = async () => {
+            const tablesData = await fetchTables();
+            setTables(tablesData || []);
+        };
+    
+        // Load when employees tab or tables tab is selected
+        if (selectedTab === "tables" || selectedTab === "employees") {
+            loadTables();
+        }
+    }, [selectedTab]);
+    
+    /* Displays all orders in a pop up */
+    const handleViewOrders = async (tableId, tableNumber) => {
+        try {
+          const tableOrders = await fetchOrdersForTable(tableId);
+      
+          setSelectedTableOrders(tableOrders || []);
+          setSelectedTableNumber(tableNumber);
+          setShowOrdersPopup(true);
+        } catch (error) {
+          console.error("Error fetching orders for table:", error);
+        }
+      };
+    /* Displays information on one order in a pop up */
+    const handleViewOrderDetails = (order) => {
+        setSelectedOrder(order);
+        setShowOrderPopup(true);
+    };
+    
+    /** Loads staff notifications if manager is on the notifications tab. */
+    useEffect(() => {
+        const loadNotifications = async () => {
+            const notificationsData = await fetchNotificationsForStaff(STAFF_ID); // Assuming STAFF_ID is defined
+            setNotifications(notificationsData || []);
+        };
+    
+        if (selectedTab === "notifications") {
+            loadNotifications();
+        }
+    }, [selectedTab]);
+    
+    /* Marks a notification as read. */
+    const handleMarkNotificationRead = async (notificationId) => {
+        try {
+            await axios.post(`http://127.0.0.1:8000/cafeApi/notifications/${notificationId}/mark_as_read/`);
+            setNotifications(prevNotifications => prevNotifications.filter(n => n.id !== notificationId));
+        } catch (error) {
+            console.error("Error marking notification as read:", error);
+        }
+    };
+
+    /* Handles form input changes for new/edit menu items. */
+    const handleInputChange = (e, isEdit = false) => {
+        const { name, value } = e.target;
+        let processedValue = value;
+    
+        // Replace comma with dot for number fields
+        if (["price", "calories", "cooking_time", "availability", "production_cost"].includes(name)) {
+            processedValue = processedValue.replace(',', '.');
+        }
+        // For allergies it is split by comma in order to create array
+        if (name === "allergies") {
+            const parsed = processedValue
+                .split(',')
+                .map(item => item.trim())
+                .filter(Boolean);
+    
+            if (isEdit) {
+                setEditItem(prev => ({ ...prev, allergies: parsed }));
+            } else {
+                setNewItem(prev => ({ ...prev, allergies: parsed }));
+            }
+            return;
+        }
+    
+        if (isEdit) {
+            setEditItem({ ...editItem, [name]: processedValue });
+        } else {
+            setNewItem({ ...newItem, [name]: processedValue });
+        }
+    };
+    
+    /** Toggles the category selection for menu items. */
+    const handleCategoryChange = (category, isEdit = false) => {
+        if (isEdit) {
+            setEditItem((prevState) => ({
+                ...prevState,
+                category: prevState.category.includes(category)
+                    ? prevState.category.filter((c) => c !== category)
+                    : [...prevState.category, category],
+            }));
+        } else {
+            setNewItem((prevState) => ({
+                ...prevState,
+                category: prevState.category.includes(category)
+                    ? prevState.category.filter((c) => c !== category)
+                    : [...prevState.category, category],
+            }));
+        }
+    };
+
+    /* Evaluate overall profit margin across menu items. */
     const getProfitSummary = () => {
         const validItems = menuItems.filter(item => {
             const cost = parseFloat(productionCosts[item.id]);
@@ -653,7 +672,16 @@ function Manager() {
         }
     };
     
-
+    /**
+     * Renders the Manager Dashboard based on current tab.
+     * Offers various functionality for:
+     * - Viewing and editing menu items (Menu tab)
+     * - Seeing item stock levels (Stock tab)
+     * - Managing employees (Employees tab)
+     * - Viewing all notifications (Notifications tab)
+     * - Managing and viewing all tables an their orders (Tables tab)
+     * - Viewing profit suggestions (Suggestions tab)
+     */
     return (
         <div className="manager-container">
             <h2>Manager Dashboard</h2>
@@ -671,13 +699,12 @@ function Manager() {
                 ))}
             </div>
 
-            
+            {/* Tab-specific content container */}
             <div className="tab-content">
+                {/* Menu Tab */}
                 {selectedTab === "Menu" && (
                     <>
                         <button className="add-btn" onClick={() => setShowAddPopup(true)}>Add Item</button>
-
-                        
                         <div className="menu-container">
                             <h3 className="menu-title">Current Menu Items</h3>
                             <div className="menu-list">
@@ -693,7 +720,7 @@ function Manager() {
                         </div>
                     </>
                 )}
-
+                {/* Stock Tab */}
                 {selectedTab === "stock" && (
                     <div className="stock-container">
                         <h3>Stock Management</h3>
@@ -717,7 +744,7 @@ function Manager() {
                         </table>
                     </div>
                 )}
-
+                {/* Employees Tab*/}
                 {selectedTab === "employees" && (
                     <div className="employees-container">
                         <h3>Employee Management</h3>
@@ -753,7 +780,7 @@ function Manager() {
                                                 </td>
                                                 <td>{waiter.email}</td>
                                                 <td>{waiter.phone || 'N/A'}</td>
-                                                <td>£{getWaiterRevenue(waiter).toFixed(2)}</td> {/* ✅ Display revenue */}
+                                                <td>£{getWaiterRevenue(waiter).toFixed(2)}</td> {/* Display revenue */}
                                                 <td>
                                                 <button onClick={() => handleEditEmployee(waiter)}>Edit</button>
                                                 <button onClick={() => handleFireEmployee(waiter.id)}>Fire</button>
@@ -805,7 +832,7 @@ function Manager() {
 
                     </div>
                 )}
-
+                {/* Notifications Tab*/}
                 {selectedTab === "notifications" && (
                     <div className="notifications-container">
                         <h3>Latest Notifications</h3>
@@ -841,10 +868,11 @@ function Manager() {
                         </table>
                     </div>
                 )}
+                {/* Tables Tab */}
                 {selectedTab === "tables" && (
-                    
                     <div className="tables-container">
                         <h3>Tables and Orders</h3>
+                        {/* Add Table Form */}
                         <div className="add-table-form">
                             <h4>Add New Table</h4>
 
@@ -872,8 +900,7 @@ function Manager() {
                                 <button className="centered-add-btn" onClick={handleAddTable}>Add Table</button>
                             </div>
                         </div>
-
-
+                        {/* List of all Tables */}
                         <table className="tables-table">
                         <thead>
                             <tr>
@@ -890,12 +917,14 @@ function Manager() {
                                         <tr key={table.id}>
                                             <td>{table.number}</td>
                                             <td>{table.status}</td>
-                                            <td>{table.waiter_name || "—"}</td> {/* ✅ Show assigned waiter */}
+                                            <td>{table.waiter_name || "—"}</td> {/* Shows assigned waiter */}
                                             <td>£{(table.revenue !== undefined ? table.revenue : 0).toFixed(2)}</td> 
                                             <td>
+                                                {/* Toggle order visibility */}
                                                 <button className="view-orders-button" onClick={() => handleViewOrders(table.id, table.number)}>
                                                     {visibleOrders[table.id] ? "Hide Orders" : "View Orders"}
                                                 </button>
+                                                {/* Edit Table button */}
                                                 <button
                                                     className="edit-btn"
                                                     onClick={() => {
@@ -910,7 +939,7 @@ function Manager() {
                                                     >
                                                     Edit
                                                 </button>
-
+                                                {/* Delete Table button */}
                                                 <button className="delete-btn" onClick={() => handleDeleteTable(table.id)} style={{ marginLeft: "8px" }}>
                                                     Delete
                                                 </button>
@@ -926,7 +955,7 @@ function Manager() {
                             </tbody>
                         </table>
 
-                        {/* Ensure Orders are rendered when visibleOrders[table.id] is true */}
+                        {/* Show visible orders for table */}
                         {tables.map((table) => (
                             visibleOrders[table.id] && orders[table.id]?.orders && (
                                 <div key={table.id} className="orders-container">
@@ -962,9 +991,7 @@ function Manager() {
                     </div>
                     
                 )}
-
-
-
+                {/* Suggestions Tab */}
                 {selectedTab === "suggestions" && (
                     <div className="suggestions-container">
                         <h3>Profit Suggestions</h3>
@@ -993,7 +1020,7 @@ function Manager() {
                                     <th>Menu Item</th>
                                     <th>Price (£)</th>
                                     <th>Production Cost (£)</th>
-                                    <th>Profit on Item (£)</th> {/* ✅ Add this column */}
+                                    <th>Profit on Item (£)</th>
                                     <th>Profit Margin (%)</th>
                                 </tr>
                             </thead>
@@ -1004,7 +1031,7 @@ function Manager() {
                                 const profit = price - cost;
                                 const margin = price > 0 ? ((profit / price) * 100) : null;
 
-                                // ✅ Make sure it's a number before checking
+                                
                                 const isValidMargin = typeof margin === "number" && !isNaN(margin);
                                 const rowClass = isValidMargin
                                     ? margin > 60
@@ -1032,7 +1059,8 @@ function Manager() {
                 )}
 
             </div>
-
+            
+            {/* Order Details pop up */}
             {showOrderPopup && selectedOrder && (
                 <div className="order-popup">
                     <div className="order-popup-content">
@@ -1055,6 +1083,7 @@ function Manager() {
                 </div>
             )}
 
+            {/* Add menu item pop up */}
             {showAddPopup && (
                 <>
                     <div className="overlay" onClick={() => setShowAddPopup(false)}></div>
@@ -1077,6 +1106,7 @@ function Manager() {
                             </label>
 
                         </div>
+                        {/* Category selection grid*/}
                         <h4>Category</h4>
                         <div className="category-grid">
                             {availableCategories.map((category) => (
@@ -1085,6 +1115,7 @@ function Manager() {
                                 </button>
                             ))}
                         </div>
+                        {/* Image upload (drag and drop compatable) */}
                         <div className="drop-zone">
                             <p>Drag & Drop an Image or Click to Upload</p>
                             <input type="file" accept="image/*" onChange={(e) => handleImageChange(e.target.files[0])} />
@@ -1092,7 +1123,7 @@ function Manager() {
                         
                         {previewImage && <img src={previewImage} alt="Preview" className="image-preview" />}
 
-                      
+                      {/* Add and cancel buttons*/}
                         <div className="popup-buttons">
                             <button onClick={handleAddItem}>Add Item</button>
                             <button onClick={() => setShowAddPopup(false)}>Cancel</button>
@@ -1101,7 +1132,8 @@ function Manager() {
                     </div>
                 </>
             )}
-       
+
+            {/* Edit menu item pop up */}
             {showEditPopup && (
                 <>
                     <div className="overlay" onClick={() => setShowEditPopup(false)}></div>
@@ -1133,6 +1165,7 @@ function Manager() {
                             </label>
 
                         </div>
+                        {/* Category selection */}
                         <h4>Category</h4>
                         <div className="category-grid">
                             {availableCategories.map((category) => (
@@ -1141,6 +1174,7 @@ function Manager() {
                                 </button>
                             ))}
                         </div>
+                        {/* Image update functiionality */}
                         <div className="drop-zone">
                             <p>Update Item Image</p>
                             <input type="file" accept="image/*" onChange={(e) => handleImageChange(e.target.files[0], true)} />
@@ -1148,7 +1182,7 @@ function Manager() {
                         
                         {editPreviewImage && <img src={editPreviewImage} alt="Preview" className="image-preview" />}
 
-                        
+                        {/* Update and cancel buttons */}
                         <div className="popup-buttons">
                             <button onClick={handleUpdateItem}>Update Item</button>
                             <button onClick={() => setShowEditPopup(false)}>Cancel</button>
@@ -1159,6 +1193,7 @@ function Manager() {
                 </>
             )}
 
+            {/* Edit table pop up*/}
             {showEditTablePopup && (
             <>
                 <div className="overlay" onClick={() => setShowEditTablePopup(false)}></div>
@@ -1210,7 +1245,7 @@ function Manager() {
                             </select>
                         </label>
                     </div>
-
+                    {/* Save and cancel buttons */}
                     <div className="popup-buttons">
                         <button
                             onClick={() =>
@@ -1230,6 +1265,7 @@ function Manager() {
             </>
             )}
 
+            {/* Add employee pop up */}
             {showAddEmployeeModal && (
             <>
                 <div className="overlay" onClick={() => setShowAddEmployeeModal(false)}></div>
@@ -1299,7 +1335,7 @@ function Manager() {
             </>
             )}
 
-            
+            {/* Edit employee pop up */}
             {showEditModal && (
     <>
                     {/* Overlay to dim the background */}
@@ -1370,7 +1406,7 @@ function Manager() {
 
                             </div>
 
-                            {/* Bottom Buttons */}
+                            {/* Save changes and cancel Buttons */}
                             <div className="popup-buttons">
                                 <button type="submit">Save Changes</button>
                                 <button type="button" onClick={() => setShowEditModal(false)} className="close-popup">Cancel</button>
@@ -1380,6 +1416,7 @@ function Manager() {
                 </>
             )}
 
+            {/* Show orders pop up */}
             {showOrdersPopup && (
             <>
                 <div className="overlay" onClick={() => setShowOrdersPopup(false)}></div>
@@ -1387,6 +1424,7 @@ function Manager() {
                 <div className="order-popup-content">
                     <h3>Orders for Table #{selectedTableNumber}</h3>
 
+                    {/* List of orders or error message */}
                     {selectedTableOrders.length > 0 ? (
                     <table className="orders-table">
                         <thead>
@@ -1420,6 +1458,7 @@ function Manager() {
                     <p>No orders for this table.</p>
                     )}
 
+                    {/* Close button for pop up */}
                     <button className="close-popup" onClick={() => setShowOrdersPopup(false)}>
                     Close
                     </button>

@@ -1,3 +1,8 @@
+/**
+ * Waiter Dashboard Component
+ * - Handles all waiter-related views and logic
+ */
+
 import React, { useState, useEffect } from "react";  
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; // For marking notifications as read
@@ -11,12 +16,14 @@ import {
   fetchWaiters, 
   fetchKitchenStaff, 
   notifyStaff 
-} from "./api";
-import "./Dropdown.css";
-import "./waiter.css"
+} from "./components/api";
+import "./styles/Dropdown.css";
+import "./styles/waiter.css"
 import { STAFF_ID } from "./constants";
 
 function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
+  
+  // States
   const navigate = useNavigate();
   const [orders, setOrders] = useState([]);
   const [menuItems, setMenuItems] = useState([]);
@@ -28,13 +35,14 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
   const [notifications, setNotifications] = useState([]);
   const [staffMembers, setStaffMembers] = useState([]);
   
-  // State for the combined alert form modal
+  // Alert modal states
   const [showAlertForm, setShowAlertForm] = useState(false);
   const [alertTableNumber, setAlertTableNumber] = useState("");
   const [alertTargetRole, setAlertTargetRole] = useState("Kitchen Staff");
   const [alertTargetId, setAlertTargetId] = useState("");
   const [alertAlertMessage, setAlertAlertMessage] = useState("");
 
+  // Initial fetch waiters data
   useEffect(() => {
     fetchWaiterDetails(staffId).then(data => {
       console.log("Fetched waiter details:", data); // Add this line
@@ -63,28 +71,32 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     };
   }, []);
 
+  // API helper functions (which load data)
+  // Loads orders
   const loadOrders = async () => { 
     const ordersData = await fetchOrders();
     setOrders(ordersData || []);
   };
 
+  // Loads tables
   const loadTables = async () => {
     const tablesData = await fetchTables();
     setTables(tablesData || []);
   };
 
+  // Loads menu items
   const loadMenuItems = async () => {
     const items = await fetchMenuItems();
     setMenuItems(items || []);
   };
 
-  // Load notifications for the current staff member
+  // Loads notifications
   const loadNotifications = async () => {
     const notificationsData = await fetchNotificationsForStaff(staffId);
     setNotifications(notificationsData || []);
   };
 
-  // Load available staff (both waiters and kitchen staff)
+  // Loads available staff (both types of staff, waiter and kitchenstaff)
   const loadStaffMembers = async () => {
     const waitersData = await fetchWaiters();
     const kitchenStaffData = await fetchKitchenStaff();
@@ -95,6 +107,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     setStaffMembers([...filteredWaiters, ...mappedKitchenStaff]);
   };
 
+  // Order handlers
   const handleStatusChange = async (orderId, newStatus) => {
     const updatedStatus = await updateOrderStatus(orderId, newStatus, staffId);
     if (updatedStatus === newStatus) {
@@ -136,6 +149,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     await loadOrders();
   };
 
+  // Toggles table alert, which notifies system
   const tableAlert = async (table) => {
     if (table.status == "pending") {
       table.status = "Alert!"
@@ -147,7 +161,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     setShowPopup(true);
   };
   
-  // Open the alert form modal for a specific table
+  // Open and sends alerts to other staff
   const openAlertForm = (tableNumber) => {
     setAlertTableNumber(tableNumber);
     setAlertTargetRole("Kitchen Staff");
@@ -178,9 +192,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     });
   };
   
-
-
-  // Send alert using the notifyStaff API
+  // Send alerts using the notifyStaff API
   const handleSendAlert = async () => {
     if (!alertTargetId || !alertAlertMessage) {
       setErrorMessage("Please select a target and enter a message.");
@@ -210,6 +222,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
   
   return (
     <div className="waiter-container">
+      {/* Return to customer view button*/}
       <button className="return-button" onClick={() => {
         setRole(0);
         navigate("/");
@@ -218,7 +231,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
       </button>
       <h3>Waiter Dashboard</h3>
 
-      {/* Pending Orders */}
+      {/* Pending Orders section*/}
       <div className="order-table pending-orders-table">
           <h4>Pending Orders</h4>
           <table>
@@ -234,7 +247,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
               {pendingOrders.length > 0 ? (
                 pendingOrders.map((order) => (
                   <tr key={order.table_id}>
-                    <td>{order.table_id} | {order.id}</td>
+                    <td>{order.table_number} | {order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
                     <td>
                       <button className="cancel-button" onClick={() => handleCancelOrder(order.id)}>
@@ -291,7 +304,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
           </table>
         </div>
 
-        {/* Delivered Orders (Awaiting Payment) */}
+        {/* Delivered Orders section (Awaiting Payment) */}
         <div className="order-table">
           <h4>Delivered Orders (Awaiting Payment)</h4>
           <table>
@@ -323,13 +336,9 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
             </tbody>
           </table>
         </div>
-
-
-
       </div>
 
-
-      {/* Table Alert System */}
+      {/* Table Alert System section*/}
       <div className="table-alert">
         <h4>Table Alert System</h4>
         <table>
@@ -366,7 +375,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
       
       
     
-    {/* Hide/Unhide Menu Items */}
+    {/* Hide/Unhide Menu Items section */}
     <div className="menu-select">
       <h4>Hide/Unhide Menu Items</h4>
       {menuItems.length > 0 ? (
@@ -390,7 +399,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     </div>
 
 
-      {/* Improved Alert Form Modal */}
+      {/* Alert Form Modal */}
       {showAlertForm && (
         <div className="alert-modal-overlay">
           <div className="alert-modal-content">
@@ -491,6 +500,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
         </table>
       </div>
 
+      {/* Popups for error messages*/}
       {showPopup && (
         <div className="custom-popup">
           <p>{errorMessage}</p>

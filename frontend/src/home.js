@@ -8,12 +8,19 @@ import {
   createCheckoutSession,
   verifyPayment,
   cancelPayment 
-} from "./api";
+} from "./components/api";
 import { useNavigate } from "react-router-dom";
+import "./styles/App.css";
+import "./styles/home.css";
 
-import "./App.css";
-import "./home.css";
-
+/**
+ * This is the home component, where customers can:
+ * - Browse the menu items
+ * - Filter and select items, which they want to order
+ * - Place orders
+ * - Call waiters
+ * - Pay using stripe
+ */
 function Home() {
   const [role, setRole] = useState(0);
   const [cart, setCart] = useState({});
@@ -28,9 +35,9 @@ function Home() {
   const navigate = useNavigate();
   const [hiddenItems, setHiddenItems] = useState([]);
 
-
+  // Loads menu items and orders
   useEffect(() => {
-    setRole(0); // Set role to customer when the "/" route is loaded
+    setRole(0); 
     const loadData = async () => {
       const items = await fetchMenuItems();
       setMenuItems(items || []);
@@ -40,11 +47,13 @@ function Home() {
     loadData();
   }, []);
 
+  // Loads the hidden items from the localStorage
   useEffect(() => {
     const storedHiddenItems = JSON.parse(localStorage.getItem("hiddenItems")) || [];
     setHiddenItems(storedHiddenItems);
   }, []);
   
+  // Applies different CSS classes to body
   useEffect(() => {
     document.body.classList.remove("waiter", "kitchen", "customer");
     if (role === 0) document.body.classList.add("customer");
@@ -52,6 +61,7 @@ function Home() {
     if (role === 2) document.body.classList.add("kitchen");
   }, [role]);
 
+  // Fetches table numbers from the backend
   useEffect(() => {
     const fetchTables = async () => {
       try {
@@ -68,10 +78,12 @@ function Home() {
     fetchTables();
   }, []);
 
+   /** Adds item to cart with quantity 1 */
   const handleSelect = (itemName) => {
     setCart((prevCart) => ({ ...prevCart, [itemName]: 1 }));
   };
 
+  /** Changes the quantity of an item */
   const handleQuantityChange = (itemName, type) => {
     setCart((prevCart) => {
       const currentQuantity = prevCart[itemName] || 1;
@@ -85,6 +97,7 @@ function Home() {
     });
   };
 
+  /** Calculates total order cost */
   const totalAmount = Object.keys(cart)
     .reduce((sum, itemName) => {
       const item = menuItems.find((menuItem) => menuItem.name === itemName);
@@ -92,12 +105,14 @@ function Home() {
     }, 0)
     .toFixed(2);
 
+  /** Calculates total cooking time */
   const totalTime = Object.keys(cart)
     .reduce((sum, itemName) => {
       const item =  menuItems.find((menuItem) => menuItem.name === itemName);
       return sum + (parseFloat(item?.cooking_time || 0) * cart[itemName]);
     }, 0);
 
+  /** Handles input changes for specific table number */
   const handleTableNumberChange = (e) => {
     const value = e.target.value.replace(/\D/g, "");
     setTableNumber(value ? parseInt(value, 10) : "");
@@ -106,6 +121,7 @@ function Home() {
     }
   };
 
+  /** Submits order */
   const handlePlaceOrder = async () => {
     const tableNum = parseInt(tableNumber, 10);
     console.log(tableNumber)
@@ -153,6 +169,7 @@ function Home() {
     }
   };
 
+  /** Calls assigned waiter to the currently selected table */
   const handleCallWaiter = async () => {
     const tableNum = parseInt(tableNumber, 10);
     if (isNaN(tableNum)) {
@@ -190,12 +207,14 @@ function Home() {
     setShowPopup(true);
   };
 
-  // New Payment Handlers
+  /** Initiates Stripe Checkout */
   const handlePayNow = async (orderId) => {
-    // orderId is same as paymentId because of one-to-one relationship
+    // orderId is the same as paymentId because of one-to-one relationship
     const checkoutUrl = await createCheckoutSession(orderId);
+
+    console.log(checkoutUrl)
     if (checkoutUrl) {
-      // Redirect user to Stripe Checkout
+      // Redirects user to Stripe Checkout
       window.location.href = checkoutUrl;
     } else {
       setErrorMessage("Error initiating payment. This order is already paid for.");
@@ -203,6 +222,7 @@ function Home() {
     }
   };
 
+  /** Verifies payment status */
   const handleVerifyPayment = async (orderId) => {
     try {
       const response = await verifyPayment(orderId);
@@ -219,6 +239,7 @@ function Home() {
     setOrders(ordersData || []);
   };
 
+  /** Cancels an active payment */
   const handleCancelPayment = async (orderId) => {
     const response = await cancelPayment(orderId);
     if (response === 200) {
@@ -232,10 +253,12 @@ function Home() {
     setOrders(ordersData || []);
   };
 
+  /** Filters menu items based on selected category */
   const handleFilterChange = (category) => {
     setFilter(category);
   };
 
+  /** All the filtered menu items excluding hidden ones */
   const filteredMenuItems =
     filter === "All"
       ? menuItems.filter((item) => !hiddenItems.includes(item.name))
@@ -247,9 +270,19 @@ function Home() {
         }).filter((item) => !hiddenItems.includes(item.name));
 
 
+  /**
+   * Renders home page, including:
+   * - A title and the filterable menu grid
+   * - Dynamic cart
+   * - Order summary and the payment options
+   * - Popups for error and the confirmation feedback
+   */        
   return (
     <div className="container">
+      {/* Restaurant Title */}
       <h1 className="restaurant-title">Oaxaca</h1>
+
+      {/* Category Filter Buttons */}
       <div className="filter-container">
         {[
           "All",
@@ -271,7 +304,10 @@ function Home() {
           </button>
         ))}
       </div>
+
+      {/* Layout splits Between the menu on the left side and the order summary on the right */}
       <div className="main-container">
+        {/* Menu Grid */}
         <div className="menu-container">
           <div className="menu-grid">
             {filteredMenuItems.length > 0 ? (
@@ -333,6 +369,7 @@ function Home() {
             )}
           </div>
         </div>
+        {/* The order summary and the table input */}
         <div className="order-summary">
           <label>Enter Table Number:</label>
           <input
@@ -346,6 +383,7 @@ function Home() {
           <button onClick={handleCallWaiter} className="call-waiter-btn">
             Call Waiter
           </button>
+          {/* Order Summary */}
           <h4>Order Summary</h4>
           {Object.keys(cart).length > 0 ? (
             <>
@@ -380,6 +418,7 @@ function Home() {
           ) : (
             <p>Your cart is empty</p>
           )}
+          {/* The placed Orders */}
           <h4>Placed Orders</h4>
           <p>Scroll to see all your orders</p>
           <div className="placed-orders-container">
@@ -425,7 +464,7 @@ function Home() {
           </div>
         </div>
       </div>
-      {/* Popup for messages */}
+      {/* Global Popups for messages */}
       {showPopup && (
         <div className="custom-popup">
           <p>{errorMessage}</p>

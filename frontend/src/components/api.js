@@ -1,7 +1,15 @@
+/**
+ * API file for the frontend of the project.
+ * Handeling of HTTP requests to the Django backend using Axios.
+ */
+
 import axios from "axios"; 
 
 const BASE_URL = "http://127.0.0.1:8000/cafeApi";  
 
+/**
+ * Axios instance configured with base URL and JSON headers
+ */
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -9,7 +17,7 @@ const api = axios.create({
   },
 });
 
-// Fetch menu items
+/** Fetches menu items */
 export const fetchMenuItems = async () => {
   try {
     const response = await api.get("/menu-items/");
@@ -19,6 +27,12 @@ export const fetchMenuItems = async () => {
     return [];
   }
 };
+
+/**
+ * Fetch a single menu item by ID
+ * @param {number} menuItemId - menu item id
+ * @returns {Object|null} data of menu item (or null)
+ */
 export const fetchMenuItem = async (menuItemId) => {
   try {
     const response = await api.get(
@@ -32,7 +46,7 @@ export const fetchMenuItem = async (menuItemId) => {
   }
 };
 
-// Fetch customers -- later on, when customer can have their own accounts for layalty rewards
+/** Fetches all customers */
 export const fetchCustomers = async () => {
   try {
     const response = await api.get("/customers/");
@@ -42,6 +56,11 @@ export const fetchCustomers = async () => {
     return [];
   }
 };
+
+/**
+ * Fetches one order of customer by ID
+ * @param {number} customerId - ID of the customer
+ */
 export const fetchCustomer = async (customerId) => {
   try {
     const response = await api.get(
@@ -55,7 +74,7 @@ export const fetchCustomer = async (customerId) => {
   }
 };
 
-// Fetch tables 
+/** Fetches all tables */
 export const fetchTables = async () => {
   try {
     const response = await api.get("/tables/");
@@ -66,6 +85,10 @@ export const fetchTables = async () => {
   }
 };
 
+/**
+ * Fetches one tables order by ID
+ * @param {number} tableId -  table Id
+ */
 export const fetchTable = async (tableId) => {
   try {
     const response = await api.get(
@@ -79,7 +102,7 @@ export const fetchTable = async (tableId) => {
   }
 };
 
-// Fetch orders
+/** Fetches all orders */
 export const fetchOrders = async () => {
   try {
     const response = await api.get("/orders/");
@@ -90,6 +113,10 @@ export const fetchOrders = async () => {
   }
 };
 
+/**
+ * Fetches one order by ID
+ * @param {number} orderId - order Id
+ */
 export const fetchOrder = async (orderId) => {
   try {
     const response = await api.get(
@@ -103,7 +130,10 @@ export const fetchOrder = async (orderId) => {
   }
 };
 
-// Create an order (Now uses `table_id` instead of `customer`)
+/**
+ * Createes a new order
+ * @param {Object} orderData - Order data, which is going to be posted
+ */
 export const createOrder = async (orderData) => {
   try {
     const response = await api.post("/orders/", orderData);
@@ -114,6 +144,12 @@ export const createOrder = async (orderData) => {
   }
 };
 
+/**
+ * Updates order status
+ * @param {number} orderId - Id of order
+ * @param {string} orderStatus - status of order
+ * @param {number} staffId - id of staff
+ */
 export const updateOrderStatus = async (orderId, orderStatus, staffId) => {
   try {
     const response = await api.put(
@@ -137,6 +173,7 @@ export const updateOrderStatus = async (orderId, orderStatus, staffId) => {
   }
 };
 
+/** Deletes an order by ID */
 export const deleteOrder = async (orderId) => {
   try {
     const response = await api.delete(
@@ -155,7 +192,8 @@ export const deleteOrder = async (orderId) => {
     return null;
   }
 }
-// Fetch waiters
+
+/** Fetches all waiters */
 export const fetchWaiters = async () => {
   try {
     const response = await api.get("/waiters/");
@@ -166,6 +204,10 @@ export const fetchWaiters = async () => {
   }
 };
 
+/**
+ * Fetches one waiter by its ID
+ * @param {number} waiterId
+ */
 export const fetchWaiter= async (waiterId) => {
   try {
     const response = await api.get(
@@ -178,7 +220,8 @@ export const fetchWaiter= async (waiterId) => {
     return null;
   }
 };
-// Fetch KitchenStaff 
+
+/** Fetches  kitchen staff */
 export const fetchKitchenStaff = async () => {
   try {
     const response = await api.get("/KitchenStaff/");
@@ -189,6 +232,10 @@ export const fetchKitchenStaff = async () => {
   }
 };
 
+/**
+ * Fetches a single kitchen staff member
+ * @param {number} KitchenStaffId - id of kitchenstaff
+ */
 export const fetchKitchenstaffer = async (KitchenStaffId) => {
   try {
     const response = await api.get(
@@ -202,6 +249,12 @@ export const fetchKitchenstaffer = async (KitchenStaffId) => {
   }
 };
 
+/**
+ * Confirms an order by a staff member
+ * @param {number} orderId - id of order
+ * @param {string} confirmationStatus - confirmation status of order
+ * @param {number} staffId - staff id
+ */
 export const confirmOrder = async (orderId, confirmationStatus, staffId) => {
   try {
     const response = await api.put(
@@ -225,6 +278,10 @@ export const confirmOrder = async (orderId, confirmationStatus, staffId) => {
   }
 };
 
+/**
+ * Fetches availability of a menu item
+ * @param {number} menuItemId - id of menuitem
+ */
 export const fetchAvailability = async (menuItemId) => {
   try {
     const response = await api.get(`menu-item/${menuItemId}/availability/`);
@@ -237,6 +294,11 @@ export const fetchAvailability = async (menuItemId) => {
   }
 };
 
+/**
+ * Updates availability field for a menu item
+ * @param {number} menuItemId - id of menu item
+ * @param {number} availabilityNum - availabitly number
+ */
 export const updateAvailability = async (menuItemId,availabilityNum) => {
   try {
     const response = await api.put(
@@ -259,6 +321,13 @@ export const updateAvailability = async (menuItemId,availabilityNum) => {
   }
 };
 
+/**
+ * Calls waiter with one notification
+ * @param {number} staffId - id of staff
+ * @param {number} orderId - order id
+ * @param {string} messages - messages
+ * @param {string} type - type
+ */
 export const callWaiter = async (staffId,orderId,messages,type) => {
   try {
     const response = await api.post(
@@ -285,6 +354,13 @@ export const callWaiter = async (staffId,orderId,messages,type) => {
   }
 };
 
+/**
+ * Notifies staff with a message
+ * @param {number} staffId - staff id
+ * @param {number} target - target
+ * @param {string} messages - messages
+ * @param {number} tableNumber - table number
+ */
 export const notifyStaff = async (staffId,target,messages,tableNumber) => {
   try {
     const response = await api.post(
@@ -310,6 +386,10 @@ export const notifyStaff = async (staffId,target,messages,tableNumber) => {
   }
 };
 
+/**
+ * Fetches details of a waiter
+ * @param {number} staffId - staff id
+ */
 export const fetchWaiterDetails = async (staffId) => {
   try {
     const response = await api.get(`/waiters/${staffId}/`);
@@ -320,7 +400,10 @@ export const fetchWaiterDetails = async (staffId) => {
   }
 };
 
-// Fetch staff_id for a given table number
+/**
+ * Fetches staff assigned to a table
+ * @param {number} tableNumber - number of table
+ */
 export const fetchStaffIdForTable = async (tableNumber) => {
   try {
     const response = await api.get(`/tables/${tableNumber}/staff_id/`);
@@ -331,6 +414,10 @@ export const fetchStaffIdForTable = async (tableNumber) => {
   }
 };
 
+/**
+ * Fetches notifications for one specific staff member
+ * @param {number} staffId
+ */
 export const fetchNotificationsForStaff = async (staffId) => {
   try {
     const response = await api.get(`/notifications/?staff_id=${staffId}`);
@@ -341,9 +428,10 @@ export const fetchNotificationsForStaff = async (staffId) => {
   }
 };
 
-
-
-
+/**
+ * Deletes menu item by ID
+ * @param {number} id - id of menu item
+ */
 export const deleteMenuItem = async (id) => {
   try {
       const response = await fetch(`http://127.0.0.1:8000/cafeApi/menu-items/${id}/`, {
@@ -364,7 +452,10 @@ export const deleteMenuItem = async (id) => {
   }
 };
 
-
+/**
+ * Adds new menu item
+ * @param {FormData} menuItemData - data of menu item
+ */
 export const addMenuItem = async (menuItemData) => {
   try {
       const response = await api.post("/menu-items/", menuItemData, {
@@ -377,6 +468,11 @@ export const addMenuItem = async (menuItemData) => {
   }
 };
 
+/**
+ * Updates an existing menu item
+ * @param {number} menuItemId - id of menu item
+ * @param {FormData} menuItemData - data of menu item
+ */
 export const updateMenuItem = async (menuItemId, menuItemData) => {
   try {
       const response = await api.patch(`/menu-items/${menuItemId}/`, menuItemData, {
@@ -392,7 +488,10 @@ export const updateMenuItem = async (menuItemId, menuItemData) => {
   }
 };
 
-// Create Stripe Checkout Session
+/**
+ * Creates a Stripe Checkout Session
+ * @param {number} paymentId - payment ID
+ */
 export const createCheckoutSession = async (paymentId) => {
   try {
     const response = await api.post(`/payments/${paymentId}/checkout/`);
@@ -403,8 +502,10 @@ export const createCheckoutSession = async (paymentId) => {
     return null;
   }
 };
-
-// Verify Payment Status
+/**
+ * Verifiys payment status
+ * @param {number} paymentId
+ */
 export const verifyPayment = async (paymentId) => {
   try {
     const response = await api.get(`/payments/${paymentId}/verify/`);
@@ -415,7 +516,10 @@ export const verifyPayment = async (paymentId) => {
   }
 };
 
-// Cancel Payment
+/**
+ * Cancels payment
+ * @param {number} paymentId - id of payment
+ */
 export const cancelPayment = async (paymentId) => {
   try {
     const response = await api.get(`/payments/${paymentId}/cancel/`);
@@ -426,7 +530,10 @@ export const cancelPayment = async (paymentId) => {
   }
 };
 
-// Get Sales Per Waiter (successful payments and total sales)
+/**
+ * Gets sales statistics for one waiter
+ * @param {number} staffId - id of staff (waiter)
+ */
 export const getSalesPerWaiter = async (staffId) => {
   try {
     const response = await api.get(`/sales/${staffId}/`);
@@ -438,7 +545,7 @@ export const getSalesPerWaiter = async (staffId) => {
   }
 };
 
-
+/** Fetches all employees */
 export const fetchEmployees = async () => {
   try {
       const response = await axios.get("http://127.0.0.1:8000/cafeApi/employees/");
@@ -449,7 +556,10 @@ export const fetchEmployees = async () => {
   }
 };
 
-
+/**
+ * Fetches orders for a given table
+ * @param {number} tableId - table Id
+ */
 export const fetchOrdersForTable = async (tableId) => {
   try {
       const response = await fetch(`http://127.0.0.1:8000/cafeApi/orders/?table=${tableId}`);
@@ -463,6 +573,10 @@ export const fetchOrdersForTable = async (tableId) => {
   }
 }
 
+/**
+ * Deletes a table by its Id
+ * @param {number} tableId - table Id
+ */
 export const deleteTable = async (tableId) => {
   try {
     const response = await axios.delete(`http://127.0.0.1:8000/cafeApi/tables/${tableId}/`);
