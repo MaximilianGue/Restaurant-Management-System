@@ -1,8 +1,8 @@
 import React from "react";
 import kitchenGif from "./assets/kitchen.gif";
 import unknownImg from "./assets/unknown.jpg"; // Placeholder for team profile picture
-import "./welcome.css";
-import "./App.css" 
+import "./styles/welcome.css";
+import "./styles/App.css" 
 
 /**
  * Welcome page Component, which serves as the landing page

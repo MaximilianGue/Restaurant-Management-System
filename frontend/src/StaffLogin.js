@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./StaffLogin.css";
+import "./styles/StaffLogin.css";
 import { ACCESS_TOKEN, REFRESH_TOKEN ,STAFF_ID} from "./constants";
 
 /**

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { fetchMenuItems, addMenuItem, deleteMenuItem, updateMenuItem, fetchEmployees } from "./api"; 
-import { fetchNotificationsForStaff } from "./api";
+import { fetchMenuItems, addMenuItem, deleteMenuItem, updateMenuItem, fetchEmployees } from "./components/api"; 
+import { fetchNotificationsForStaff } from "./components/api";
 import axios from "axios";
-import { fetchTables, fetchOrdersForTable } from "./api";
-import "./manager.css";
-import { fetchWaiters, fetchKitchenStaff } from "./api";
+import { fetchTables, fetchOrdersForTable } from "./components/api";
+import "./styles/manager.css";
+import { fetchWaiters, fetchKitchenStaff } from ".//components/api";
 import { useMemo } from "react";
-import { deleteTable } from "./api";
+import { deleteTable } from "./components/api";
 
 
 /**

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./StaffLogin.css";
+import "./styles/StaffLogin.css";
 
 /**
  * Staff registration form

@@ -7,8 +7,8 @@ import {
   fetchNotificationsForStaff, 
   callWaiter,
   confirmOrder 
-} from "./api";
-import "./kitchen.css";
+} from "./components/api";
+import "./styles/kitchen.css";
 import { STAFF_ID } from "./constants";
 
 /**

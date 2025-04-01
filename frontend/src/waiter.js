@@ -16,9 +16,9 @@ import {
   fetchWaiters, 
   fetchKitchenStaff, 
   notifyStaff 
-} from "./api";
-import "./Dropdown.css";
-import "./waiter.css"
+} from "./components/api";
+import "./styles/Dropdown.css";
+import "./styles/waiter.css"
 import { STAFF_ID } from "./constants";
 
 function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {

@@ -8,10 +8,10 @@ import {
   createCheckoutSession,
   verifyPayment,
   cancelPayment 
-} from "./api";
+} from "./components/api";
 import { useNavigate } from "react-router-dom";
-import "./App.css";
-import "./home.css";
+import "./styles/App.css";
+import "./styles/home.css";
 
 /**
  * This is the home component, where customers can:
