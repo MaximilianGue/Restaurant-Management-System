@@ -10,7 +10,7 @@ body {
 
 /* Kitchen Container */
 .kitchen-container {
-  width: 90%;
+  width: 100%;
   max-width: 1200px;
   background: #ffffff;
   padding: 2rem;
@@ -52,6 +52,7 @@ body {
 .order-table,
 .notifications {
   flex: 1 1 48%;
+  min-width: 550px;
   background: #fffaf0;
   padding: 1.25rem;
   border-radius: 10px;
@@ -173,6 +174,57 @@ select:hover {
 
 .custom-popup button:hover {
   background-color: #cc5200;
+}
+
+
+
+/* Order popup */
+.kitchen-container .order-popup-overlay {
+  position: fixed;
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999; 
+}
+
+/* order details content */
+.kitchen-container .order-popup-content {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  position: relative;
+  color: #333;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+/* Close button from view order pop up */
+.kitchen-container .order-popup-content .close-button {
+  background-color: #ca1f1f;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin-top: 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.kitchen-container .order-popup-content .close-button:hover {
+  background-color: #666;
+}
+
+.kitchen-container .order-table td.status-col {
+  min-width: 160px;
 }
 
 /* Responsivness for smaller screens */

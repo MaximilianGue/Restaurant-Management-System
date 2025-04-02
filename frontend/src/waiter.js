@@ -42,6 +42,11 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
   const [alertTargetId, setAlertTargetId] = useState("");
   const [alertAlertMessage, setAlertAlertMessage] = useState("");
 
+  // Pop up
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showOrderPopup, setShowOrderPopup] = useState(false);
+
+
   // Initial fetch waiters data
   useEffect(() => {
     fetchWaiterDetails(staffId).then(data => {
@@ -219,6 +224,12 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     }
   };
 
+  // handels viwe order (for view order button)
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+    setShowOrderPopup(true);
+  };
+  
   
   return (
     <div className="waiter-container">
@@ -231,46 +242,51 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
       </button>
       <h3>Waiter Dashboard</h3>
 
-      {/* Pending Orders section*/}
+           {/* Pending Orders section*/}
       <div className="order-table pending-orders-table">
-          <h4>Pending Orders</h4>
-          <table>
-            <thead>
-              <tr>
-                <th>Table/Order #</th>
-                <th>Total (£)</th>
-                <th>Action</th>
-                <th>Time (Min)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {pendingOrders.length > 0 ? (
-                pendingOrders.map((order) => (
-                  <tr key={order.table_id}>
-                    <td>{order.table_number} | {order.id}</td>
-                    <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
-                    <td>
-                      <button className="cancel-button" onClick={() => handleCancelOrder(order.id)}>
-                        Cancel Order
-                      </button>
-                      <button className="confirm-button" onClick={() => handleConfirmOrder(order.id)}>
-                        Confirm Order
-                      </button>
-                    </td>
-                    <td>{Math.round((new Date().getTime() - new Date(order.order_date))/60000)}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr><td colSpan="4">No pending orders.</td></tr>
-              )}
-            </tbody>
-          </table>
-          <button className="cancel-all-button" onClick={cancelAllOrders}>
-            Cancel All Orders
-          </button>
+            <h4>Pending Orders</h4>
+            <table>
+              <thead>
+                <tr>
+                  <th>Table/Order #</th>
+                  <th>Total (£)</th>
+                  <th>Action</th>
+                  <th>Time (Min)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingOrders.length > 0 ? (
+                  pendingOrders.map((order) => (
+                    <tr key={order.table_id}>
+                      <td>{order.table_number} | {order.id}</td>
+                      <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
+                      <td>
+                        <button className="cancel-button" onClick={() => handleCancelOrder(order.id)}>
+                          Cancel Order
+                        </button>
+                        <button className="confirm-button" onClick={() => handleConfirmOrder(order.id)}>
+                          Confirm Order
+                        </button>
+                        <button onClick={() => handleViewOrder(order)}>
+                        View Order
+                        </button>
+                      </td>
+                      <td>{Math.round((new Date().getTime() - new Date(order.order_date))/60000)}</td>
+                      
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan="4">No pending orders.</td></tr>
+                )}
+              </tbody>
+            </table>
+            <button className="cancel-all-button" onClick={cancelAllOrders}>
+              Cancel All Orders
+            </button>
       </div>
 
       <div className="order-tables">
+
         {/* Orders Ready for Pick Up */}
         <div className="order-table">
           <h4>Orders Ready for Pick Up</h4>
@@ -280,6 +296,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                 <th>Order #</th>
                 <th>Total (£)</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -288,12 +305,17 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                   <tr key={order.id}>
                     <td>{order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
-                    <td>
+                    <td className="status-col">
                       <select value={order.status} onChange={(e) => handleStatusChange(order.id, e.target.value)}>
                         <option value="ready for pick up">ready for pick up</option>
                         <option value="delivered">delivered</option>
                         <option value="canceled">canceled</option>
                       </select>
+                    </td>
+                    <td>
+                      <button onClick={() => handleViewOrder(order)}>
+                        View Order
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -313,6 +335,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                 <th>Order #</th>
                 <th>Total (£)</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -321,12 +344,17 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                   <tr key={order.id}>
                     <td>{order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
-                    <td>
+                    <td className="status-col">
                       <select value={order.status} onChange={(e) => handleStatusChange(order.id, e.target.value)}>
                         <option value="delivered">delivered</option>
                         <option value="paid for">paid for</option>
                         <option value="canceled">canceled</option>
                       </select>
+                    </td>
+                    <td>
+                      <button onClick={() => handleViewOrder(order)}>
+                        View Order
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -336,6 +364,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
             </tbody>
           </table>
         </div>
+
       </div>
 
       {/* Table Alert System section*/}
@@ -505,6 +534,38 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
         <div className="custom-popup">
           <p>{errorMessage}</p>
           <button onClick={() => setShowPopup(false)}>Close</button>
+        </div>
+      )}
+
+      {/* Popup to view order details */}
+      {showOrderPopup && selectedOrder && (
+        <div className="order-popup-overlay">
+          <div className="order-popup-content">
+            <h3>Order Details:</h3>
+            <p><strong>Order ID:</strong> {selectedOrder.id}</p>
+            <p>
+              <strong>Status:</strong> {selectedOrder.status} <br />
+              <strong>Total Price:</strong> £{parseFloat(selectedOrder.total_price || 0).toFixed(2)}
+            </p>
+            <h4>Items</h4>
+            {selectedOrder.items && selectedOrder.items.length > 0 ? (
+              <ul>
+                {selectedOrder.items.map((item, index) => (
+                  <li key={index}>
+                    {item.name} x {item.quantity} – £{parseFloat(item.price).toFixed(2)}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No items found for this order.</p>
+            )}
+            <button
+              className="close-button"
+              onClick={() => setShowOrderPopup(false)}
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>

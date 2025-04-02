@@ -24,6 +24,11 @@ function Kitchen({ setRole }) {
 
   const staffId = localStorage.getItem(STAFF_ID); 
 
+  // For view ordr pop up
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showOrderPopup, setShowOrderPopup] = useState(false);
+
+
   const statusOptions = [
     "pending",
     "confirmed",
@@ -119,6 +124,13 @@ function Kitchen({ setRole }) {
     }
   };
 
+  // Handles View order button
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+    setShowOrderPopup(true);
+  };
+  
+
   // Filters active and completed orders based on their status
   const activeOrders = orders.filter((order) =>
     ["confirmed", "being prepared"].includes(order.status)
@@ -149,6 +161,7 @@ function Kitchen({ setRole }) {
                 <th>Total (£)</th>
                 <th>Status</th>
                 <th>Time (Min)</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -157,7 +170,7 @@ function Kitchen({ setRole }) {
                   <tr key={order.table_id}>
                     <td>{order.table_number} | {order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
-                    <td>
+                    <td className="status-col">
                       <select
                         value={order.status}
                         onChange={(e) => handleStatusChange(order.id, e.target.value)}>
@@ -167,6 +180,11 @@ function Kitchen({ setRole }) {
                       </select>
                     </td>
                     <td>{Math.round((new Date().getTime() - new Date(order.order_date))/60000)}</td>
+                    <td>
+                      <button onClick={() => handleViewOrder(order)}>
+                        View Order
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -187,6 +205,7 @@ function Kitchen({ setRole }) {
                 <th>Order #</th>
                 <th>Total (£)</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -196,6 +215,11 @@ function Kitchen({ setRole }) {
                     <td>{order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
                     <td>{order.status}</td>
+                    <td>
+                      <button onClick={() => handleViewOrder(order)}>
+                        View Order
+                      </button>
+                    </td>
                   </tr>
                 ))
               ) : (
@@ -205,10 +229,10 @@ function Kitchen({ setRole }) {
               )}
             </tbody>
           </table>
-        </div>
-
-        {/* Unread Notifications Table */}
-        <div className="notifications">
+        </div>      
+      </div>
+      {/* Unread Notifications Table */}
+      <div className="notifications">
           <h3>Unread Notifications</h3>
           {notifications.length > 0 ? (
             <table>
@@ -252,7 +276,6 @@ function Kitchen({ setRole }) {
             <p>No unread notifications.</p>
           )}
         </div>
-      </div>
 
       {/* Popups for the status or error messages */}
       {showPopup && (
@@ -261,7 +284,41 @@ function Kitchen({ setRole }) {
           <button onClick={() => setShowPopup(false)}>Close</button>
         </div>
       )}
+
+       {/* Popup to view order details */}
+       {showOrderPopup && selectedOrder && (
+        <div className="order-popup-overlay">
+          <div className="order-popup-content">
+            <h3>Order Details:</h3>
+            <p><strong>Order ID:</strong> {selectedOrder.id}</p>
+            <p>
+              <strong>Status:</strong> {selectedOrder.status} <br />
+              <strong>Total Price:</strong> £{parseFloat(selectedOrder.total_price || 0).toFixed(2)}
+            </p>
+            <h4>Items</h4>
+            {selectedOrder.items && selectedOrder.items.length > 0 ? (
+              <ul>
+                {selectedOrder.items.map((item, index) => (
+                  <li key={index}>
+                    {item.name} x {item.quantity} – £{parseFloat(item.price).toFixed(2)}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No items found for this order.</p>
+            )}
+            <button
+              className="close-button"
+              onClick={() => setShowOrderPopup(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
+
   );
 }
 

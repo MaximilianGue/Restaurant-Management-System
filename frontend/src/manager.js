@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchMenuItems, addMenuItem, deleteMenuItem, updateMenuItem, fetchEmployees } from "./components/api"; 
+import { fetchMenuItems, addMenuItem, deleteMenuItem, updateMenuItem, fetchEmployees } from "./components//api"; 
 import { fetchNotificationsForStaff } from "./components/api";
 import axios from "axios";
 import { fetchTables, fetchOrdersForTable } from "./components/api";
@@ -641,33 +641,37 @@ function Manager() {
     /* Evaluate overall profit margin across menu items. */
     const getProfitSummary = () => {
         const validItems = menuItems.filter(item => {
-          const cost = parseFloat(item.production_cost);
-          const price = parseFloat(item.price);
-          return !isNaN(cost) && price > 0;
+            const cost = parseFloat(productionCosts[item.id]);
+            return !isNaN(cost) && parseFloat(item.price) > 0;
         });
-      
+    
         if (validItems.length === 0) return null;
-      
-        let totalMargin = 0;
+    
+        let below60 = 0;
+        let equal60 = 0;
+        let above60 = 0;
+    
         validItems.forEach(item => {
-          const price = parseFloat(item.price);
-          const cost = parseFloat(item.production_cost);
-          const margin = ((price - cost) / price) * 100;
-          totalMargin += margin;
+            const price = parseFloat(item.price);
+            const cost = parseFloat(productionCosts[item.id]);
+            const margin = ((price - cost) / price) * 100;
+    
+            if (margin > 60) above60++;
+            else if (margin === 60) equal60++;
+            else below60++;
         });
-      
-        // Compute the average margin
-        const avgMargin = totalMargin / validItems.length;
-      
-        if (avgMargin < 60) {
-          return { color: 'red', message: 'Overall profit margin under 60%' };
-        } else if (Math.abs(avgMargin - 60) < 0.001) {
-          return { color: 'yellow', message: 'Overall profit margin at 60%' };
+    
+        if (below60 > 0) {
+            return { color: 'red', message: 'Overall profit margin under 60%' };
+        } else if (equal60 > 0 && above60 === 0) {
+            return { color: 'yellow', message: 'Profit margin at 60%' };
+        } else if (equal60 > 0 && above60 > 0) {
+            return { color: 'yellow', message: 'Some items have a profit margin of 60%' };
         } else {
-          return { color: 'green', message: `Overall profit margin above 60%` };
+            return { color: 'green', message: 'Overall profit margin above 60%' };
         }
-      };
-      
+    };
+    
     /**
      * Renders the Manager Dashboard based on current tab.
      * Offers various functionality for:
