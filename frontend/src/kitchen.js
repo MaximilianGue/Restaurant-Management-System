@@ -229,10 +229,10 @@ function Kitchen({ setRole }) {
               )}
             </tbody>
           </table>
-        </div>
-
-        {/* Unread Notifications Table */}
-        <div className="notifications">
+        </div>      
+      </div>
+      {/* Unread Notifications Table */}
+      <div className="notifications">
           <h3>Unread Notifications</h3>
           {notifications.length > 0 ? (
             <table>
@@ -276,7 +276,6 @@ function Kitchen({ setRole }) {
             <p>No unread notifications.</p>
           )}
         </div>
-      </div>
 
       {/* Popups for the status or error messages */}
       {showPopup && (
