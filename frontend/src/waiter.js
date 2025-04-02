@@ -304,7 +304,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                   <tr key={order.id}>
                     <td>{order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
-                    <td>
+                    <td className="status-col">
                       <select value={order.status} onChange={(e) => handleStatusChange(order.id, e.target.value)}>
                         <option value="ready for pick up">ready for pick up</option>
                         <option value="delivered">delivered</option>
@@ -343,7 +343,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
                   <tr key={order.id}>
                     <td>{order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
-                    <td>
+                    <td className="status-col">
                       <select value={order.status} onChange={(e) => handleStatusChange(order.id, e.target.value)}>
                         <option value="delivered">delivered</option>
                         <option value="paid for">paid for</option>
@@ -539,7 +539,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
       {showOrderPopup && selectedOrder && (
         <div className="order-popup-overlay">
           <div className="order-popup-content">
-            <h3>Order Details</h3>
+            <h3>Order Details:</h3>
             <p><strong>Order ID:</strong> {selectedOrder.id}</p>
             <p>
               <strong>Status:</strong> {selectedOrder.status} <br />

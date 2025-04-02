@@ -170,7 +170,7 @@ function Kitchen({ setRole }) {
                   <tr key={order.table_id}>
                     <td>{order.table_number} | {order.id}</td>
                     <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
-                    <td>
+                    <td className="status-col">
                       <select
                         value={order.status}
                         onChange={(e) => handleStatusChange(order.id, e.target.value)}>

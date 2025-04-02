@@ -350,3 +350,7 @@
 .waiter-container .order-popup-content .close-button:hover {
   background-color: #666;
 }
+
+.waiter-container .order-table td.status-col {
+  min-width: 160px;
+}

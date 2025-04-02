@@ -222,6 +222,9 @@ select:hover {
   background-color: #666;
 }
 
+.kitchen-container .order-table td.status-col {
+  min-width: 160px;
+}
 
 /* Responsivness for smaller screens */
 @media (max-width: 768px) {
