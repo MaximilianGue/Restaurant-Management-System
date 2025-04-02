@@ -35,6 +35,10 @@ function Home() {
   const navigate = useNavigate();
   const [hiddenItems, setHiddenItems] = useState([]);
 
+  // Show order pop up
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showOrderPopup, setShowOrderPopup] = useState(false);
+
   // Loads menu items and orders
   useEffect(() => {
     setRole(0); 
@@ -149,6 +153,12 @@ function Home() {
           quantity: cart[itemName],
         };
       }),
+    };
+
+    // handels view order (for view order button)
+    const handleViewOrder = (order) => {
+      setSelectedOrder(order);
+      setShowOrderPopup(true);
     };
 
     try {
@@ -269,6 +279,11 @@ function Home() {
           return item.category.toLowerCase() === filter.toLowerCase();
         }).filter((item) => !hiddenItems.includes(item.name));
 
+  // handels viwe order (for view order button)
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+    setShowOrderPopup(true);
+  };
 
   /**
    * Renders home page, including:
@@ -444,18 +459,18 @@ function Home() {
                         >
                           Pay Now
                         </button>
-                        <button
-                          onClick={() => handleVerifyPayment(order.id)}
-                          className="order-button"
-                        >
-                          Verify Payment
-                        </button>
+                        
                         <button
                           onClick={() => handleCancelPayment(order.id)}
                           className="order-button"
                         >
                           Cancel Payment
                         </button>
+
+                        <button onClick={() => handleViewOrder(order)}>
+                          View Order
+                        </button>
+
                       </div>
                     )}
                   </div>
@@ -464,6 +479,37 @@ function Home() {
           </div>
         </div>
       </div>
+      {/* Popup to view order details */}
+      {showOrderPopup && selectedOrder && (
+        <div className="order-popup-overlay">
+          <div className="order-popup-content">
+            <h3>Order Details:</h3>
+            <p><strong>Order ID:</strong> {selectedOrder.id}</p>
+            <p>
+              <strong>Status:</strong> {selectedOrder.status} <br />
+              <strong>Total Price:</strong> £{parseFloat(selectedOrder.total_price || 0).toFixed(2)}
+            </p>
+            <h4>Items</h4>
+            {selectedOrder.items && selectedOrder.items.length > 0 ? (
+              <ul>
+                {selectedOrder.items.map((item, index) => (
+                  <li key={index}>
+                    {item.name} x {item.quantity} – £{parseFloat(item.price).toFixed(2)}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No items found for this order.</p>
+            )}
+            <button
+              className="close-button"
+              onClick={() => setShowOrderPopup(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       {/* Global Popups for messages */}
       {showPopup && (
         <div className="custom-popup">
