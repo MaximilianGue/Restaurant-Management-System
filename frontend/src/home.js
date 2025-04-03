@@ -37,6 +37,10 @@ function Home() {
     const [showOrderPopup, setShowOrderPopup] = useState(false);
   
 
+  // Show order pop up
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showOrderPopup, setShowOrderPopup] = useState(false);
+
   // Loads menu items and orders
   useEffect(() => {
     setRole(0); 
@@ -149,6 +153,12 @@ function Home() {
           quantity: cart[itemName],
         };
       }),
+    };
+
+    // handels view order (for view order button)
+    const handleViewOrder = (order) => {
+      setSelectedOrder(order);
+      setShowOrderPopup(true);
     };
 
     try {
@@ -438,6 +448,11 @@ function Home() {
                         >
                           Cancel Payment
                         </button>
+
+                        <button onClick={() => handleViewOrder(order)}>
+                          View Order
+                        </button>
+
                       </div>
                     )}         
                     <button onClick={() => handleViewOrder(order)}>
