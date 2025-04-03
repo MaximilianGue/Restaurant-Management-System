@@ -1,4 +1,7 @@
-*,
+/*
+ * Global reset and base styles
+ */
+ *,
 *::before,
 *::after {
   margin: 0;
@@ -6,6 +9,10 @@
   box-sizing: border-box;
 }
 
+/*
+ * Html Element Styles
+ * Ensures full height and a scrolling behavior
+ */
 html {
   width: auto !important;
   height: auto !important;
@@ -14,6 +21,10 @@ html {
   scroll-behavior: smooth;
 }
 
+/*
+ * Body Styles
+ * Sets default font, background color, and padding for nav
+ */
 body {
   width: auto !important;
   height: auto !important;
@@ -28,6 +39,10 @@ body {
   transition: background-color 0.3s ease !important;
 }
 
+/*
+ * Navigation Bar styles
+ * Fixed to top with dark background 
+ */
 nav {
   width: 100% !important;
   background: #374151 !important;
@@ -37,6 +52,10 @@ nav {
   z-index: 100 !important;
 }
 
+/*
+ * Navigation list Styles
+ * Centers horozontically items with optimal spacing
+ */
 nav ul {
   list-style: none !important;
   display: flex !important;
@@ -48,6 +67,9 @@ nav ul {
   max-width: 1200px !important;
 }
 
+/*
+ * Navigation links Styles
+ */
 nav ul li a {
   text-decoration: none !important;
   font-weight: 500 !important;
@@ -55,10 +77,16 @@ nav ul li a {
   transition: color 0.2s ease !important;
 }
 
+/*
+ * Hover effects for the navigation links
+ */
 nav ul li a:hover {
   color: #93c5fd !important;
 }
 
+/*
+ * Container Class
+ */
 .container {
   width: 100% !important;
   max-width: 1200px !important;
@@ -66,14 +94,23 @@ nav ul li a:hover {
   padding: 2rem !important;
 }
 
+/*
+ * Text Alignment 
+ */
 .text-center {
   text-align: center !important;
 }
 
+/*
+ * Margin Top
+ */
 .mt-2 {
   margin-top: 2rem !important;
 }
 
+/*
+ * Styles for button
+ */
 button {
   cursor: pointer !important;
   border: none !important;
@@ -84,10 +121,16 @@ button {
   transition: background-color 0.3s ease, transform 0.1s ease !important;
 }
 
+/*
+ * Active state of button (click animation)
+ */
 button:active {
   transform: scale(0.98) !important;
 }
 
+/*
+ * Style of link
+ */
 a {
   color: #2563eb !important;
   text-decoration: none !important;
@@ -97,6 +140,9 @@ a:hover {
   text-decoration: underline !important;
 }
 
+/*
+ * Styles of input, select and textarea
+ */
 input,
 select,
 textarea {
@@ -111,6 +157,9 @@ textarea {
   transition: border-color 0.2s ease !important;
 }
 
+/*
+ * Focus State for the Form Elements
+ */
 input:focus,
 select:focus,
 textarea:focus {
@@ -118,6 +167,9 @@ textarea:focus {
   border-color: #2563eb !important;
 }
 
+/*
+ * Shadow Classes
+ */
 .shadow {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.07) !important;
 }

@@ -4,6 +4,8 @@ npm install jwt-decode
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+Look inside package.json to find out what dependencies need to be installed
+
 ## Available Scripts
 
 In the project directory, you can run:

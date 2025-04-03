@@ -8,42 +8,56 @@ import json
 from rest_framework.exceptions import ValidationError
 from rest_framework import serializers
 from .models import MenuItem
+from .models import OrderItem
+
 
 class MenuItemSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer to display and update the MenuItem model.
+    Handles allergies and categories for MenuItems.
+    """
+
+    allergies = serializers.ListField(
+        child=serializers.CharField(), required=False
+    )
     category = serializers.SerializerMethodField()
     category_input = serializers.ListField(child=serializers.CharField(), write_only=True, required=False)
 
     def get_category(self, obj):
-        """ Ensure the category is returned as a list. """
-        if isinstance(obj.category, str):
-            return obj.category.split(",")
-        return obj.category or []
-    
-    def get_allergies(self, obj):
-        """ Ensure 'None' is returned when allergies are empty. """
-        return obj.allergies if obj.allergies else ["none"]  # ✅ Returns ["None"] instead of an empty list
+        return obj.category if isinstance(obj.category, list) else []
 
+    def get_allergies(self, obj):
+        return obj.allergies if obj.allergies else ["none"]
 
     def update(self, instance, validated_data):
-        print("🔍 Updating with validated data:", validated_data)  # Debugging
-
-        # ✅ Ensure category is stored as JSON in the DB
         if "category_input" in validated_data:
-            raw_category = validated_data.pop('category_input', [])
-            validated_data["category"] = json.dumps(raw_category) if isinstance(raw_category, list) else raw_category
+            raw_category = validated_data.pop("category_input", [])
+            validated_data["category"] = raw_category
 
-        # ✅ Remove 'image' field from validated_data if no new image is provided
         if 'image' in validated_data and validated_data['image'] is None:
             validated_data.pop('image')
+        
+        if 'production_cost' in validated_data:
+            instance.production_cost = validated_data.pop('production_cost')
 
         return super().update(instance, validated_data)
 
     class Meta:
         model = MenuItem
-        fields = ["id", "name", "price", "image", "allergies", "calories", "category", "category_input", "cooking_time", "availability"]
+        fields = [
+            "id", "name", "price", "production_cost", "image", "allergies", "calories",
+            "category", "category_input", "cooking_time", "availability"
+        ]
+
 
 
 class UpdateAvailabilitySerializer(serializers.ModelSerializer):
+
+    """
+    Serializer to update the availability of a MenuItem.
+    """
+
     class Meta:
         model = MenuItem
         fields = ['availability']  # Only allow updating the availability field
@@ -53,35 +67,55 @@ class UpdateAvailabilitySerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
 class TableSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Table model to display details about tables including their assigned waiter
+    and total revenue.
+    """
+
+    waiter_name = serializers.SerializerMethodField()
     revenue = serializers.SerializerMethodField()
 
     class Meta:
         model = Table
-        fields = ['id', 'number', 'status', 'waiter_name', 'estimated_time', 'capacity', 'revenue']
+        fields = ['id', 'number', 'status', 'waiter', 'waiter_name', 'estimated_time', 'capacity', 'revenue']
+
+    def get_waiter_name(self, obj):
+        return f"{obj.waiter.first_name} {obj.waiter.last_name}" if obj.waiter else None
 
     def get_revenue(self, obj):
-        paid_orders = Order.objects.filter(table=obj, status='paid for')
-        total_revenue = sum(order.total_price for order in paid_orders)
-        print(f"Table {obj.number} revenue calculated: {total_revenue}")  # Debugging line
-        return total_revenue
-        
-    def get_waiter_name(self, obj):
-        return obj.waiter.first_name if obj.waiter else "None"
+        paid_orders = obj.orders.filter(status='paid for')
+        return sum(order.total_price for order in paid_orders)
 
 
+class OrderItemSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Table model to display details about tables including their assigned waiter
+    and total revenue.
+    """
+
+    name = serializers.CharField(source="menu_item.name", read_only=True)
+    price = serializers.DecimalField(source="menu_item.price", max_digits=6, decimal_places=2, read_only=True)
+
+    class Meta:
+        model = OrderItem
+        fields = ["name", "price", "quantity"]
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    table_id = serializers.PrimaryKeyRelatedField(
-        queryset=Table.objects.all(), source="table"
-    )  # Only show table ID, not full table details
 
-    items = MenuItemSerializer(many=True, read_only=True)  # Nested items in response
+    """
+    Serializer for the Order model to handle orders and their associated items.
+    """
+
+    table_id = serializers.PrimaryKeyRelatedField(queryset=Table.objects.all(), source="table")
+    items = OrderItemSerializer(source="orderitem_set", many=True, read_only=True)  # ✅ FIXED
+
     item_ids = serializers.PrimaryKeyRelatedField(
         queryset=MenuItem.objects.all(), source="items", many=True, write_only=True
-    )  # Accept `item_ids` list when creating/updating an order
+    )
 
     class Meta:
         model = Order
@@ -89,13 +123,24 @@ class OrderSerializer(serializers.ModelSerializer):
             "id", "table_id", "order_date", "status", "total_price", "items", "item_ids"
         ]
 
+
 class CustomerSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Customer model to handle customer data.
+    """
+
     class Meta:
         model = Customer
         fields = '__all__'
 
         
 class UpdateStatusSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer to update the status of an order by waiter.
+    """
+
     Staff_id = serializers.CharField(source = "waiter.Staff_id", allow_blank=True, required=False)
     order_id = serializers.CharField(source = "order.id", allow_blank=True, required=False)
     class Meta:
@@ -111,6 +156,11 @@ class UpdateStatusSerializer(serializers.ModelSerializer):
 
         
 class ConfirmOrderSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for confirming an order by kitchen staff, changing its status.
+    """
+
     Staff_id = serializers.CharField(source="KitchenStaff.Staff_id", allow_blank=True, required=False)
     order_id = serializers.CharField(source = "order.id", allow_blank=True, required=False)
     class Meta:
@@ -124,6 +174,11 @@ class ConfirmOrderSerializer(serializers.ModelSerializer):
         return instance
 
 class NotificationSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Notification model to display notification details.
+    """
+
     class Meta:
         model = Notification
         fields = '__all__'
@@ -132,6 +187,11 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer to display and create User accounts, including role and staff ID.
+    """
+
     class Meta:
         model = get_user_model()
         fields = ['username', 'password', 'role', 'staff_id']  # Include staff_id
@@ -142,25 +202,59 @@ class UserSerializer(serializers.ModelSerializer):
         return user
 
 class WaiterSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Waiter model to handle waiter details.
+    """
+
     role = serializers.CharField(default="Waiter")  # Add role info
 
     class Meta:
         model = Waiter
-        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'role']
+        fields = ["id" ,'Staff_id',  'first_name', 'last_name', 'email', 'phone', 'role']
 
 class KitchenStaffSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the KitchenStaff model to handle kitchen staff details.
+    """
+
     role = serializers.CharField(default="Kitchen Staff")  # Add role info
 
     class Meta:
         model = KitchenStaff
-        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'role']
+        fields = ["id" ,'Staff_id', 'first_name', 'last_name', 'email', 'phone', 'role']
 
 class PaymentSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Payment model to display and manage payments for orders.
+    """
+
     class Meta:
         model = Payment
         fields = ["id","order" ,"table", "waiter", "amount",]
 
 class ManagerSerializer(serializers.ModelSerializer):
+
+    """
+    Serializer for the Manager model to display manager details.
+    """
+
     class Meta:
         model = Manager
         fields = '__all__'
+
+class TableStatusUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer to  change the  Table status for Table model.
+    """
+    class Meta:
+        model = Table
+        fields = ['status']
+    
+    def validate_status(self, value):
+        allowed = dict(Table.TABLE_TYPES).keys()  # e.g. ['pending', 'all orders received', 'alert']
+        if value not in allowed:
+            raise serializers.ValidationError("Invalid status value. Allowed values are: " + ", ".join(allowed))
+        return value

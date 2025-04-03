@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions
 from rest_framework.exceptions import ValidationError
-from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer, NotificationSerializer,UpdateAvailabilitySerializer, get_user_model, UserSerializer,PaymentSerializer,ManagerSerializer
+from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer, NotificationSerializer,UpdateAvailabilitySerializer, get_user_model, UserSerializer,PaymentSerializer,ManagerSerializer,TableStatusUpdateSerializer
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -20,45 +20,82 @@ import json
 from django.db.models import Q
 import stripe
 from django.conf import settings
+from .models import Table
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 # Views for CRUD operations on MenuItems, Tables, and Customers
 class MenuItemView(generics.ListCreateAPIView):
+    """
+    MenuItemView class.
+
+    Handles operations related to menu items such as creation and updates.
+
+    Attributes:
+        serializer_class (Serializer): The serializer used for menu items.
+        permission_classes (list): List of permission classes applied to the view.
+    """
+    
     serializer_class = MenuItemSerializer
     queryset = MenuItem.objects.all()
 
     def post(self, request, *args, **kwargs):
+        """
+        Handles POST request to create a new menu item.
+
+        Args:
+            request (Request): The HTTP request containing menu item data.
+
+        Returns:
+            Response: A Response object containing the serialized menu item data or errors.
+        """
         data = request.data
         image = request.FILES.get('image')  # New uploaded image
         existing_image = data.get("existing_image")  # Old image URL if no new image
 
-        # Convert category back into a string for storage
-        category = json.loads(data.get("category", "[]"))
-        category_str = ",".join(category)  
+        try:
+            category = json.loads(data.get("category", "[]"))  # 
+        except json.JSONDecodeError:
+            return Response({"error": "Invalid category format"}, status=400)
+
+        try:
+            allergies_raw = data.get("allergies", "")
+            if allergies_raw.strip().lower() == "none":
+                allergies = []
+            else:
+                allergies = [a.strip() for a in allergies_raw.split(",") if a.strip()]
+        except Exception as e:
+            allergies = []
 
         menu_item = MenuItem.objects.create(
             name=data.get('name'),
             calories=data.get('calories'),
-            allergies=data.get('allergies'),
-            category=category_str,
+            allergies=allergies,
+            category=category,
             cooking_time=data.get('cooking_time'),
             availability=data.get('availability'),
             price=data.get('price'),
-            image=image if image else existing_image  # Use old image if no new one
+            production_cost=data.get('production_cost', 0.00),
+            image=image if image else existing_image
         )
+
         serializer = MenuItemSerializer(menu_item)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-
 
     serializer_class = MenuItemSerializer
     queryset = MenuItem.objects.all()
 
     def update(self, request, *args, **kwargs):
-        print("Incoming PATCH Request Data:", request.data)  # Debugging
-        print(" Incoming PATCH Request Files:", request.FILES)  # Debugging file uploads
+        """
+        Handles PUT request to update a menu item.
 
+        Args:
+            request (Request): The HTTP request containing updated data.
+            pk (int or str): The primary key of the menu item to update.
+
+        Returns:
+            Response: A Response object containing updated data or errors.
+        """
         instance = self.get_object()
         
         # Convert QueryDict to mutable dictionary
@@ -86,70 +123,106 @@ class MenuItemView(generics.ListCreateAPIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
 class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    MenuItemDetailView class.
+
+    Provides detailed information about a specific menu item.
+
+    Attributes:
+        queryset (QuerySet): QuerySet containing all menu items.
+        serializer_class (Serializer): Serializer used for displaying item details.
+    """
     serializer_class = MenuItemSerializer
     queryset = MenuItem.objects.all()
 
     def patch(self, request, *args, **kwargs):
-        print(" Incoming PATCH Request Data:", request.data)  # Debugging
-        print(" Incoming PATCH Request Files:", request.FILES)  # Debugging file uploads
+        """
+        Handles PATCH request to partially update a menu item.
 
-        mutable_data = request.data.copy()  # Ensure it's mutable
+        Args:
+            request (Request): The HTTP request with partial update data.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments (includes `pk` of the item).
 
-        #  Fix `category_input` Handling (Ensure it's a string before JSON parsing)
+        Returns:
+            Response: A Response object with updated data or errors.
+        """
+        instance = self.get_object()
+        mutable_data = request.data.copy()
+
+        # --- Fix category_input (stringified list to real list) ---
         if "category_input" in mutable_data:
+            raw = mutable_data.get("category_input")
             try:
-                category_raw = mutable_data.pop("category_input")
-
-                if isinstance(category_raw, list):  # Handle list case
-                    category_raw = category_raw[0]  # Extract first value if it's a list
-
-                if isinstance(category_raw, str):  # Ensure it's a string before JSON parsing
-                    mutable_data["category"] = json.loads(category_raw)
+                # If raw is a list (from QueryDict), get the first string
+                if isinstance(raw, list):
+                    raw = raw[0]
+                parsed_category = json.loads(raw)
+                if isinstance(parsed_category, list):
+                    mutable_data.setlist("category_input", parsed_category)
                 else:
-                    return Response({"error": "Invalid category format"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"error": "category_input must be a list"}, status=400)
+            except Exception as e:
+                return Response({"error": f"Invalid category_input format: {str(e)}"}, status=400)
 
-            except json.JSONDecodeError:
-                return Response({"error": "Invalid JSON format in category_input"}, status=status.HTTP_400_BAD_REQUEST)
+        # --- Fix allergies (no json.loads, just pass list) ---
+        allergies = request.data.getlist("allergies")
+        if allergies:
+            mutable_data.setlist("allergies", allergies)
 
-        # Fix `allergies` Field Handling (Ensure list format)
-        if "allergies" in mutable_data:
-            allergies_raw = mutable_data["allergies"]
-
-            if isinstance(allergies_raw, str):  # Convert string to list
-                mutable_data["allergies"] = [allergies_raw] if allergies_raw.lower() != "none" else []
-            elif isinstance(allergies_raw, list):
-                mutable_data["allergies"] = allergies_raw
-            else:
-                return Response({"error": "Invalid format for allergies"}, status=status.HTTP_400_BAD_REQUEST)
-
-        #  Fix Image Handling (Preserve Old Image if Not Updated)
+        # --- Handle image ---
         if "image" in request.FILES:
             mutable_data["image"] = request.FILES["image"]
         else:
-            mutable_data.pop("image", None)  # 🔥 Remove from update if no new image is provided
+            mutable_data.pop("image", None)
 
-        #  Apply Update
-        instance = self.get_object()
+        # --- Perform update ---
         serializer = self.get_serializer(instance, data=mutable_data, partial=True)
-
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=200)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        print("Serializer Errors:", serializer.errors)
+        return Response(serializer.errors, status=400)
+
 
 class MenuItemAvailabilityView(APIView):
+    """
+    MenuItemAvailabilityView class.
+
+    Provides availability information for a specific menu item.
+
+    Attributes:
+        permission_classes (list): List of permission classes required to access the view.
+    """
     def get(self,pk):
         menu_item = get_object_or_404(MenuItem, pk=pk)
         serializer = MenuItemSerializer(menu_item)
         return Response({"id": menu_item.id, "availability": serializer.data["availability"]})
 
 class AvailabilityUpdateView(generics.UpdateAPIView):
-  
+    """
+    AvailabilityUpdateView class.
+
+    Updates the availability status of a menu item.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all menu items.
+        serializer_class (Serializer): Serializer to update availability.
+    """
     queryset = MenuItem.objects.all()
     serializer_class = UpdateAvailabilitySerializer
 
     def perform_update(self, serializer):
+        """
+        Custom update logic during PATCH or PUT request.
+
+        Args:
+            serializer (Serializer): The serializer instance to save.
+
+        Returns:
+            None
+        """
         availability = self.request.data.get("availability", None)
 
         if availability is None:
@@ -162,7 +235,15 @@ class TableView(viewsets.ModelViewSet):
     serializer_class = TableSerializer
 
 class TableViewSet(viewsets.ViewSet):
-    
+    """
+    TableView class.
+
+    Manages CRUD operations for tables in the restaurant.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all tables.
+        serializer_class (Serializer): Serializer used for table operations.
+    """
     def list(self, request):
         # Query all tables and for each table calculate the revenue
         tables = Table.objects.all()
@@ -184,61 +265,133 @@ class TableViewSet(viewsets.ViewSet):
 
         return Response(table_revenue)
 
+    def create(self, request):
+        number = request.data.get("number")
+        waiter_id = request.data.get("waiter")
+
+        if not number or not waiter_id:
+            return Response({"error": "Table number and waiter ID are required."}, status=400)
+
+        waiter = Waiter.objects.filter(id=waiter_id).first()
+        if not waiter:
+            return Response({"error": "Waiter not found."}, status=404)
+
+        #  Save waiter as FK
+        table = Table.objects.create(
+            number=number,
+            waiter=waiter,
+        )
+
+        serializer = TableSerializer(table)
+        return Response(serializer.data, status=201)
+
+
 class TableDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    TableDetailView class.
+
+    Retrieves details of a specific table.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all tables.
+        serializer_class (Serializer): Serializer for displaying table details.
+    """
+
     serializer_class = TableSerializer
     queryset = Table.objects.all()
 
 class TableStaffIDView(APIView):
     """
-    Fetches the staff_id for a given table number.
+    TableStaffIDView class.
+
+    Handles fetching the waiter assigned to a particular table.
     """
     def get(self, request, table_number):
+        """
+        Handles GET request to retrieve waiter assigned to a specific table.
+
+        Args:
+            request (Request): The HTTP request object.
+            table_id (int): ID of the table.
+
+        Returns:
+            Response: Waiter details or error if not found.
+        """
         try:
             table = Table.objects.get(number=table_number)
-            waiter_name = table.waiter_name
-
-            if not waiter_name:
-                return Response({"detail": "No waiter assigned to this table."}, status=status.HTTP_404_NOT_FOUND)
-
-            # Split "John Doe" into first and last name
-            try:
-                first_name, last_name = waiter_name.split(" ", 1)
-            except ValueError:
-                return Response({"detail": "Invalid waiter name format in table data."}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Find the waiter in the system
-            waiter = Waiter.objects.filter(first_name=first_name, last_name=last_name).first()
-
-            if not waiter:
-                return Response({"detail": "No matching waiter found for this table."}, status=status.HTTP_404_NOT_FOUND)
-
-            # Return the staff_id
-            return Response({"staff_id": waiter.Staff_id}, status=status.HTTP_200_OK)
-
+            if table.waiter:
+                return Response({"staff_id": table.waiter.Staff_id})
+            else:
+                return Response({"error": "No waiter is assigned to your table."}, status=status.HTTP_404_NOT_FOUND)
         except Table.DoesNotExist:
-            return Response({"detail": "Table not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Table does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        
+class TableStatusUpdateView(generics.UpdateAPIView):
+    queryset = Table.objects.all()
+    serializer_class = TableStatusUpdateSerializer
+    lookup_field = 'number'          # the model field to use for lookup
+    lookup_url_kwarg = 'table_number'  # the URL parameter name
 
+    def perform_update(self, serializer):
+        new_status = self.request.data.get('status')
+        allowed_statuses = dict(Table.TABLE_TYPES).keys()  # e.g., ['pending', 'all orders received', 'alert']
+        if new_status not in allowed_statuses:
+            raise ValidationError({"status": "Invalid status value. Allowed: " + ", ".join(allowed_statuses)})
+        serializer.save()
+            
 class CustomerView(generics.ListCreateAPIView):
+    """
+    CustomerView class.
+
+    Allows listing all customers and adding a new customer.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all customers.
+        serializer_class (Serializer): Serializer used for customer data.
+    """
     serializer_class = CustomerSerializer
     queryset = Customer.objects.all()  # It gets all customers as a JSON list object
 
 class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    CustomerDetailView class.
+
+    Provides retrieval, update, and delete functionality for a single customer.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all customers.
+        serializer_class (Serializer): Serializer for customer operations.
+    """
     serializer_class = CustomerSerializer
     queryset = Customer.objects.all()  # It gets a single customer by ID, allowing update or delete
 
 class OrderView(APIView):
+    """
+    OrderView class.
+
+    Handles listing all orders and creating new ones.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all orders.
+        serializer_class (Serializer): Serializer used for order creation and display.
+    """
     def get(self, request):
-        orders = Order.objects.all()
+        table_id = request.query_params.get("table")
+        if table_id:
+            orders = Order.objects.filter(table__id=table_id)
+        else:
+            orders = Order.objects.all()
+
         orders_data = []
         for order in orders:
             order_data = {
                 "id": order.id,
                 "table_id": order.table.id,
+                "table_number":order.table.number,
                 "order_date": order.order_date,
                 "status": order.status,
                 "total_price": order.total_price,
                 "items": [],
-                # Include waiter details if available
                 "waiter": {
                     "Staff_id": order.waiter.Staff_id,
                     "first_name": order.waiter.first_name,
@@ -259,12 +412,13 @@ class OrderView(APIView):
                     "category": menu_item.category,
                     "cooking_time": menu_item.cooking_time,
                     "availability": menu_item.availability,
-                    "quantity": order_item.quantity  # <- Directly from the database, always correct
+                    "quantity": order_item.quantity
                 })
 
             orders_data.append(order_data)
 
         return Response(orders_data, status=200)
+
 
     def post(self, request):
         try:
@@ -295,14 +449,16 @@ class OrderView(APIView):
                 message=f"New order received for Table {table.number}",
                 table=table
             )
-            payment = Payment.objects.create(
+            Payment.objects.create(
                     order=order,
                     table=table,
                     amount=data["total_price"],
                     waiter=waiter,
                     status="unpaid"
                 )
-
+           
+            table.status = "pending"
+            table.save()
             return JsonResponse({
                 "message": "Order created successfully",
                 "order_id": order.id,
@@ -310,18 +466,44 @@ class OrderView(APIView):
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
 
-# OrderDetailView for retrieving, updating, or deleting a specific order
 class OrderDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    OrderDetailView class.
+
+    Enables retrieval, update, and deletion of a specific order.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all orders.
+        serializer_class (Serializer): Serializer used for order operations.
+    """
     serializer_class = OrderSerializer
     queryset = Order.objects.all()
 
 class WaiterView(generics.ListCreateAPIView):
+    """
+    WaiterView class.
+
+    Handles creation and listing of waiter profiles.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all waiters.
+        serializer_class (Serializer): Serializer used for waiter data.
+    """
     serializer_class = WaiterSerializer
-    queryset = Waiter.objects.all()  # It gets all waiters as a JSON list object
+    queryset = Waiter.objects.all()  
 
 class WaiterDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """
+    WaiterDetailView class.
+
+    Retrieves, updates, or deletes a specific waiter.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all waiters.
+        serializer_class (Serializer): Serializer used for waiter operations.
+    """
     serializer_class = WaiterSerializer
-    queryset = Waiter.objects.all()  # It gets a single waiter by ID, allowing update or delete
+    queryset = Waiter.objects.all()  
 
 
 class WaiterDetailView(generics.RetrieveAPIView):
@@ -331,6 +513,15 @@ class WaiterDetailView(generics.RetrieveAPIView):
 
     
 class StatusUpdateView(generics.UpdateAPIView):
+    """
+    StatusUpdateView class.
+
+    Allows kitchen staff or waiters to update the status of orders.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all orders.
+        serializer_class (Serializer): Serializer used for status updates.
+    """
     queryset = Order.objects.all()
     serializer_class = UpdateStatusSerializer
 
@@ -343,16 +534,45 @@ class StatusUpdateView(generics.UpdateAPIView):
         waiter = get_object_or_404(Waiter, Staff_id=Staff_id)
         serializer.instance.waiter = waiter  
         serializer.save()
+
 class KitchenStaffView(generics.ListCreateAPIView):
+    """
+    KitchenStaffView class.
+
+    Lists all kitchen staff members and allows creation of new ones.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all kitchen staff.
+        serializer_class (Serializer): Serializer used for kitchen staff data.
+    """
     serializer_class = KitchenStaffSerializer
     queryset = KitchenStaff.objects.all()  # It gets all kitchen staff as a JSON list object
 
 class KitchenStaffDetailView(generics.RetrieveAPIView):
+    """
+    KitchenStaffDetailView class.
+
+    Retrieves, updates, or deletes a specific kitchen staff member.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all kitchen staff.
+        serializer_class (Serializer): Serializer used for kitchen staff operations.
+    """
     queryset = KitchenStaff.objects.all()
     serializer_class = KitchenStaffSerializer
 
 
+
 class ConfirmOrderUpdateView(generics.UpdateAPIView):
+    """
+    ConfirmOrderUpdateView class.
+
+    Allows confirmation of customer orders.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all orders.
+        serializer_class (Serializer): Serializer used for confirming orders.
+    """
     queryset = Order.objects.all()
     serializer_class = ConfirmOrderSerializer
 
@@ -384,7 +604,13 @@ class StatusUpdateView(generics.UpdateAPIView):
 
 class NotificationViewSet(viewsets.ModelViewSet):
     """
-    A viewset to manage notifications between waiters and kitchen staff.
+    NotificationViewSet class.
+
+    Handles operations related to customer/waiter/kitchen staff notifications.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all notifications.
+        serializer_class (Serializer): Serializer used for notification data.
     """
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
@@ -448,12 +674,10 @@ class NotificationViewSet(viewsets.ModelViewSet):
         if not staff_id or not target_staff_id:
             return Response({"detail": "Staff_id and target_staff_id are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Confirm sender is a waiter
         waiter = Waiter.objects.filter(Staff_id=staff_id).first()
         if not waiter:
             return Response({"detail": "Only waiters can send assistance requests."}, status=status.HTTP_403_FORBIDDEN)
 
-        # Try to find target staff — it could be either a waiter or kitchen staff
         target_staff = None
         is_kitchen_staff = False
 
@@ -470,15 +694,12 @@ class NotificationViewSet(viewsets.ModelViewSet):
         if not target_staff:
             return Response({"detail": "Target staff member not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        # Build message
         note_message = message if message else f"Waiter {waiter.first_name} {waiter.last_name} needs assistance."
         if table_number:
             note_message += f" at Table {table_number}."
 
-        # Look up table if provided
         table = Table.objects.filter(number=table_number).first() if table_number else None
 
-        # Create notification (with flexible target)
         notification = Notification.objects.create(
             notification_type='alert',
             kitchen_staff=kitchen_staff if is_kitchen_staff else None,
@@ -520,6 +741,11 @@ class NotificationViewSet(viewsets.ModelViewSet):
 
 
 class MarkNotificationRead(APIView):
+    """
+    MarkNotificationRead class.
+
+    Marks a specific notification as read.
+    """
     def post(self, request, pk):
         notification = get_object_or_404(Notification, pk=pk)
         notification.is_read = True
@@ -529,6 +755,14 @@ class MarkNotificationRead(APIView):
 
 
 class RegisterView(generics.CreateAPIView):
+    """
+    RegisterView class.
+
+    Handles user registration and account creation.
+
+    Attributes:
+        permission_classes (list): Permissions for open access to registration.
+    """
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
@@ -537,6 +771,11 @@ class RegisterView(generics.CreateAPIView):
         serializer.save()
 
 class LoginView(APIView):
+    """
+    LoginView class.
+
+    Handles user login and JWT token generation.
+    """
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
@@ -560,6 +799,15 @@ class LoginView(APIView):
     
 
 class UserListView(generics.ListAPIView):
+    """
+    UserListView class.
+
+    Lists all registered users.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all users.
+        serializer_class (Serializer): Serializer used for user data.
+    """
     queryset = get_user_model().objects.all()
     serializer_class = UserSerializer
     permission_classes = [AllowAny]
@@ -581,8 +829,8 @@ class CreateStripeCheckoutSessionView(APIView):
                 payment_method_types=['card'],
                 line_items=[{
                     'price_data': {
-                        'currency': 'usd',
-                        'unit_amount': int(payment.amount * 100),  
+                        'currency': 'gbp',
+                        'unit_amount': int(payment.amount*100),  
                         'product_data': {'name': f"Payment for Order {payment.order.id}"},
                     },
                     'quantity': 1,
@@ -593,11 +841,13 @@ class CreateStripeCheckoutSessionView(APIView):
             )
 
             payment.stripe_session_id = checkout_session.id
+            
             payment.save()
-
+            
             return Response({"checkout_url": checkout_session.url}, status=status.HTTP_200_OK)
 
         except Exception as e:
+            print("Stripe Error:", str(e))
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -612,38 +862,47 @@ class StripePaymentSuccessView(APIView):
         payment = get_object_or_404(Payment, pk=pk)
         order = payment.order
 
-        if payment.status == "paid":
-            return redirect("http://localhost:3000/home")  # Already paid, redirect immediately
-
+        # Check if stripe_session_id exists before retrieving the session
         if not payment.stripe_session_id:
-            return Response({"error": "No Stripe session ID found for this payment."},
-                            status=400)
+            return Response(
+                {"error": "No Stripe session ID found for this payment."},
+                status=400
+            )
+
+        # Optionally, check if order is already marked as paid
+        if order.status == "paid for":
+            return Response(
+                {"message": "Order is already paid for."},
+                status=200
+            )
 
         try:
             stripe_session = stripe.checkout.Session.retrieve(payment.stripe_session_id)
-
             if stripe_session.payment_status == "paid":
                 payment.status = "paid"
                 payment.save()
                 order.status = "paid for"
                 order.save()
-                return redirect("http://localhost:3000/home")  # Redirect on success
-
+                # Redirect after successful payment processing
+                return redirect("http://localhost:3000/home")
         except stripe.error.StripeError as e:
-            return Response({"error": str(e)}, status=400)
+            return Response(
+                {"error": str(e)},
+                status=400
+            )
 
-        return Response({"message": "Payment not completed yet."}, status=400)
-
-
-
-
-
-
-
+        return Response(
+            {"message": "Payment not completed yet."},
+            status=400
+        )
 
 
 class StripePaymentCancelView(APIView):
+    """
+    StripePaymentCancelView class.
 
+    Handles actions when a Stripe payment is canceled.
+    """
     permission_classes = [AllowAny]
 
     def get(self, request, pk, **kwargs):
@@ -651,16 +910,20 @@ class StripePaymentCancelView(APIView):
         order = payment.order  # Directly reference the related Order
 
         if payment.status == "paid":
-            return Response({"message": "Cannot cancel a paid payment."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Cannot cancel a paid payment."}, status=400)
 
         payment.status = "canceled"
         payment.save()
         order.status = "canceled"
         order.save()
-        return Response({"message": "Payment canceled!", "status": "canceled"}, status=status.HTTP_200_OK)
+        return Response({"message": "Payment canceled!"},status=200)
 
 class SalesPerWaiterView(APIView):
-  
+    """
+    SalesPerWaiterView class.
+
+    Provides a report of total sales per waiter.
+    """
     permission_classes =[AllowAny]
 
     def get(self, request, staff_id):
@@ -673,7 +936,15 @@ class SalesPerWaiterView(APIView):
             "total_sales": sum(payment.amount for payment in successful_payments) 
         }, status=status.HTTP_200_OK)
 class PaymentListView(APIView):
-  
+    """
+    PaymentListView class.
+
+    Lists all recorded payments.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of all payments.
+        serializer_class (Serializer): Serializer used for payment data.
+    """
     permission_classes = [AllowAny] 
     def get(self, request):
         payments = Payment.objects.all()
@@ -691,13 +962,57 @@ class PaymentListView(APIView):
 
 
 class ManagerListView(generics.ListAPIView):
+    """
+    ManagerListView class.
 
+    Lists all users with the manager role.
+
+    Attributes:
+        queryset (QuerySet): QuerySet of manager users.
+        serializer_class (Serializer): Serializer used for user data.
+    """
     queryset = Manager.objects.all()
     serializer_class = ManagerSerializer
-    
+
+def generate_staff_id(role):
+    """
+    Generate a new Staff_id for a given role.
+    For waiters, the ID will be in the format "WXXX" (e.g. "W001")
+    For kitchen staff, the ID will be in the format "KXXX" (e.g. "K001")
+    """
+    if role.lower() == "waiter":
+        prefix = "W"
+        existing = Waiter.objects.exclude(Staff_id__isnull=True)
+        numbers = [
+            int(w.Staff_id[1:]) for w in existing 
+            if w.Staff_id and w.Staff_id[1:].isdigit()
+        ]
+        next_number = max(numbers, default=0) + 1
+        return f"{prefix}{str(next_number).zfill(3)}"
+    elif role.lower() == "kitchen staff":
+        prefix = "K"
+        existing = KitchenStaff.objects.exclude(Staff_id__isnull=True)
+        numbers = [
+            int(k.Staff_id[1:]) for k in existing 
+            if k.Staff_id and k.Staff_id[1:].isdigit()
+        ]
+        next_number = max(numbers, default=0) + 1
+        return f"{prefix}{str(next_number).zfill(3)}"
+    else:
+        raise ValueError("Invalid role for Staff_id generation.")
+
 
 @api_view(['GET'])
 def get_employees(request):
+    """
+    Retrieves all users with roles such as waiter, kitchen staff, or manager.
+
+    Args:
+        request (Request): The HTTP request object.
+
+    Returns:
+        Response: A list of filtered users based on role.
+    """
     # Fetch all waiters and kitchen staff
     waiters = Waiter.objects.all()
     kitchen_staff = KitchenStaff.objects.all()
@@ -714,6 +1029,15 @@ def get_employees(request):
 
 @api_view(['PUT'])
 def assign_waiter_to_table(request, table_id):
+    """
+    Assigns a waiter to a specific table.
+
+    Args:
+        request (Request): The HTTP request with assignment data.
+
+    Returns:
+        Response: A confirmation or error message.
+    """
     try:
         table = Table.objects.get(id=table_id)
     except Table.DoesNotExist:
@@ -729,79 +1053,240 @@ def assign_waiter_to_table(request, table_id):
     table.save()
     return Response({"message": f"Waiter {waiter.first_name} {waiter.last_name} assigned to Table {table.number}"}, status=status.HTTP_200_OK)
 
-@api_view(['PUT'])
-def update_employee(request, employee_id):
-    # Fetch the employee (Waiter or KitchenStaff) by ID
-    waiter = Waiter.objects.filter(id=employee_id).first()
-    kitchen_staff = KitchenStaff.objects.filter(id=employee_id).first()
 
-    # Check if employee exists and handle based on type (Waiter or Kitchen Staff)
-    if waiter:
-        employee = waiter
-        is_waiter = True
-    elif kitchen_staff:
+@api_view(['PUT'])
+def update_employee(request, employee_Staff_id):
+    """
+    Updates information about a specific employee.
+    If the role changes, a new Staff_id is generated based on the new role.
+    """
+    # Look up by the string Staff_id
+    waiter = Waiter.objects.filter(Staff_id=employee_Staff_id).first()
+    kitchen_staff = KitchenStaff.objects.filter(Staff_id=employee_Staff_id).first()
+
+    if kitchen_staff:
         employee = kitchen_staff
         is_waiter = False
+    elif waiter:
+        employee = waiter
+        is_waiter = True
     else:
         return Response({"detail": "Employee not found."}, status=404)
 
-    # Update employee details
-    employee.first_name = request.data.get("first_name", employee.first_name)
-    employee.last_name = request.data.get("last_name", employee.last_name)
-    employee.email = request.data.get("email", employee.email)
-    employee.phone = request.data.get("phone", employee.phone)
+    # Update basic fields (ensure empty strings instead of None)
+    employee.first_name = request.data.get("first_name", employee.first_name) or ""
+    employee.last_name = request.data.get("last_name", employee.last_name) or ""
+    employee.email = request.data.get("email", employee.email) or ""
+    employee.phone = request.data.get("phone", employee.phone) or ""
 
-    # Handle role change
     role = request.data.get("role")
     if role:
-        # If role is changing to 'waiter' from kitchen staff
-        if role.lower() == "waiter" and not is_waiter:
-            # Moving from KitchenStaff to Waiter
-            waiter_data = {
-                "first_name": employee.first_name,
-                "last_name": employee.last_name,
-                "email": employee.email,
-                "phone": employee.phone,
-            }
-            new_waiter = Waiter.objects.create(**waiter_data)
-            kitchen_staff.delete()  # Remove old kitchen staff
-            employee = new_waiter  # Point to the new waiter
-            is_waiter = True
-        # If role is changing to 'kitchen staff' from waiter
-        elif role.lower() == "kitchen staff" and is_waiter:
-            # Moving from Waiter to KitchenStaff
-            kitchen_staff_data = {
-                "first_name": employee.first_name,
-                "last_name": employee.last_name,
-                "email": employee.email,
-                "phone": employee.phone,
-            }
-            new_kitchen_staff = KitchenStaff.objects.create(**kitchen_staff_data)
-            waiter.delete()  # Remove old waiter
-            employee = new_kitchen_staff  # Point to the new kitchen staff
-            is_waiter = False
-
-    # Save the updated employee details
+        current_role = "waiter" if is_waiter else "kitchen staff"
+        new_role = role.lower()
+        if new_role != current_role:
+            # When switching roles, generate a new Staff_id for the new role.
+            new_staff_id = generate_staff_id(new_role)
+            if new_role == "waiter" and not is_waiter:
+                if Waiter.objects.filter(email=employee.email).exists():
+                    return Response({"detail": "A waiter with this email already exists."}, status=400)
+                new_waiter = Waiter.objects.create(
+                    first_name=employee.first_name,
+                    last_name=employee.last_name,
+                    email=employee.email,
+                    phone=employee.phone,
+                    Staff_id=new_staff_id
+                )
+                # Optionally, delete the old kitchen staff record:
+                kitchen_staff.delete()
+                employee = new_waiter
+                is_waiter = True
+            elif new_role == "kitchen staff" and is_waiter:
+                if KitchenStaff.objects.filter(email=employee.email).exclude(id=employee.id).exists():
+                    return Response({"detail": "A kitchen staff member with this email already exists."}, status=400)
+                new_kitchen_staff = KitchenStaff.objects.create(
+                    first_name=employee.first_name,
+                    last_name=employee.last_name,
+                    email=employee.email,
+                    phone=employee.phone,
+                    Staff_id=new_staff_id
+                )
+                waiter.delete()
+                employee = new_kitchen_staff
+                is_waiter = False
     employee.save()
-
     return Response({"detail": "Employee updated successfully."}, status=200)
 
 @api_view(['DELETE'])
-def fire_employee(request, employee_id):
+def fire_employee(request, employee_Staff_id):
+    """
+    Removes an employee from the system.
+    """
     try:
-        # Check if it's a waiter or kitchen staff and delete accordingly
-        waiter = Waiter.objects.filter(id=employee_id).first()
-        kitchen_staff = KitchenStaff.objects.filter(id=employee_id).first()
-
+        waiter = Waiter.objects.filter(Staff_id=employee_Staff_id).first()
+        kitchen_staff = KitchenStaff.objects.filter(Staff_id=employee_Staff_id).first()
         if waiter:
-            waiter.delete()  # The related payments will be automatically deleted due to cascade delete
+            waiter.delete()
             return JsonResponse({"message": "Waiter has been fired."}, status=200)
         elif kitchen_staff:
             kitchen_staff.delete()
             return JsonResponse({"message": "Kitchen staff has been fired."}, status=200)
         else:
             return JsonResponse({"message": "Employee not found."}, status=404)
-
     except Exception as e:
-        print(f"Error: {str(e)}")  # Log the error to the console
+        print(f"Error: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
+
+@api_view(['POST'])
+def create_employee(request):
+    """
+    Creates a new employee with a specific role.
+    A new Staff_id is generated based on the role (e.g., "W001" or "K001").
+    """
+    role = request.data.get("role", "").lower()
+    if role not in ["waiter", "kitchen staff"]:
+        return Response({"error": "Invalid role. Must be 'waiter' or 'kitchen staff'."}, status=400)
+
+    required_fields = ["first_name", "last_name", "email"]
+    for field in required_fields:
+        if not request.data.get(field):
+            return Response({"error": f"{field.replace('_', ' ').capitalize()} is required."}, status=400)
+
+    # Use the helper function to generate a new Staff_id
+    new_staff_id = generate_staff_id(role)
+
+    base_data = {
+        "first_name": request.data.get("first_name"),
+        "last_name": request.data.get("last_name"),
+        "email": request.data.get("email"),
+        "phone": request.data.get("phone", ""),
+        "Staff_id": new_staff_id,
+    }
+
+    if role == "waiter":
+        if Waiter.objects.filter(email=base_data["email"]).exists():
+            return Response({"error": "A waiter with this email already exists."}, status=400)
+        waiter = Waiter.objects.create(**base_data)
+        serializer = WaiterSerializer(waiter)
+        return Response(serializer.data, status=201)
+    elif role == "kitchen staff":
+        if KitchenStaff.objects.filter(email=base_data["email"]).exists():
+            return Response({"error": "A kitchen staff member with this email already exists."}, status=400)
+        kitchen_staff = KitchenStaff.objects.create(**base_data)
+        serializer = KitchenStaffSerializer(kitchen_staff)
+        return Response(serializer.data, status=201)
+
+@api_view(['POST'])
+def create_table(request):
+    """
+    Creates a new table using a given table number and waiter Staff_id.
+
+
+    Returns:
+        Response: The serialized table data if successful, or an error message.
+    """
+    table_number = request.data.get("table_number")
+    waiter_id = request.data.get("waiter_id")
+
+    if not table_number or not waiter_id:
+        return Response({"error": "Both table_number and waiter_id are required."}, status=400)
+
+    # Look up the waiter using Staff_id
+    waiter = get_object_or_404(Waiter, Staff_id=waiter_id)
+
+    # Optionally check if a table with the same number already exists
+    if Table.objects.filter(number=table_number).exists():
+        return Response({"error": "A table with this number already exists."}, status=400)
+
+    # Create the table with the specified number and assign the waiter
+    table = Table.objects.create(number=table_number, waiter=waiter)
+
+    serializer = TableSerializer(table)
+    return Response(serializer.data, status=201)
+
+@api_view(['PUT'])
+def update_table(request, pk):
+    """
+    Updates the details of a table.
+
+    Args:
+        request (Request): The HTTP request containing table data.
+        table_id (int): ID of the table to update.
+
+    Returns:
+        Response: Updated table data or validation errors.
+    """
+    try:
+        table = Table.objects.get(pk=pk)
+    except Table.DoesNotExist:
+        return Response({"error": "Table not found."}, status=status.HTTP_404_NOT_FOUND)
+    print(table)
+    number = request.data.get("number")
+    status_value = request.data.get("status")
+    waiter_id = request.data.get("waiter_id")  # or 'waiter' depending on your frontend
+
+    if number is not None:
+        table.number = number
+
+    if status_value is not None:
+        table.status = status_value
+
+    if waiter_id:
+        try:
+            waiter = Waiter.objects.get(id=waiter_id)
+            table.waiter = waiter  #  This is the fix
+        except Waiter.DoesNotExist:
+            return Response({"error": "Waiter not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    table.save()
+    return Response({"message": "Table updated successfully."}, status=status.HTTP_200_OK)
+
+
+class ConfirmOrderAvailabilityByOrderIdView(APIView):
+    """
+    View to check and confirm an order's availability by order ID.
+    
+    It retrieves the order using the provided order ID, then for each order item,
+    it verifies that the associated MenuItem has an availability greater than or equal
+    to the ordered quantity. If all items are available, it updates each MenuItem's
+    availability by subtracting the ordered quantity. If any item is insufficient, it
+    returns details about the shortage.
+    """
+    def post(self, request, order_id):
+        # Get the order by ID or return 404 if not found
+        order = get_object_or_404(Order, id=order_id)
+        order_items = order.orderitem_set.all()
+
+        insufficient_items = []
+        # Check the availability for each item in the order
+        for order_item in order_items:
+            menu_item = order_item.menu_item
+            quantity_required = order_item.quantity
+
+            if menu_item.availability is None or menu_item.availability < quantity_required:
+                insufficient_items.append({
+                    "item": menu_item.name,
+                    "available": menu_item.availability,
+                    "required": quantity_required
+                })
+
+        # If any menu item does not have enough availability, return a failure response.
+        if insufficient_items:
+            return Response(
+                {
+                    "can_prepare": False,
+                    "details": insufficient_items,
+                    "message": "Insufficient availability for one or more items."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # All items are available: update the availability for each MenuItem.
+        for order_item in order_items:
+            menu_item = order_item.menu_item
+            menu_item.availability -= order_item.quantity
+            menu_item.save()
+
+        return Response(
+            {"can_prepare": True, "message": "Order can be prepared and availability updated."},
+            status=status.HTTP_200_OK
+        )   

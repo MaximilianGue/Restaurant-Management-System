@@ -1,0 +1,264 @@
+[
+{
+  "model": "cafeApi.menuitem",
+  "pk": 1,
+  "fields": {
+    "name": "Tacos",
+    "price": "9.99",
+    "image": "menu_images/taco.jpg",
+    "allergies": [
+      "Gluten",
+      "Dairy"
+    ],
+    "calories": "350.00",
+    "category": [
+      "Main Course",
+      "Non-Vegetarian"
+    ],
+    "cooking_time": 10,
+    "availability": 20,
+    "production_cost": "2.00"
+  }
+},
+{
+  "model": "cafeApi.menuitem",
+  "pk": 2,
+  "fields": {
+    "name": "Nachos",
+    "price": "6.50",
+    "image": "menu_images/nachos.jpg",
+    "allergies": [
+      "Dairy"
+    ],
+    "calories": "500.00",
+    "category": [
+      "Appetizer",
+      "Vegetarian",
+      "Gluten-Free"
+    ],
+    "cooking_time": 5,
+    "availability": 20,
+    "production_cost": "2.00"
+  }
+},
+{
+  "model": "cafeApi.menuitem",
+  "pk": 3,
+  "fields": {
+    "name": "Burrito",
+    "price": "12.99",
+    "image": "menu_images/burrito.jpg",
+    "allergies": [
+      "Gluten",
+      "Dairy"
+    ],
+    "calories": "700.00",
+    "category": [
+      "Main Course",
+      "Non-Vegetarian"
+    ],
+    "cooking_time": 15,
+    "availability": 12,
+    "production_cost": "2.00"
+  }
+},
+{
+  "model": "cafeApi.menuitem",
+  "pk": 4,
+  "fields": {
+    "name": "Enchiladas",
+    "price": "14.99",
+    "image": "menu_images/enchiladas.jpg",
+    "allergies": [
+      "Gluten",
+      "Dairy"
+    ],
+    "calories": "600.00",
+    "category": [
+      "Main Course",
+      "Non-Vegetarian"
+    ],
+    "cooking_time": 20,
+    "availability": 12,
+    "production_cost": "2.00"
+  }
+},
+{
+  "model": "cafeApi.menuitem",
+  "pk": 5,
+  "fields": {
+    "name": "Quesadilla",
+    "price": "11.50",
+    "image": "menu_images/quesadilla.jpg",
+    "allergies": [
+      "Gluten",
+      "Dairy"
+    ],
+    "calories": "550.00",
+    "category": [
+      "Appetizer",
+      "Vegetarian"
+    ],
+    "cooking_time": 10,
+    "availability": 20,
+    "production_cost": "2.00"
+  }
+},
+{
+  "model": "cafeApi.menuitem",
+  "pk": 6,
+  "fields": {
+    "name": "Fajitas",
+    "price": "16.00",
+    "image": "menu_images/fajitas.jpg",
+    "allergies": [],
+    "calories": "650.00",
+    "category": [
+      "Main Course",
+      "Non-Vegetarian",
+      "Gluten-Free"
+    ],
+    "cooking_time": 15,
+    "availability": 12,
+    "production_cost": "2.00"
+  }
+},
+{
+  "model": "cafeApi.menuitem",
+  "pk": 7,
+  "fields": {
+    "name": "Chilaquiles",
+    "price": "13.50",
+    "image": "menu_images/chilaquiles.jpg",
+    "allergies": [
+      "Dairy"
+    ],
+    "calories": "400.00",
+    "category": [
+      "Breakfast",
+      "Vegetarian",
+      "Gluten-Free"
+    ],
+    "cooking_time": 12,
+    "availability": 12,
+    "production_cost": "2.00"
+  }
+},
+{
+  "model": "cafeApi.menuitem",
+  "pk": 8,
+  "fields": {
+    "name": "Carnitas",
+    "price": "15.00",
+    "image": "menu_images/carnitas.jpg",
+    "allergies": [],
+    "calories": "550.00",
+    "category": [
+      "Main Course",
+      "Non-Vegetarian",
+      "Gluten-Free"
+    ],
+    "cooking_time": 18,
+    "availability": 12,
+    "production_cost": "2.00"
+  }
+},
+{
+  "model": "cafeApi.menuitem",
+  "pk": 9,
+  "fields": {
+    "name": "Mole Poblano",
+    "price": "18.00",
+    "image": "menu_images/mole-poblano.jpg",
+    "allergies": [
+      "Dairy",
+      "Nuts"
+    ],
+    "calories": "600.00",
+    "category": [
+      "Main Course",
+      "Non-Vegetarian"
+    ],
+    "cooking_time": 25,
+    "availability": 8,
+    "production_cost": "2.00"
+  }
+},
+{
+  "model": "cafeApi.menuitem",
+  "pk": 10,
+  "fields": {
+    "name": "Tamale",
+    "price": "10.99",
+    "image": "menu_images/tamale.jpg",
+    "allergies": [
+      "Gluten"
+    ],
+    "calories": "450.00",
+    "category": [
+      "Main Course",
+      "Non-Vegetarian"
+    ],
+    "cooking_time": 30,
+    "availability": 8,
+    "production_cost": "2.00"
+  }
+},
+{
+  "model": "cafeApi.menuitem",
+  "pk": 11,
+  "fields": {
+    "name": "Churros",
+    "price": "5.99",
+    "image": "menu_images/churros.jpg",
+    "allergies": [
+      "Gluten",
+      "Dairy"
+    ],
+    "calories": "300.00",
+    "category": [
+      "Dessert",
+      "Vegetarian"
+    ],
+    "cooking_time": 8,
+    "availability": 20,
+    "production_cost": "2.00"
+  }
+},
+{
+  "model": "cafeApi.menuitem",
+  "pk": 12,
+  "fields": {
+    "name": "Flan",
+    "price": "4.99",
+    "image": "menu_images/flan.jpg",
+    "allergies": [
+      "Dairy"
+    ],
+    "calories": "250.00",
+    "category": [
+      "Dessert",
+      "Vegetarian",
+      "Gluten-Free"
+    ],
+    "cooking_time": 5,
+    "availability": 18,
+    "production_cost": "2.00"
+  }
+},
+{
+  "model": "cafeApi.menuitem",
+  "pk": 14,
+  "fields": {
+    "name": "Coca Cola Zero",
+    "price": "-5.00",
+    "image": "menu_images/th_8AJeAZy.jpg",
+    "allergies": [],
+    "calories": "0.00",
+    "category": ["Drinks"],
+    "cooking_time": 5,
+    "availability": 500,
+    "production_cost": "2.00"
+  }
+}
+]

@@ -1,0 +1,240 @@
+/* General Page Styling */
+body {
+  font-family: "Segoe UI", sans-serif;
+  background-color: #fffaf0;
+  margin: 0;
+  padding: 0;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+/* Kitchen Container */
+.kitchen-container {
+  width: 100%;
+  max-width: 1200px;
+  background: #ffffff;
+  padding: 2rem;
+  margin: 2rem auto;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+/* Return Button */
+.return-button {
+  background-color: #ff6600;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  transition: background 0.3s, transform 0.2s;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.return-button:hover {
+  background-color: #cc5200;
+  transform: scale(1.05);
+}
+
+/* Layout of orders and notifications*/
+.order-tables {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+  justify-content: space-between;
+}
+
+/* Shared Style for order and notifications */
+.order-table,
+.notifications {
+  flex: 1 1 48%;
+  min-width: 550px;
+  background: #fffaf0;
+  padding: 1.25rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: left;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+/* The section headers */
+.order-table h3,
+.notifications h3 {
+  color: #ff6600;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+/* Table styling*/
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 0.85rem;
+}
+
+th,
+td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+th {
+  background-color: #ff6600;
+  color: white;
+  text-transform: uppercase;
+}
+
+/* Style of dropdown */
+select {
+  padding: 6px 10px;
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  background-color: white;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+select:hover {
+  background-color: #ffe0cc;
+  transform: scale(1.03);
+}
+
+/* Buttons inside the Tables */
+.order-button,
+.filter-button {
+  background-color: #ff6600;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin: 2px;
+  transition: background 0.3s ease;
+}
+
+.order-button:hover,
+.filter-button:hover {
+  background-color: #cc5200;
+}
+
+/* Notification table tweak */
+.notifications table {
+  margin-top: 10px;
+}
+
+/* Custom Popup */
+.custom-popup {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #ffffff;
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  border-left: 4px solid #ff6600;
+  z-index: 1000;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.custom-popup p {
+  margin: 0 0 10px;
+  color: #333;
+}
+
+.custom-popup button {
+  background-color: #ff6600;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+
+.custom-popup button:hover {
+  background-color: #cc5200;
+}
+
+
+
+/* Order popup */
+.kitchen-container .order-popup-overlay {
+  position: fixed;
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999; 
+}
+
+/* order details content */
+.kitchen-container .order-popup-content {
+  background-color: #ffffff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  position: relative;
+  color: #333;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+/* Close button from view order pop up */
+.kitchen-container .order-popup-content .close-button {
+  background-color: #ca1f1f;
+  color: #fff;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  margin-top: 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.kitchen-container .order-popup-content .close-button:hover {
+  background-color: #666;
+}
+
+.kitchen-container .order-table td.status-col {
+  min-width: 160px;
+}
+
+/* Responsivness for smaller screens */
+@media (max-width: 768px) {
+  .order-tables {
+    flex-direction: column;
+  }
+
+  .order-table,
+  .notifications {
+    flex: 1 1 100%;
+  }
+}

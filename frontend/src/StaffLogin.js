@@ -1,16 +1,27 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./StaffLogin.css";
+import "./styles/StaffLogin.css";
 import { ACCESS_TOKEN, REFRESH_TOKEN ,STAFF_ID} from "./constants";
 
-
+/**
+ * StaffLogin Component
+ * Handles the staff authentication and the role based automatic navigation
+ */
 function StaffLogin({ setRole }) {
     const navigate = useNavigate();
+
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+
+    // Error popup state
     const [showPopup, setShowPopup] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
 
+    /**
+     * Handles login logic
+     * - Sends login credentials to backend, stores returned tokens and staf id, 
+     * fetches user to determine role and then directs him to the page based on his role
+     */
     const handleLogin = async () => {
         try {
             const response = await fetch("http://127.0.0.1:8000/cafeApi/login/", {
@@ -22,11 +33,13 @@ function StaffLogin({ setRole }) {
             const data = await response.json();
 
             if (response.ok) {
+                // Store tokens and the staff Id
                 localStorage.setItem(ACCESS_TOKEN, data.access_token);
                 localStorage.setItem(REFRESH_TOKEN, data.refresh_token);
                 localStorage.setItem(STAFF_ID, data.staff_id);
                 console.log(localStorage.getItem(STAFF_ID));
-                // Fetch user list to determine role for this logged-in user
+
+                // Fetches user list to determine role for this user
                 const usersResponse = await fetch("http://127.0.0.1:8000/cafeApi/users/", {
                     headers: {
                         Authorization: `Bearer ${data.access_token}`,
@@ -60,6 +73,7 @@ function StaffLogin({ setRole }) {
                     navigate("/");
                 }
             } else {
+                // User provided invalid credentials or other login issue
                 setErrorMessage(data.detail || "Invalid credentials");
                 setShowPopup(true);
             }
@@ -72,6 +86,8 @@ function StaffLogin({ setRole }) {
     return (
         <div className="staff-login-container">
             <h2>Staff Login</h2>
+
+            {/* Username input */}
             <input
                 type="text"
                 className="staff-input"
@@ -79,6 +95,8 @@ function StaffLogin({ setRole }) {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
             />
+
+            {/* Password input */}
             <input
                 type="password"
                 className="staff-input"
@@ -86,16 +104,22 @@ function StaffLogin({ setRole }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
             />
+
+            {/* Login button */}
             <button className="staff-button login-button" onClick={handleLogin}>
                 Login
             </button>
+            {/* Register new account button */}
             <button className="staff-button register-button" onClick={() => navigate("/register")}>
                 Register New Account
             </button>
+            {/* Return to customer view button*/}
             <button className="ret-button" onClick={() => {
                 setRole(0);
                 navigate("/");
             }}>Return to Customer View</button>
+
+            {/* Error popup */}
             {showPopup && (
                 <div className="custom-popup">
                     <div className="popup-content">
