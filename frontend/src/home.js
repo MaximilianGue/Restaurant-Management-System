@@ -32,8 +32,10 @@ function Home() {
   const [tables, setTables] = useState([]);
   const [loadingTables, setLoadingTables] = useState(true);
   const [filter, setFilter] = useState("All");
-  const navigate = useNavigate();
   const [hiddenItems, setHiddenItems] = useState([]);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [showOrderPopup, setShowOrderPopup] = useState(false);
+  
 
   // Show order pop up
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -128,8 +130,6 @@ function Home() {
   /** Submits order */
   const handlePlaceOrder = async () => {
     const tableNum = parseInt(tableNumber, 10);
-    console.log(tableNumber)
-    console.log(tableNum)
     const staffId = await fetchStaffIdForTable(tableNum);
     if (isNaN(tableNum)) {
       setErrorMessage("Please enter a valid table number.");
@@ -198,7 +198,7 @@ function Home() {
       setShowPopup(true);
       return;
     }
-    const tableOrders = orders.filter((order) => order.table_id === tableNum);
+    const tableOrders = orders.filter((order) => order.table_number === tableNum);
     if (tableOrders.length === 0) {
       setErrorMessage("No orders found for this table. Cannot call waiter.");
       setShowPopup(true);
@@ -222,7 +222,6 @@ function Home() {
     // orderId is the same as paymentId because of one-to-one relationship
     const checkoutUrl = await createCheckoutSession(orderId);
 
-    console.log(checkoutUrl)
     if (checkoutUrl) {
       // Redirects user to Stripe Checkout
       window.location.href = checkoutUrl;
@@ -230,24 +229,7 @@ function Home() {
       setErrorMessage("Error initiating payment. This order is already paid for.");
       setShowPopup(true);
     }
-  };
-
-  /** Verifies payment status */
-  const handleVerifyPayment = async (orderId) => {
-    try {
-      const response = await verifyPayment(orderId);
-      if (response === 200) {
-        setErrorMessage("Payment verified successfully!");
-      } else {
-        setErrorMessage("Payment not completed yet.");
-      }
-    } catch (error) {
-      console.error("Error verifying payment:", error.response ? error.response.status : error);
-    }
-    setShowPopup(true);
-    const ordersData = await fetchOrders();
-    setOrders(ordersData || []);
-  };
+  };;
 
   /** Cancels an active payment */
   const handleCancelPayment = async (orderId) => {
@@ -267,6 +249,7 @@ function Home() {
   const handleFilterChange = (category) => {
     setFilter(category);
   };
+
 
   /** All the filtered menu items excluding hidden ones */
   const filteredMenuItems =
@@ -459,7 +442,6 @@ function Home() {
                         >
                           Pay Now
                         </button>
-                        
                         <button
                           onClick={() => handleCancelPayment(order.id)}
                           className="order-button"
@@ -472,15 +454,18 @@ function Home() {
                         </button>
 
                       </div>
-                    )}
+                    )}         
+                    <button onClick={() => handleViewOrder(order)}>
+                          View Order
+                        </button>
                   </div>
                 ))
             )}
           </div>
         </div>
       </div>
-      {/* Popup to view order details */}
-      {showOrderPopup && selectedOrder && (
+       {/* Popup to view order details */}
+       {showOrderPopup && selectedOrder && (
         <div className="order-popup-overlay">
           <div className="order-popup-content">
             <h3>Order Details:</h3>

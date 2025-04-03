@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; 
-import { 
-  fetchOrders, 
-  updateOrderStatus, 
-  fetchNotificationsForStaff, 
+import axios from "axios";
+import {
+  fetchOrders,
+  updateOrderStatus,
+  fetchNotificationsForStaff,
   callWaiter,
-  confirmOrder 
+  confirmOrder,
+  confirmOrderAvailability  // Imported new API function
 } from "./components/api";
 import "./styles/kitchen.css";
 import { STAFF_ID } from "./constants";
 
 /**
- * Kitchen component, which is used by kitchen staff to:
- * - Track different orders, change their status, view notifications and notify waiters when orders are ready
+ * Kitchen component used by kitchen staff to:
+ * - Track orders, update their status (with proper validations),
+ * - View notifications and notify waiters when orders are ready,
+ * - View order details in a popup.
  */
 function Kitchen({ setRole }) {
   const navigate = useNavigate();
@@ -22,13 +25,20 @@ function Kitchen({ setRole }) {
   const [errorMessage, setErrorMessage] = useState("");
   const [showPopup, setShowPopup] = useState(false);
 
-  const staffId = localStorage.getItem(STAFF_ID); 
-
-  // For view ordr pop up
+  // For viewing order details
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderPopup, setShowOrderPopup] = useState(false);
 
+  const staffId = localStorage.getItem(STAFF_ID);
 
+  // Allowed options for status change on active orders.
+  const allowedOptions = [
+    "being prepared",
+    "ready for pick up",
+    "canceled"
+  ];
+
+  // Full list of statuses for display purposes.
   const statusOptions = [
     "pending",
     "confirmed",
@@ -36,10 +46,10 @@ function Kitchen({ setRole }) {
     "canceled",
     "ready for pick up",
     "delivered",
-    "paid for",
+    "paid for"
   ];
 
-    // Load orders and notifications at first and then poll every 5 seconds
+  // Load orders and notifications on mount and poll every 5 seconds.
   useEffect(() => {
     loadOrders();
     loadNotifications();
@@ -50,44 +60,88 @@ function Kitchen({ setRole }) {
     return () => clearInterval(interval);
   }, []);
 
-  // Fetches orders from api
   const loadOrders = async () => {
     const ordersData = await fetchOrders();
     setOrders(ordersData || []);
   };
 
-   // Fetches unread notifications for this specific staff member
   const loadNotifications = async () => {
     const notificationsData = await fetchNotificationsForStaff(staffId);
     setNotifications(notificationsData || []);
   };
 
-  // Updates order status and notifies waiter when ready
+  // Handles status change with validation and API calls.
   const handleStatusChange = async (orderId, newStatus) => {
-    try {
-      const updatedStatus = await confirmOrder(orderId, newStatus, staffId);
-  
-      if (updatedStatus === newStatus) {
-        setOrders((prevOrders) =>
-          prevOrders.map((order) =>
-            order.id === orderId ? { ...order, status: newStatus } : order
-          )
-        );
-        setErrorMessage("Status successfully updated!");
-        if (newStatus === "ready for pick up") {
-          await notifyWaiterForReadyOrder(orderId);
+    const order = orders.find((o) => o.id === orderId);
+    if (!order) {
+      setErrorMessage("Order not found.");
+      setShowPopup(true);
+      return;
+    }
+
+    // "Ready for pick up" can only be set if current status is "being prepared".
+    if (newStatus === "ready for pick up" && order.status !== "being prepared") {
+      setErrorMessage("Order must be in 'being prepared' status to mark as 'ready for pick up'.");
+      setShowPopup(true);
+      return;
+    }
+
+    // For "being prepared", first check availability.
+    if (newStatus === "being prepared") {
+      const result = await confirmOrderAvailability(orderId);
+      if (result && result.can_prepare) {
+        const updatedStatus = await confirmOrder(orderId, "being prepared", staffId);
+        if (updatedStatus === "being prepared") {
+          setOrders((prevOrders) =>
+            prevOrders.map((o) => (o.id === orderId ? { ...o, status: "being prepared" } : o))
+          );
+          setErrorMessage(result.message || "Order status updated to 'being prepared'.");
+        } else {
+          setErrorMessage("Failed to update order status to 'being prepared'.");
         }
       } else {
-        setErrorMessage("Failed to update order status.");
+        setErrorMessage(result ? result.message : "Not enough availability to mark order as 'being prepared'.");
       }
-    } catch (error) {
-      setErrorMessage("Error updating status. Please try again.");
+      setShowPopup(true);
+      await loadOrders();
+      return;
     }
-    setShowPopup(true);
-    await loadOrders();
+
+    // For "canceled", update status directly.
+    if (newStatus === "canceled") {
+      const updatedStatus = await confirmOrder(orderId, "canceled", staffId);
+      if (updatedStatus === "canceled") {
+        setOrders((prevOrders) =>
+          prevOrders.map((o) => (o.id === orderId ? { ...o, status: "canceled" } : o))
+        );
+        setErrorMessage("Order status updated to 'canceled'.");
+      } else {
+        setErrorMessage("Failed to update order status to 'canceled'.");
+      }
+      setShowPopup(true);
+      await loadOrders();
+      return;
+    }
+
+    // For "ready for pick up", current status must be "being prepared".
+    if (newStatus === "ready for pick up") {
+      const updatedStatus = await confirmOrder(orderId, "ready for pick up", staffId);
+      if (updatedStatus === "ready for pick up") {
+        setOrders((prevOrders) =>
+          prevOrders.map((o) => (o.id === orderId ? { ...o, status: "ready for pick up" } : o))
+        );
+        setErrorMessage("Order status updated to 'ready for pick up'.");
+        await notifyWaiterForReadyOrder(orderId);
+      } else {
+        setErrorMessage("Failed to update order status to 'ready for pick up'.");
+      }
+      setShowPopup(true);
+      await loadOrders();
+      return;
+    }
   };
 
-  // Sends notification to waiter so that he know that the order is ready for pickup
+  // Notifies the assigned waiter that the order is ready.
   const notifyWaiterForReadyOrder = async (orderId) => {
     const order = orders.find((o) => o.id === orderId);
     if (!order || !order.waiter) {
@@ -100,38 +154,34 @@ function Kitchen({ setRole }) {
     const response = await callWaiter(waiterStaffId, orderId, message, "order_ready");
     if (!response) {
       setErrorMessage("Failed to notify waiter about order readiness.");
-      setShowPopup(true);
+    } else {
+      setErrorMessage("Successfully notified waiter about order readiness.");
     }
-    else{
-      setErrorMessage("Successfully notified waiter about order ");
-      setShowPopup(true);
-    }
-
+    setShowPopup(true);
   };
 
-    // Handles notification action
+  // Handles notification action for notifying waiter from a notification.
   const handleNotifyWaiterFromNotification = async (orderId) => {
     await notifyWaiterForReadyOrder(orderId);
   };
 
-  // Marks a notification as read and updates its state
+  // Marks a notification as read.
   const handleMarkNotificationRead = async (notificationId) => {
     try {
       await axios.post(`http://127.0.0.1:8000/cafeApi/notifications/${notificationId}/mark_as_read/`);
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
+      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
   };
 
-  // Handles View order button
+  // Handles view order button.
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
     setShowOrderPopup(true);
   };
-  
 
-  // Filters active and completed orders based on their status
+  // Filter orders into active and completed groups.
   const activeOrders = orders.filter((order) =>
     ["confirmed", "being prepared"].includes(order.status)
   );
@@ -139,14 +189,15 @@ function Kitchen({ setRole }) {
     ["canceled", "ready for pick up", "delivered", "paid for"].includes(order.status)
   );
 
-  /* Renders main component*/ 
   return (
     <div className="kitchen-container">
-      {/* Button to return to the customer view */}
-      <button className="return-button" onClick={() => {
-        setRole(0);
-        navigate("/");
-      }}>
+      <button
+        className="return-button"
+        onClick={() => {
+          setRole(0);
+          navigate("/");
+        }}
+      >
         Return to Customer View
       </button>
 
@@ -166,30 +217,54 @@ function Kitchen({ setRole }) {
             </thead>
             <tbody>
               {activeOrders.length > 0 ? (
-                activeOrders.map((order) => (
-                  <tr key={order.table_id}>
-                    <td>{order.table_number} | {order.id}</td>
-                    <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
-                    <td className="status-col">
-                      <select
-                        value={order.status}
-                        onChange={(e) => handleStatusChange(order.id, e.target.value)}>
-                        <option value="being prepared">being prepared</option>
-                        <option value="ready for pick up">ready for pick up</option>
-                        <option value="canceled">canceled</option>
-                      </select>
-                    </td>
-                    <td>{Math.round((new Date().getTime() - new Date(order.order_date))/60000)}</td>
-                    <td>
-                      <button onClick={() => handleViewOrder(order)}>
-                        View Order
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                activeOrders.map((order) => {
+                  // If the order’s current status is not one of the allowed options,
+                  // add it as a disabled option so that staff can see the current status.
+                  const currentNotAllowed = !allowedOptions.includes(order.status);
+                  return (
+                    <tr key={order.table_id}>
+                      <td>
+                        {order.table_number} | {order.id}
+                      </td>
+                      <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
+                      <td className="status-col">
+                        <select
+                          value={order.status}
+                          onChange={(e) => handleStatusChange(order.id, e.target.value)}
+                        >
+                          {currentNotAllowed && (
+                            <option value={order.status} disabled>
+                              {order.status}
+                            </option>
+                          )}
+                          {allowedOptions.map((option) => (
+                            <option
+                              key={option}
+                              value={option}
+                              disabled={
+                                option === "ready for pick up" &&
+                                order.status !== "being prepared"
+                              }
+                            >
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td>
+                        {Math.round((new Date().getTime() - new Date(order.order_date)) / 60000)}
+                      </td>
+                      <td>
+                        <button onClick={() => handleViewOrder(order)}>
+                          View Order
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
-                  <td colSpan="4">No active orders</td>
+                  <td colSpan="5">No active orders</td>
                 </tr>
               )}
             </tbody>
@@ -224,60 +299,61 @@ function Kitchen({ setRole }) {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="3">No completed orders</td>
+                  <td colSpan="4">No completed orders</td>
                 </tr>
               )}
             </tbody>
           </table>
-        </div>      
+        </div>
       </div>
+
       {/* Unread Notifications Table */}
       <div className="notifications">
-          <h3>Unread Notifications</h3>
-          {notifications.length > 0 ? (
-            <table>
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Order #</th>
-                  <th>Message</th>
-                  <th>Time</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {notifications.map((notif) => (
-                  <tr key={notif.id}>
-                    <td>{notif.notification_type}</td>
-                    <td>{notif.order || "N/A"}</td>
-                    <td>{notif.message}</td>
-                    <td>{new Date(notif.created_at).toLocaleString()}</td>
-                    <td>
-                      {notif.notification_type === "order_received" && (
-                        <button 
-                          onClick={() => handleNotifyWaiterFromNotification(notif.order)}
-                          className="order-button"
-                        >
-                          Notify Waiter
-                        </button>
-                      )}
-                      <button 
-                        onClick={() => handleMarkNotificationRead(notif.id)}
-                        className="filter-button"
+        <h3>Unread Notifications</h3>
+        {notifications.length > 0 ? (
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Order #</th>
+                <th>Message</th>
+                <th>Time</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {notifications.map((notif) => (
+                <tr key={notif.id}>
+                  <td>{notif.notification_type}</td>
+                  <td>{notif.order || "N/A"}</td>
+                  <td>{notif.message}</td>
+                  <td>{new Date(notif.created_at).toLocaleString()}</td>
+                  <td>
+                    {notif.notification_type === "order_received" && (
+                      <button
+                        onClick={() => handleNotifyWaiterFromNotification(notif.order)}
+                        className="order-button"
                       >
-                        Mark as Read
+                        Notify Waiter
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p>No unread notifications.</p>
-          )}
-        </div>
+                    )}
+                    <button
+                      onClick={() => handleMarkNotificationRead(notif.id)}
+                      className="filter-button"
+                    >
+                      Mark as Read
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p>No unread notifications.</p>
+        )}
+      </div>
 
-      {/* Popups for the status or error messages */}
+      {/* Popup for status or error messages */}
       {showPopup && (
         <div className="custom-popup">
           <p>{errorMessage}</p>
@@ -285,12 +361,14 @@ function Kitchen({ setRole }) {
         </div>
       )}
 
-       {/* Popup to view order details */}
-       {showOrderPopup && selectedOrder && (
+      {/* Popup to view order details */}
+      {showOrderPopup && selectedOrder && (
         <div className="order-popup-overlay">
           <div className="order-popup-content">
             <h3>Order Details:</h3>
-            <p><strong>Order ID:</strong> {selectedOrder.id}</p>
+            <p>
+              <strong>Order ID:</strong> {selectedOrder.id}
+            </p>
             <p>
               <strong>Status:</strong> {selectedOrder.status} <br />
               <strong>Total Price:</strong> £{parseFloat(selectedOrder.total_price || 0).toFixed(2)}
@@ -307,18 +385,13 @@ function Kitchen({ setRole }) {
             ) : (
               <p>No items found for this order.</p>
             )}
-            <button
-              className="close-button"
-              onClick={() => setShowOrderPopup(false)}
-            >
+            <button className="close-button" onClick={() => setShowOrderPopup(false)}>
               Close
             </button>
           </div>
         </div>
       )}
-
     </div>
-
   );
 }
 

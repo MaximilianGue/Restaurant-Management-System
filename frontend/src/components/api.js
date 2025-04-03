@@ -224,7 +224,7 @@ export const fetchWaiter= async (waiterId) => {
 /** Fetches  kitchen staff */
 export const fetchKitchenStaff = async () => {
   try {
-    const response = await api.get("/KitchenStaff/");
+    const response = await api.get("kitchen_staff/");
     return response.data;
   } catch (error) {
     console.error("Error fetching KitchenStaff:", error);
@@ -393,6 +393,7 @@ export const notifyStaff = async (staffId,target,messages,tableNumber) => {
 export const fetchWaiterDetails = async (staffId) => {
   try {
     const response = await api.get(`/waiters/${staffId}/`);
+    console.log(response.data)
     return response.data;
   } catch (error) {
     console.error("Error fetching waiter details:", error.response ? error.response.data : error.message);
@@ -584,5 +585,42 @@ export const deleteTable = async (tableId) => {
   } catch (error) {
     console.error("Error deleting table:", error);
     return false;
+  }
+};
+
+/**
+ * Confirms the availability of all items in a specific order by order ID.
+ * 
+ * @param {number} orderId - The ID of the order to check and update.
+ * @returns {Object|null} The response data if successful, or null if there's an error.
+ */
+export const confirmOrderAvailability = async (orderId) => {
+  try {
+    const response = await api.post(`/orders/${orderId}/confirm_availability/`);
+    console.log("Response Data:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error confirming order availability:", error.response ? error.response.data : error.message);
+    return null;
+  }
+};
+/**
+ * Updates the status of a table.
+ * @param {number} tableNumber - The table number (unique identifier).
+ * @param {string} newStatus - The new status (e.g., "alert", "all orders received").
+ * @returns {Object|null} The response data if successful, or null if there's an error.
+ */
+export const updateTableStatus = async (tableNumber, newStatus) => {
+  try {
+    const response = await api.put(
+      `/tables/${tableNumber}/update-status/`,
+      { status: newStatus },
+      { headers: { "Content-Type": "application/json" } }
+    );
+    console.log("Table status update response:", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error updating table status:", error.response ? error.response.data : error.message);
+    return null;
   }
 };

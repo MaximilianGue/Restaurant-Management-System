@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, NotificationViewSet, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView,WaiterDetailView,TableStaffIDView, CreateStripeCheckoutSessionView,StripePaymentSuccessView,StripePaymentCancelView,SalesPerWaiterView,PaymentListView,ManagerListView
+from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, NotificationViewSet, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView,WaiterDetailView,TableStaffIDView, CreateStripeCheckoutSessionView,StripePaymentSuccessView,StripePaymentCancelView,SalesPerWaiterView,PaymentListView,ManagerListView,ConfirmOrderAvailabilityByOrderIdView,TableStatusUpdateView 
 from .views import get_employees
 from . import views
 from .views import MenuItemView, OrderDetailView, OrderView, CustomerDetailView, CustomerView,TableView,TableDetailView,MenuItemDetailView, WaiterView, WaiterDetailView, StatusUpdateView,KitchenStaffView,KitchenStaffDetailView,ConfirmOrderUpdateView, NotificationViewSet, MarkNotificationRead, MenuItemAvailabilityView, AvailabilityUpdateView, RegisterView, LoginView, UserListView,WaiterDetailView,TableStaffIDView
@@ -17,12 +17,14 @@ urlpatterns = [
     path('menu-item/<int:pk>/availability/', MenuItemAvailabilityView.as_view(), name='menu-item-availability'),
     path('menu-item/<int:pk>/update-availability/', AvailabilityUpdateView.as_view(), name='update-menu-item-availability'),
 
-    # Tables endpoint
+
     path('tables/', table_list, name="tables"),
     path("tables/<int:pk>/", TableDetailView.as_view(), name="table-detail"),
     path('tables/<int:table_number>/staff_id/', TableStaffIDView.as_view(), name='table-staff-id'),
+    path("tables/<int:table_number>/update-status/", TableStatusUpdateView.as_view(), name="table-update-status"),
+    path("table/create/", views.create_table, name="create_table"),
+    path("tables/<int:pk>/update/", views.update_table, name="update_table"),
 
-    # Other endpoints...
     path("customers/", CustomerView.as_view(), name="customers"),
     path("customers/<int:pk>/", CustomerDetailView.as_view(), name="customer-detail"),
 
@@ -38,6 +40,9 @@ urlpatterns = [
     path("orders/<int:pk>/", OrderDetailView.as_view(), name="order-detail"),
     path("orders/<int:pk>/update/", StatusUpdateView.as_view(), name="order-update"),
     path("orders/<int:pk>/confirmation/", ConfirmOrderUpdateView.as_view(), name="order-confirm-update"),
+    path("orders/<order_id>/confirm_availability/", ConfirmOrderAvailabilityByOrderIdView.as_view(), name="order-confirm-availability"),
+
+
 
     path("notifications/", NotificationViewSet.as_view({'get': 'list', 'post': 'create'}), name="notifications"),
     path("notifications/notify_staff/", notify_staff, name="notify-staff"),
@@ -51,8 +56,9 @@ urlpatterns = [
 
 
     path('employees/', get_employees, name='get-employees'),
-    path('employee/<int:employee_id>/update/', views.update_employee, name='update_employee'),
-    path('employee/<int:employee_id>/fire/', views.fire_employee, name='fire_employee'),
+    path('employee/<str:employee_Staff_id>/update/', views.update_employee, name='update_employee'),
+    path('employee/<str:employee_Staff_id>/fire/', views.fire_employee, name='fire_employee'),
+    path('employee/create/', views.create_employee, name='create_employee'),
 
     
     path("payments/<int:pk>/checkout/", CreateStripeCheckoutSessionView.as_view(), name="create_checkout_session"),

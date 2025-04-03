@@ -302,7 +302,6 @@
   transform: scale(1.02);
 }
 
-
 /* Order popup */
 .order-popup-overlay {
   position: fixed;
@@ -351,6 +350,7 @@
 .order-table td.status-col {
   min-width: 160px;
 }
+
 
 /* Responsiveness for tablets, etc */
 @media (max-width: 1024px) {
