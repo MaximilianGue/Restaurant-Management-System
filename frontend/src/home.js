@@ -32,8 +32,10 @@ function Home() {
   const [tables, setTables] = useState([]);
   const [loadingTables, setLoadingTables] = useState(true);
   const [filter, setFilter] = useState("All");
-  const navigate = useNavigate();
   const [hiddenItems, setHiddenItems] = useState([]);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [showOrderPopup, setShowOrderPopup] = useState(false);
+  
 
   // Loads menu items and orders
   useEffect(() => {
@@ -124,8 +126,6 @@ function Home() {
   /** Submits order */
   const handlePlaceOrder = async () => {
     const tableNum = parseInt(tableNumber, 10);
-    console.log(tableNumber)
-    console.log(tableNum)
     const staffId = await fetchStaffIdForTable(tableNum);
     if (isNaN(tableNum)) {
       setErrorMessage("Please enter a valid table number.");
@@ -188,7 +188,7 @@ function Home() {
       setShowPopup(true);
       return;
     }
-    const tableOrders = orders.filter((order) => order.table_id === tableNum);
+    const tableOrders = orders.filter((order) => order.table_number === tableNum);
     if (tableOrders.length === 0) {
       setErrorMessage("No orders found for this table. Cannot call waiter.");
       setShowPopup(true);
@@ -212,7 +212,6 @@ function Home() {
     // orderId is the same as paymentId because of one-to-one relationship
     const checkoutUrl = await createCheckoutSession(orderId);
 
-    console.log(checkoutUrl)
     if (checkoutUrl) {
       // Redirects user to Stripe Checkout
       window.location.href = checkoutUrl;
@@ -220,24 +219,7 @@ function Home() {
       setErrorMessage("Error initiating payment. This order is already paid for.");
       setShowPopup(true);
     }
-  };
-
-  /** Verifies payment status */
-  const handleVerifyPayment = async (orderId) => {
-    try {
-      const response = await verifyPayment(orderId);
-      if (response === 200) {
-        setErrorMessage("Payment verified successfully!");
-      } else {
-        setErrorMessage("Payment not completed yet.");
-      }
-    } catch (error) {
-      console.error("Error verifying payment:", error.response ? error.response.status : error);
-    }
-    setShowPopup(true);
-    const ordersData = await fetchOrders();
-    setOrders(ordersData || []);
-  };
+  };;
 
   /** Cancels an active payment */
   const handleCancelPayment = async (orderId) => {
@@ -258,6 +240,7 @@ function Home() {
     setFilter(category);
   };
 
+
   /** All the filtered menu items excluding hidden ones */
   const filteredMenuItems =
     filter === "All"
@@ -269,6 +252,11 @@ function Home() {
           return item.category.toLowerCase() === filter.toLowerCase();
         }).filter((item) => !hiddenItems.includes(item.name));
 
+  // handels viwe order (for view order button)
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+    setShowOrderPopup(true);
+  };
 
   /**
    * Renders home page, including:
@@ -445,25 +433,53 @@ function Home() {
                           Pay Now
                         </button>
                         <button
-                          onClick={() => handleVerifyPayment(order.id)}
-                          className="order-button"
-                        >
-                          Verify Payment
-                        </button>
-                        <button
                           onClick={() => handleCancelPayment(order.id)}
                           className="order-button"
                         >
                           Cancel Payment
                         </button>
                       </div>
-                    )}
+                    )}         
+                    <button onClick={() => handleViewOrder(order)}>
+                          View Order
+                        </button>
                   </div>
                 ))
             )}
           </div>
         </div>
       </div>
+       {/* Popup to view order details */}
+       {showOrderPopup && selectedOrder && (
+        <div className="order-popup-overlay">
+          <div className="order-popup-content">
+            <h3>Order Details:</h3>
+            <p><strong>Order ID:</strong> {selectedOrder.id}</p>
+            <p>
+              <strong>Status:</strong> {selectedOrder.status} <br />
+              <strong>Total Price:</strong> £{parseFloat(selectedOrder.total_price || 0).toFixed(2)}
+            </p>
+            <h4>Items</h4>
+            {selectedOrder.items && selectedOrder.items.length > 0 ? (
+              <ul>
+                {selectedOrder.items.map((item, index) => (
+                  <li key={index}>
+                    {item.name} x {item.quantity} – £{parseFloat(item.price).toFixed(2)}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No items found for this order.</p>
+            )}
+            <button
+              className="close-button"
+              onClick={() => setShowOrderPopup(false)}
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
       {/* Global Popups for messages */}
       {showPopup && (
         <div className="custom-popup">

@@ -65,10 +65,15 @@ class Table(models.Model):
         estimated_time (int): Estimated time for the table to be ready.
         capacity (int): The seating capacity of the table.
     """
+    TABLE_TYPES = [
+        ('pending', 'Pending'),
+        ('all orders received', 'All orders received'),
+        ('alert','Alert'),
+    ]
 
 
     number = models.IntegerField(unique=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    status = models.CharField(max_length=20, choices=TABLE_TYPES, default='pending')
     waiter = models.ForeignKey('Waiter', on_delete=models.SET_NULL, null=True, blank=True, related_name='tables')
     estimated_time = models.IntegerField(blank=True, null=True, default=5)
     capacity = models.IntegerField(default=4)

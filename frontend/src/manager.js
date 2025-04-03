@@ -119,12 +119,13 @@ function Manager() {
         if (!newTableNumber || !newTableWaiterId) {
             alert("Please enter a table number and select a waiter.");
             return;
-        }
+        } 
+        console.log(newTableWaiterId)
     
         try {
-            const response = await axios.post("http://127.0.0.1:8000/cafeApi/tables/", {
-                number: newTableNumber,
-                waiter: newTableWaiterId
+            const response = await axios.post("http://127.0.0.1:8000/cafeApi/table/create/", {
+                table_number: newTableNumber,
+                waiter_id: newTableWaiterId
             });
     
             if (response.status === 201 || response.status === 200) {
@@ -163,7 +164,6 @@ function Manager() {
       
     /* Handels employee management functions delete/add/edit */
     const handleEditEmployee = (employee) => {
-        console.log("Editing employee:", employee);
     
         setSelectedEmployee(employee);
         setUpdatedEmployee({
@@ -177,23 +177,24 @@ function Manager() {
         setShowEditModal(true);
     };
 
-    const handleFireEmployee = async (employeeId) => {
+    const handleFireEmployee = async (employee) => {
+        setSelectedEmployee(employee);
         if (window.confirm("Are you sure you want to fire this employee?")) {
             try {
                 // Send the DELETE request to fire the employee
-                const response = await axios.delete(`http://127.0.0.1:8000/cafeApi/employee/${employeeId}/fire/`);
+                const response = await axios.delete(`http://127.0.0.1:8000/cafeApi/employee/${selectedEmployee.Staff_id}/fire/`);
                 
                 if (response.status === 200) {
                     // Optimistic UI update: remove the fired employee from the waiters and kitchen staff state
     
                     // Remove the fired employee from the waiters and kitchen staff lists
-                    const updatedWaiters = waiters.filter(waiter => waiter.id !== employeeId);
-                    const updatedKitchenStaff = kitchenStaff.filter(staff => staff.id !== employeeId);
-    
-                    // Update the state directly
+                    const [updatedWaiters, updatedKitchenStaff] = await Promise.all([
+                        fetchWaiters(),
+                        fetchKitchenStaff(),
+                    ]);
+        
                     setWaiters(updatedWaiters);
                     setKitchenStaff(updatedKitchenStaff);
-    
                     alert("Employee fired successfully.");
                 }
             } catch (error) {
@@ -432,7 +433,7 @@ function Manager() {
     
         try {
             const response = await axios.put(
-                `http://127.0.0.1:8000/cafeApi/employee/${selectedEmployee.id}/update/`,
+                `http://127.0.0.1:8000/cafeApi/employee/${selectedEmployee.Staff_id}/update/`,
                 updatedEmployee
             );
             console.log("Employee updated:", response.data);
@@ -783,7 +784,7 @@ function Manager() {
                                                 <td>£{getWaiterRevenue(waiter).toFixed(2)}</td> {/* Display revenue */}
                                                 <td>
                                                 <button onClick={() => handleEditEmployee(waiter)}>Edit</button>
-                                                <button onClick={() => handleFireEmployee(waiter.id)}>Fire</button>
+                                                <button onClick={() => handleFireEmployee(waiter)}>Fire</button>
                                                 </td>
                                             </tr>
                                         ))
@@ -817,7 +818,7 @@ function Manager() {
                                                 <td>{staff.phone || 'N/A'}</td>
                                                 <td>
                                                     <button onClick={() => handleEditEmployee(staff)}>Edit</button>
-                                                    <button onClick={() => handleFireEmployee(staff.id)}>Fire</button>
+                                                    <button onClick={() => handleFireEmployee(staff)}>Fire</button>
                                                 </td>
                                             </tr>
                                         ))
@@ -890,7 +891,7 @@ function Manager() {
                                     >
                                         <option value="">Select Waiter</option>
                                         {waiters.map((waiter) => (
-                                            <option key={waiter.id} value={waiter.id}>
+                                            <option key={waiter.id} value={waiter.Staff_id}>
                                                 {waiter.first_name} {waiter.last_name}
                                             </option>
                                         ))}
@@ -906,7 +907,7 @@ function Manager() {
                             <tr>
                                 <th>Table #</th>
                                 <th>Status</th>
-                                <th>Waiter</th> {/* ✅ Add this */}
+                                <th>Waiter</th> 
                                 <th>Revenue (£)</th>
                                 <th>Actions</th>
                             </tr>
@@ -1221,10 +1222,8 @@ function Manager() {
                                 }
                             >
                                 <option value="pending">Pending</option>
-                                <option value="confirmed">Confirmed</option>
-                                <option value="paid for">Paid For</option>
-                                <option value="unconfirmed">Unconfirmed</option>
-                                <option value="canceled">Canceled</option>
+                                <option value="all orders received">all orders received</option>
+                                <option value="alert">alert</option>
                             </select>
                         </label>
 

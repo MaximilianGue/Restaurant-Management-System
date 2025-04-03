@@ -211,7 +211,7 @@ class WaiterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Waiter
-        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'role']
+        fields = ["id" ,'Staff_id',  'first_name', 'last_name', 'email', 'phone', 'role']
 
 class KitchenStaffSerializer(serializers.ModelSerializer):
 
@@ -223,7 +223,7 @@ class KitchenStaffSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = KitchenStaff
-        fields = ['id', 'first_name', 'last_name', 'email', 'phone', 'role']
+        fields = ["id" ,'Staff_id', 'first_name', 'last_name', 'email', 'phone', 'role']
 
 class PaymentSerializer(serializers.ModelSerializer):
 
@@ -244,3 +244,17 @@ class ManagerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Manager
         fields = '__all__'
+
+class TableStatusUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer to  change the  Table status for Table model.
+    """
+    class Meta:
+        model = Table
+        fields = ['status']
+    
+    def validate_status(self, value):
+        allowed = dict(Table.TABLE_TYPES).keys()  # e.g. ['pending', 'all orders received', 'alert']
+        if value not in allowed:
+            raise serializers.ValidationError("Invalid status value. Allowed values are: " + ", ".join(allowed))
+        return value

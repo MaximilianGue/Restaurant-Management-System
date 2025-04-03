@@ -15,7 +15,8 @@ import {
   fetchWaiterDetails, 
   fetchWaiters, 
   fetchKitchenStaff, 
-  notifyStaff 
+  notifyStaff,
+  updateTableStatus
 } from "./components/api";
 import "./styles/Dropdown.css";
 import "./styles/waiter.css"
@@ -117,6 +118,14 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     const updatedStatus = await updateOrderStatus(orderId, newStatus, staffId);
     if (updatedStatus === newStatus) {
       setErrorMessage("Status successfully updated!");
+      if (newStatus === "delivered") {
+        // Find the order from local state; assume it has table_id (primary key)
+        const order = orders.find((o) => o.id === orderId);
+        if (order && order.table_number) {
+          // Update table status to "all orders received"
+          await updateTableStatus(order.table_number, "all orders received");
+        }
+      }
       await loadOrders();
     } else {
       setErrorMessage("Failed to update order status.");
@@ -154,18 +163,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     await loadOrders();
   };
 
-  // Toggles table alert, which notifies system
-  const tableAlert = async (table) => {
-    if (table.status == "pending") {
-      table.status = "Alert!"
-      setErrorMessage("Table #" + table.number + " is in need of assistance!");
-    } else {
-      table.status = "pending"
-      setErrorMessage("Table #" + table.number + " has been responded to.");
-    }
-    setShowPopup(true);
-  };
-  
   // Open and sends alerts to other staff
   const openAlertForm = (tableNumber) => {
     setAlertTableNumber(tableNumber);
@@ -207,6 +204,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     const response = await notifyStaff(staffId, alertTargetId, alertAlertMessage, alertTableNumber);
     if (response) {
       setErrorMessage("Alert message sent successfully!");
+      await updateTableStatus(alertTableNumber, "alert");
     } else {
       setErrorMessage("Failed to send alert message.");
     }
@@ -229,7 +227,6 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
     setSelectedOrder(order);
     setShowOrderPopup(true);
   };
-  
   
   return (
     <div className="waiter-container">
@@ -257,7 +254,7 @@ function Waiter({ setRole, hiddenItems = [], setHiddenItems = () => {} }) {
               <tbody>
                 {pendingOrders.length > 0 ? (
                   pendingOrders.map((order) => (
-                    <tr key={order.table_id}>
+                    <tr key={order.id}>
                       <td>{order.table_number} | {order.id}</td>
                       <td>£{parseFloat(order.total_price || 0).toFixed(2)}</td>
                       <td>

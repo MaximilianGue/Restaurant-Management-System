@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions
 from rest_framework.exceptions import ValidationError
-from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer, NotificationSerializer,UpdateAvailabilitySerializer, get_user_model, UserSerializer,PaymentSerializer,ManagerSerializer
+from .serializers import MenuItemSerializer, OrderSerializer, TableSerializer, CustomerSerializer, WaiterSerializer, UpdateStatusSerializer,KitchenStaffSerializer,ConfirmOrderSerializer, NotificationSerializer,UpdateAvailabilitySerializer, get_user_model, UserSerializer,PaymentSerializer,ManagerSerializer,TableStatusUpdateSerializer
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -96,9 +96,6 @@ class MenuItemView(generics.ListCreateAPIView):
         Returns:
             Response: A Response object containing updated data or errors.
         """
-        print("Incoming PATCH Request Data:", request.data)  # Debugging
-        print(" Incoming PATCH Request Files:", request.FILES)  # Debugging file uploads
-
         instance = self.get_object()
         
         # Convert QueryDict to mutable dictionary
@@ -150,9 +147,6 @@ class MenuItemDetailView(generics.RetrieveUpdateDestroyAPIView):
         Returns:
             Response: A Response object with updated data or errors.
         """
-        print("Incoming PATCH Request Data:", request.data)
-        print("Incoming PATCH Request Files:", request.FILES)
-
         instance = self.get_object()
         mutable_data = request.data.copy()
 
@@ -331,6 +325,19 @@ class TableStaffIDView(APIView):
                 return Response({"error": "No waiter is assigned to your table."}, status=status.HTTP_404_NOT_FOUND)
         except Table.DoesNotExist:
             return Response({"error": "Table does not exist."}, status=status.HTTP_404_NOT_FOUND)
+        
+class TableStatusUpdateView(generics.UpdateAPIView):
+    queryset = Table.objects.all()
+    serializer_class = TableStatusUpdateSerializer
+    lookup_field = 'number'          # the model field to use for lookup
+    lookup_url_kwarg = 'table_number'  # the URL parameter name
+
+    def perform_update(self, serializer):
+        new_status = self.request.data.get('status')
+        allowed_statuses = dict(Table.TABLE_TYPES).keys()  # e.g., ['pending', 'all orders received', 'alert']
+        if new_status not in allowed_statuses:
+            raise ValidationError({"status": "Invalid status value. Allowed: " + ", ".join(allowed_statuses)})
+        serializer.save()
             
 class CustomerView(generics.ListCreateAPIView):
     """
@@ -449,7 +456,9 @@ class OrderView(APIView):
                     waiter=waiter,
                     status="unpaid"
                 )
-
+           
+            table.status = "pending"
+            table.save()
             return JsonResponse({
                 "message": "Order created successfully",
                 "order_id": order.id,
@@ -964,7 +973,34 @@ class ManagerListView(generics.ListAPIView):
     """
     queryset = Manager.objects.all()
     serializer_class = ManagerSerializer
-    
+
+def generate_staff_id(role):
+    """
+    Generate a new Staff_id for a given role.
+    For waiters, the ID will be in the format "WXXX" (e.g. "W001")
+    For kitchen staff, the ID will be in the format "KXXX" (e.g. "K001")
+    """
+    if role.lower() == "waiter":
+        prefix = "W"
+        existing = Waiter.objects.exclude(Staff_id__isnull=True)
+        numbers = [
+            int(w.Staff_id[1:]) for w in existing 
+            if w.Staff_id and w.Staff_id[1:].isdigit()
+        ]
+        next_number = max(numbers, default=0) + 1
+        return f"{prefix}{str(next_number).zfill(3)}"
+    elif role.lower() == "kitchen staff":
+        prefix = "K"
+        existing = KitchenStaff.objects.exclude(Staff_id__isnull=True)
+        numbers = [
+            int(k.Staff_id[1:]) for k in existing 
+            if k.Staff_id and k.Staff_id[1:].isdigit()
+        ]
+        next_number = max(numbers, default=0) + 1
+        return f"{prefix}{str(next_number).zfill(3)}"
+    else:
+        raise ValueError("Invalid role for Staff_id generation.")
+
 
 @api_view(['GET'])
 def get_employees(request):
@@ -1019,24 +1055,15 @@ def assign_waiter_to_table(request, table_id):
 
 
 @api_view(['PUT'])
-def update_employee(request, employee_id):
+def update_employee(request, employee_Staff_id):
     """
     Updates information about a specific employee.
-
-    Args:
-        request (Request): The HTTP request containing updated data.
-        user_id (int): The ID of the employee to update.
-
-    Returns:
-        Response: The updated employee data or an error.
+    If the role changes, a new Staff_id is generated based on the new role.
     """
-    print("Data received in PUT:", request.data)
+    # Look up by the string Staff_id
+    waiter = Waiter.objects.filter(Staff_id=employee_Staff_id).first()
+    kitchen_staff = KitchenStaff.objects.filter(Staff_id=employee_Staff_id).first()
 
-    # Try to fetch both a waiter and kitchen staff with this ID
-    waiter = Waiter.objects.filter(id=employee_id).first()
-    kitchen_staff = KitchenStaff.objects.filter(id=employee_id).first()
-
-    #  Prioritize kitchen staff if both exist with same ID
     if kitchen_staff:
         employee = kitchen_staff
         is_waiter = False
@@ -1046,86 +1073,138 @@ def update_employee(request, employee_id):
     else:
         return Response({"detail": "Employee not found."}, status=404)
 
-    # Update basic fields
-    employee.first_name = request.data.get("first_name", employee.first_name)
-    employee.last_name = request.data.get("last_name", employee.last_name)
-    employee.email = request.data.get("email", employee.email)
-    employee.phone = request.data.get("phone", employee.phone)
+    # Update basic fields (ensure empty strings instead of None)
+    employee.first_name = request.data.get("first_name", employee.first_name) or ""
+    employee.last_name = request.data.get("last_name", employee.last_name) or ""
+    employee.email = request.data.get("email", employee.email) or ""
+    employee.phone = request.data.get("phone", employee.phone) or ""
 
-    # Handle role change
     role = request.data.get("role")
     if role:
         current_role = "waiter" if is_waiter else "kitchen staff"
         new_role = role.lower()
-
         if new_role != current_role:
+            # When switching roles, generate a new Staff_id for the new role.
+            new_staff_id = generate_staff_id(new_role)
             if new_role == "waiter" and not is_waiter:
-                # Ensure no duplicate email for waiter
                 if Waiter.objects.filter(email=employee.email).exists():
                     return Response({"detail": "A waiter with this email already exists."}, status=400)
-
                 new_waiter = Waiter.objects.create(
                     first_name=employee.first_name,
                     last_name=employee.last_name,
                     email=employee.email,
                     phone=employee.phone,
+                    Staff_id=new_staff_id
                 )
+                # Optionally, delete the old kitchen staff record:
                 kitchen_staff.delete()
                 employee = new_waiter
                 is_waiter = True
-
             elif new_role == "kitchen staff" and is_waiter:
-                # Ensure no duplicate email for kitchen staff
-                if KitchenStaff.objects.filter(email=employee.email).exclude(pk=employee.pk).exists():
+                if KitchenStaff.objects.filter(email=employee.email).exclude(id=employee.id).exists():
                     return Response({"detail": "A kitchen staff member with this email already exists."}, status=400)
-
                 new_kitchen_staff = KitchenStaff.objects.create(
                     first_name=employee.first_name,
                     last_name=employee.last_name,
                     email=employee.email,
                     phone=employee.phone,
+                    Staff_id=new_staff_id
                 )
                 waiter.delete()
                 employee = new_kitchen_staff
                 is_waiter = False
-
-    # Save updates (if no role switch happened, or after switching)
     employee.save()
-
     return Response({"detail": "Employee updated successfully."}, status=200)
 
 @api_view(['DELETE'])
-def fire_employee(request, employee_id):
+def fire_employee(request, employee_Staff_id):
     """
     Removes an employee from the system.
-
-    Args:
-        request (Request): The HTTP request.
-        user_id (int): The ID of the employee to remove.
-
-    Returns:
-        Response: A success message or error.
     """
     try:
-        # Check if it's a waiter or kitchen staff and delete accordingly
-        waiter = Waiter.objects.filter(id=employee_id).first()
-        kitchen_staff = KitchenStaff.objects.filter(id=employee_id).first()
-
+        waiter = Waiter.objects.filter(Staff_id=employee_Staff_id).first()
+        kitchen_staff = KitchenStaff.objects.filter(Staff_id=employee_Staff_id).first()
         if waiter:
-            waiter.delete()  # The related payments will be automatically deleted due to cascade delete
+            waiter.delete()
             return JsonResponse({"message": "Waiter has been fired."}, status=200)
         elif kitchen_staff:
             kitchen_staff.delete()
             return JsonResponse({"message": "Kitchen staff has been fired."}, status=200)
         else:
             return JsonResponse({"message": "Employee not found."}, status=404)
-
     except Exception as e:
-        print(f"Error: {str(e)}")  # Log the error to the console
+        print(f"Error: {str(e)}")
         return JsonResponse({"error": str(e)}, status=500)
 
+@api_view(['POST'])
+def create_employee(request):
+    """
+    Creates a new employee with a specific role.
+    A new Staff_id is generated based on the role (e.g., "W001" or "K001").
+    """
+    role = request.data.get("role", "").lower()
+    if role not in ["waiter", "kitchen staff"]:
+        return Response({"error": "Invalid role. Must be 'waiter' or 'kitchen staff'."}, status=400)
+
+    required_fields = ["first_name", "last_name", "email"]
+    for field in required_fields:
+        if not request.data.get(field):
+            return Response({"error": f"{field.replace('_', ' ').capitalize()} is required."}, status=400)
+
+    # Use the helper function to generate a new Staff_id
+    new_staff_id = generate_staff_id(role)
+
+    base_data = {
+        "first_name": request.data.get("first_name"),
+        "last_name": request.data.get("last_name"),
+        "email": request.data.get("email"),
+        "phone": request.data.get("phone", ""),
+        "Staff_id": new_staff_id,
+    }
+
+    if role == "waiter":
+        if Waiter.objects.filter(email=base_data["email"]).exists():
+            return Response({"error": "A waiter with this email already exists."}, status=400)
+        waiter = Waiter.objects.create(**base_data)
+        serializer = WaiterSerializer(waiter)
+        return Response(serializer.data, status=201)
+    elif role == "kitchen staff":
+        if KitchenStaff.objects.filter(email=base_data["email"]).exists():
+            return Response({"error": "A kitchen staff member with this email already exists."}, status=400)
+        kitchen_staff = KitchenStaff.objects.create(**base_data)
+        serializer = KitchenStaffSerializer(kitchen_staff)
+        return Response(serializer.data, status=201)
+
+@api_view(['POST'])
+def create_table(request):
+    """
+    Creates a new table using a given table number and waiter Staff_id.
+
+
+    Returns:
+        Response: The serialized table data if successful, or an error message.
+    """
+    table_number = request.data.get("table_number")
+    waiter_id = request.data.get("waiter_id")
+
+    if not table_number or not waiter_id:
+        return Response({"error": "Both table_number and waiter_id are required."}, status=400)
+
+    # Look up the waiter using Staff_id
+    waiter = get_object_or_404(Waiter, Staff_id=waiter_id)
+
+    # Optionally check if a table with the same number already exists
+    if Table.objects.filter(number=table_number).exists():
+        return Response({"error": "A table with this number already exists."}, status=400)
+
+    # Create the table with the specified number and assign the waiter
+    table = Table.objects.create(number=table_number, waiter=waiter)
+
+    serializer = TableSerializer(table)
+    return Response(serializer.data, status=201)
+
 @api_view(['PUT'])
-def update_table(request, table_id):
+def update_table(request, pk):
     """
     Updates the details of a table.
 
@@ -1137,10 +1216,10 @@ def update_table(request, table_id):
         Response: Updated table data or validation errors.
     """
     try:
-        table = Table.objects.get(id=table_id)
+        table = Table.objects.get(pk=pk)
     except Table.DoesNotExist:
         return Response({"error": "Table not found."}, status=status.HTTP_404_NOT_FOUND)
-
+    print(table)
     number = request.data.get("number")
     status_value = request.data.get("status")
     waiter_id = request.data.get("waiter_id")  # or 'waiter' depending on your frontend
@@ -1161,45 +1240,53 @@ def update_table(request, table_id):
     table.save()
     return Response({"message": "Table updated successfully."}, status=status.HTTP_200_OK)
 
-@api_view(['POST'])
-def create_employee(request):
-    """
-    Creates a new employee with a specific role.
 
-    Args:
-        request (Request): The HTTP request with employee details.
-
-    Returns:
-        Response: Newly created employee data or errors.
+class ConfirmOrderAvailabilityByOrderIdView(APIView):
     """
-    role = request.data.get("role", "").lower()
+    View to check and confirm an order's availability by order ID.
     
-    if role not in ["waiter", "kitchen staff"]:
-        return Response({"error": "Invalid role. Must be 'waiter' or 'kitchen staff'."}, status=400)
+    It retrieves the order using the provided order ID, then for each order item,
+    it verifies that the associated MenuItem has an availability greater than or equal
+    to the ordered quantity. If all items are available, it updates each MenuItem's
+    availability by subtracting the ordered quantity. If any item is insufficient, it
+    returns details about the shortage.
+    """
+    def post(self, request, order_id):
+        # Get the order by ID or return 404 if not found
+        order = get_object_or_404(Order, id=order_id)
+        order_items = order.orderitem_set.all()
 
-    required_fields = ["first_name", "last_name", "email"]
-    for field in required_fields:
-        if not request.data.get(field):
-            return Response({"error": f"{field.replace('_', ' ').capitalize()} is required."}, status=400)
+        insufficient_items = []
+        # Check the availability for each item in the order
+        for order_item in order_items:
+            menu_item = order_item.menu_item
+            quantity_required = order_item.quantity
 
-    base_data = {
-        "first_name": request.data.get("first_name"),
-        "last_name": request.data.get("last_name"),
-        "email": request.data.get("email"),
-        "phone": request.data.get("phone", ""),
-        "Staff_id": f"{role.replace(' ', '')}_{request.data.get('email')}".lower(),  # auto-generate staff ID
-    }
+            if menu_item.availability is None or menu_item.availability < quantity_required:
+                insufficient_items.append({
+                    "item": menu_item.name,
+                    "available": menu_item.availability,
+                    "required": quantity_required
+                })
 
-    if role == "waiter":
-        if Waiter.objects.filter(email=base_data["email"]).exists():
-            return Response({"error": "A waiter with this email already exists."}, status=400)
-        waiter = Waiter.objects.create(**base_data)
-        serializer = WaiterSerializer(waiter)
-        return Response(serializer.data, status=201)
+        # If any menu item does not have enough availability, return a failure response.
+        if insufficient_items:
+            return Response(
+                {
+                    "can_prepare": False,
+                    "details": insufficient_items,
+                    "message": "Insufficient availability for one or more items."
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-    elif role == "kitchen staff":
-        if KitchenStaff.objects.filter(email=base_data["email"]).exists():
-            return Response({"error": "A kitchen staff member with this email already exists."}, status=400)
-        kitchen_staff = KitchenStaff.objects.create(**base_data)
-        serializer = KitchenStaffSerializer(kitchen_staff)
-        return Response(serializer.data, status=201)
+        # All items are available: update the availability for each MenuItem.
+        for order_item in order_items:
+            menu_item = order_item.menu_item
+            menu_item.availability -= order_item.quantity
+            menu_item.save()
+
+        return Response(
+            {"can_prepare": True, "message": "Order can be prepared and availability updated."},
+            status=status.HTTP_200_OK
+        )   
