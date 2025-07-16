@@ -33,9 +33,6 @@ function Home() {
   const [loadingTables, setLoadingTables] = useState(true);
   const [filter, setFilter] = useState("All");
   const [hiddenItems, setHiddenItems] = useState([]);
-    const [selectedOrder, setSelectedOrder] = useState(null);
-    const [showOrderPopup, setShowOrderPopup] = useState(false);
-  
 
   // Show order pop up
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -455,9 +452,6 @@ function Home() {
 
                       </div>
                     )}         
-                    <button onClick={() => handleViewOrder(order)}>
-                          View Order
-                        </button>
                   </div>
                 ))
             )}
