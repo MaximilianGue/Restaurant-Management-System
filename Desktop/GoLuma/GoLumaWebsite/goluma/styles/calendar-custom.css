@@ -1,0 +1,15 @@
+.react-calendar {
+  border: none;
+  font-family: 'Inter', sans-serif;
+}
+.react-calendar__tile--active {
+  background-color: #f97316 !important;
+  color: white;
+}
+.react-calendar__tile--now {
+  background: #fde68a !important;
+  color: black;
+}
+.react-calendar__tile:hover {
+  background: #fee2e2;
+}

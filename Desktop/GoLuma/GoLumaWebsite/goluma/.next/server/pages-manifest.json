@@ -1,0 +1,12 @@
+{
+  "/_app": "pages/_app.js",
+  "/_error": "pages/_error.js",
+  "/_document": "pages/_document.js",
+  "/join": "pages/join.js",
+  "/": "pages/index.js",
+  "/access": "pages/access.js",
+  "/api/auth": "pages/api/auth.js",
+  "/api/experiences": "pages/api/experiences.js",
+  "/erlebnisbetreiber/register": "pages/erlebnisbetreiber/register.js",
+  "/about": "pages/about.js"
+}

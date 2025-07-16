@@ -1,0 +1,15 @@
+// pages/api/host/register.ts
+import type { NextApiRequest, NextApiResponse } from 'next';
+
+// Beispiel: hier würdest du in DB speichern
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') return res.status(405).end();
+
+  const { name, email, password, company, phone, role } = req.body;
+
+  // TODO: Hier in Datenbank speichern
+  console.log('Registrierung:', { name, email, company, phone, role });
+
+  // Simuliert Erfolg
+  return res.status(200).json({ success: true });
+}
